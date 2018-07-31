@@ -1,10 +1,6 @@
 language: bash
-
-sudo: required
-
-install:
-  - sudo apt-get install -y gawk
+services: docker
 
 script:
   - set -e
-  - ./base-php.sh
+  - docker run --rm -v $PWD:/images wodby/alpine sh -c "cd images && ./base-php.sh"
