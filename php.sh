@@ -10,7 +10,7 @@ git clone --depth=1 "https://${GITHUB_MACHINE_USER}:${GITHUB_MACHINE_USER_API_TO
 cd /tmp/php
 
 for version in "${versions[@]}"; do
-    tags=($(get_tags "wodby/base-php" | grep -v debug | grep -F "${version}." | sort -r))
+    tags=($(get_tags "wodby/base-php" | grep -v debug | grep -F "${version}." | sort -rV))
 
     cur_ver=$(grep -oP "(?<=PHP${version//.}=)(.+)" .travis.yml)
     latest_ver="${tags[0]}"
@@ -18,7 +18,7 @@ for version in "${versions[@]}"; do
     if [[ "${cur_ver}" != "${latest_ver}" ]]; then
         echo "PHP ${cur_ver} is outdated, updating to ${latest_ver}"
         sed -i -E "s/(PHP${version//.})=.+/\1=${latest_ver}/" .travis.yml
-        git_commit ./ "Update PHP to: ${latest_ver}"
+        git_commit ./ "Updating PHP to ${latest_ver}"
         git push origin
     fi
 done
