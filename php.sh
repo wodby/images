@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -e
+set -ex
 
 . lib.sh
 
@@ -18,6 +18,7 @@ for version in "${versions[@]}"; do
     latest_ver="${tags[0]}"
 
     if [[ "${cur_ver}" != "${latest_ver}" ]]; then
+        echo "PHP ${cur_ver} is outdated, updating to ${latest_ver}"
         sed -i -E "s/(PHP${version//.})=.+/\1=${latest_ver}/" .travis.yml
         git_commit ./ "Update PHP to: ${latest_ver}"
         git push origin
