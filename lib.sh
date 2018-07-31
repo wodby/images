@@ -13,3 +13,15 @@ git_commit() {
         echo 'Nothing to commit'
     fi
 }
+
+get_tags() {
+    local repo=$1
+    local filter=$2
+
+    echo "${filter}"
+
+    wget -q "https://registry.hub.docker.com/v1/repositories/${repo}/tags" -O - \
+        | sed -e 's/[][]//g' -e 's/"//g' -e 's/ //g' \
+        | tr '}' '\n' \
+        | awk -F: '{print $3}'
+}

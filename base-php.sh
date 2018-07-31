@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-set -ex
+set -e
 
-. ./git.sh
+. lib.sh
 
 apk add --update git gawk coreutils jq
 
