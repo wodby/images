@@ -1,0 +1,5 @@
+language: bash
+
+script:
+  - set -e
+  - ./bash-php.sh
