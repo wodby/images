@@ -25,3 +25,7 @@ get_tags() {
         | tr '}' '\n' \
         | awk -F: '{print $3}'
 }
+
+# Init global git config.
+git config --global user.email "${GIT_USER_EMAIL}"
+git config --global user.name "Wodby Robot"

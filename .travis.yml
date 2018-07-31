@@ -9,5 +9,5 @@ env:
 script:
   - set -e
   - |
-    docker run -e GITHUB_MACHINE_USER_API_TOKEN -e GITHUB_MACHINE_USER --rm -v $PWD:/images \
+    docker run -e GITHUB_MACHINE_USER_API_TOKEN -e GITHUB_MACHINE_USER -e GIT_USER_EMAIL --rm -v $PWD:/images \
       wodby/alpine sh -c "cd /images && ./${REPO}.sh"
