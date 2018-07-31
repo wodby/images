@@ -4,6 +4,8 @@ set -ex
 
 . ./git.sh
 
+apk add --update git gawk coreutils jq
+
 git clone "https://${GITHUB_MACHINE_USER}:${GITHUB_MACHINE_USER_API_TOKEN}@github.com/wodby/base-php"
 cd base-php
 git remote add upstream https://github.com/docker-library/php
