@@ -3,4 +3,4 @@ services: docker
 
 script:
   - set -e
-  - docker run --rm -v $PWD:/images wodby/alpine sh -c "cd images && ./base-php.sh"
+  - docker run --rm -v $PWD:/images wodby/alpine sh -c "cd /images && ./base-php.sh"
