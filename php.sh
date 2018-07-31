@@ -4,8 +4,6 @@ set -ex
 
 . lib.sh
 
-apk add --update git grep
-
 versions=(7.2 7.1 7.0 5.6)
 
 git clone --depth=1 "https://${GITHUB_MACHINE_USER}:${GITHUB_MACHINE_USER_API_TOKEN}@github.com/wodby/php" /tmp/php
