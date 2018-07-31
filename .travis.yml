@@ -4,4 +4,4 @@ services: docker
 script:
   - set -e
   - docker run -e GITHUB_MACHINE_USER_API_TOKEN -e GITHUB_MACHINE_USER \
-    --rm -v $PWD:/images wodby/alpine sh -c "cd /images && ./base-php.sh"
+      --rm -v $PWD:/images wodby/alpine sh -c "cd /images && ./base-php.sh"
