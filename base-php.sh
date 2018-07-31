@@ -2,7 +2,7 @@
 
 set -e
 
-./git.sh
+. ./git.sh
 
 git clone --depth=10 "https://${GITHUB_MACHINE_USER}:${GITHUB_MACHINE_USER_API_TOKEN}@github.com/wodby/base-php"
 git remote add upstream https://github.com/docker-library/php
