@@ -3,6 +3,7 @@ services: docker
 
 env:
   matrix:
+    - REPO=base-python
     - REPO=base-php
     - REPO=php
 
