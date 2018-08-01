@@ -5,6 +5,7 @@ env:
   matrix:
     - REPO=base-php
     - REPO=base-python
+    - REPO=base-ruby
     - REPO=php
     - REPO=python
 
