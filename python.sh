@@ -18,6 +18,10 @@ for version in "${versions[@]}"; do
     if [[ "${cur_ver}" != "${latest_ver}" ]]; then
         echo "Python ${cur_ver} is outdated, updating to ${latest_ver}"
         sed -i -E "s/(PYTHON${version//.})=.+/\1=${latest_ver}/" .travis.yml
+
+        # Update Makefiles.
+        sed -i -E "s/(PYTHON_VER \?= )${cur_ver}/\1${latest_ver}/" Makefile
+
         git_commit ./ "Updating Python to ${latest_ver}"
         git push origin
     fi
