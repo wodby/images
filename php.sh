@@ -18,6 +18,18 @@ for version in "${versions[@]}"; do
     if [[ "${cur_ver}" != "${latest_ver}" ]]; then
         echo "PHP ${cur_ver} is outdated, updating to ${latest_ver}"
         sed -i -E "s/(PHP${version//.})=.+/\1=${latest_ver}/" .travis.yml
+
+        # Update Makefiles.
+        if [[ -f "${version}/Makefile" ]]; then
+            sed -i -E "s/(PHP_VER \?= )${cur_ver}/\1${latest_ver}/" "${version}/Makefile"
+        fi
+
+        [[ "${version}" =~ ^([0-9]+) ]] && major_ver="${BASH_REMATCH[1]}"
+
+        if [[ -f "${major_ver}/Makefile" ]]; then
+            sed -i -E "s/(PHP_VER ?= )${cur_ver}/\1${latest_ver}/" "${major_ver}/Makefile"
+        fi
+
         git_commit ./ "Updating PHP to ${latest_ver}"
         git push origin
     fi
