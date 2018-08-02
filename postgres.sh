@@ -4,7 +4,8 @@ set -e
 
 . lib.sh
 
-versions=(10.4 9.6 9.5 9.4 9.3)
+# http://www.databasesoup.com/2016/05/changing-postgresql-version-numbering.html
+versions=(10 9.6 9.5 9.4 9.3)
 
 user="${GITHUB_MACHINE_USER}"
 token="${GITHUB_MACHINE_USER_API_TOKEN}"
@@ -13,18 +14,10 @@ git clone --depth=1 "https://${user}:${token}@github.com/wodby/postgres" /tmp/po
 cd /tmp/postgres
 
 for version in "${versions[@]}"; do
-    # 10.2 => 10, 9.6 => 9.6
-    # http://www.databasesoup.com/2016/05/changing-postgresql-version-numbering.html
-    if [[ "${version}" != 9* ]]; then
-        [[ "${version}" =~ ^([0-9]+) ]] && major_ver="${BASH_REMATCH[1]}"
-    else
-        major_ver="${version}"
-    fi
-
-    tags=($(get_tags "postgres" | grep -oP "^(${major_ver/./\.}\.[0-9]+)(?=\-alpine$)" | sort -rV))
+    tags=($(get_tags "postgres" | grep -oP "^(${version/./\.}\.[0-9]+)(?=\-alpine$)" | sort -rV))
     latest_ver="${tags[0]}"
 
-    cur_ver=$(grep -oP "(?<=POSTGRES_VER=)(${major_ver}\.[0-9]+)" .travis.yml)
+    cur_ver=$(grep -oP "(?<=POSTGRES_VER=)(${version}\.[0-9]+)" .travis.yml)
 
     validate_versions "${version}" "${cur_ver}" "${latest_ver}"
 
