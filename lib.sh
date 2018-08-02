@@ -38,12 +38,16 @@ validate_versions()
 
     if [[ -z "${latest}" ]]; then
         echo "Couldn't find latest version of ${version}. Probably no longer supported!"
-        exit 1;
+        exit 1
     fi
 
     if [[ -z "${current}" ]]; then
         echo "Couldn't get the current version of ${version}! Probably need to updated supported minor version!"
-        exit 1;
+        exit 1
+    fi
+
+    if [[ "${current}" == "${latest}" ]]; then
+        echo "The current version ${current} is already the latest version of branch ${version}"
     fi
 }
 
