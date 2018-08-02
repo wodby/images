@@ -33,14 +33,14 @@
 [httpd]: https://github.com/docker-library/httpd
 [php]: https://github.com/docker-library/php
 [python]: https://github.com/docker-library/python
-[ruby]: (https://github.com/docker-library/ruby)
+[ruby]: https://github.com/docker-library/ruby
 
 [wodby/redis]: https://github.com/wodby/redis
 [wodby/solr]: https://github.com/wodby/solr
 [wodby/postgres]: https://github.com/wodby/postgres
-[redis]: (https://github.com/docker-library/redis)
-[solr]: (https://github.com/docker-library/solr)
-[postgres]: (https://github.com/docker-library/postgres)
+[redis]: https://github.com/docker-library/redis
+[solr]: https://github.com/docker-library/solr
+[postgres]: https://github.com/docker-library/postgres
 
 [wodby/php]: https://github.com/wodby/php
 [wodby/ruby]: https://github.com/wodby/ruby
