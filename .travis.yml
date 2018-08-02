@@ -8,6 +8,7 @@ env:
     - REPO=base-ruby
     - REPO=php
     - REPO=python
+    - REPO=ruby
 
 script:
   - set -e
