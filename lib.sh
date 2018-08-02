@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 
-git_commit() {
+set -e
+
+git_commit()
+{
     local dir="${1}"
     local msg="${2}"
 
@@ -14,7 +17,8 @@ git_commit() {
     fi
 }
 
-get_tags() {
+get_tags()
+{
     local repo=$1
     local filter=$2
 
@@ -24,6 +28,23 @@ get_tags() {
         | sed -e 's/[][]//g' -e 's/"//g' -e 's/ //g' \
         | tr '}' '\n' \
         | awk -F: '{print $3}'
+}
+
+validate_versions()
+{
+    local version=$1
+    local current=$2
+    local latest=$3
+
+    if [[ -z "${latest}" ]]; then
+        echo "Couldn't find latest version of ${version}. Probably no longer supported!"
+        exit 1;
+    fi
+
+    if [[ -z "${current}" ]]; then
+        echo "Couldn't get the current version of ${version}! Probably need to updated supported minor version!"
+        exit 1;
+    fi
 }
 
 # Init global git config.
