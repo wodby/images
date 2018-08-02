@@ -6,14 +6,19 @@ set -e
 
 versions=(2.4)
 
-git clone --depth=1 "https://${GITHUB_MACHINE_USER}:${GITHUB_MACHINE_USER_API_TOKEN}@github.com/wodby/apache" /tmp/apache
+user="${GITHUB_MACHINE_USER}"
+token="${GITHUB_MACHINE_USER_API_TOKEN}"
+
+git clone --depth=1 "https://${user}:${token}@github.com/wodby/apache" /tmp/apache
 cd /tmp/apache
 
 for version in "${versions[@]}"; do
-    tags=($(get_tags "wodby/httpd" | grep -v debug | grep -F "${version}." | sort -rV))
+    tags=($(get_tags "wodby/httpd" | grep -F "${version}." | sort -rV))
+    latest_ver="${tags[0]}"
 
     cur_ver=$(grep -oP "(?<=APACHE_VER=)(${version}\.[0-9]+)" .travis.yml)
-    latest_ver="${tags[0]}"
+
+    validate_versions "${version}" "${cur_ver}" "${latest_ver}"
 
     if [[ "${cur_ver}" != "${latest_ver}" ]]; then
         echo "Apache ${cur_ver} is outdated, updating to ${latest_ver}"

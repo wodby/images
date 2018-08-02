@@ -11,6 +11,10 @@ env:
     - REPO=python
     - REPO=ruby
     - REPO=apache
+    - REPO=postgres
+    - REPO=redis
+    - REPO=solr
+    - REPO=mariadb
 
 script:
   - set -e
