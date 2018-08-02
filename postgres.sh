@@ -16,7 +16,7 @@ for version in "${versions[@]}"; do
     # 10.2 => 10, 9.6 => 9.6
     # http://www.databasesoup.com/2016/05/changing-postgresql-version-numbering.html
     if [[ "${version}" != 9* ]]; then
-        [[ "${version}" =~ ^[0-9]+ ]] && major_ver="${BASH_REMATCH[1]}"
+        [[ "${version}" =~ ^([0-9]+) ]] && major_ver="${BASH_REMATCH[1]}"
     else
         major_ver="${version}"
     fi
