@@ -14,7 +14,7 @@ git clone --depth=1 "https://${user}:${token}@github.com/wodby/python" /tmp/pyth
 cd /tmp/python
 
 for version in "${versions[@]}"; do
-    tags=($(get_tags "${repo}" | grep -oP "^(${version/./\.}\.[0-9]+)$" | sort -rV))
+    tags=($(get_tags "${repo}" | grep -oP "^(${version/\./\\.}\.[0-9]+)$" | sort -rV))
     latest_ver="${tags[0]}"
 
     cur_ver=$(grep -oP "(?<=PYTHON${version//.}=)(.+)" .travis.yml)

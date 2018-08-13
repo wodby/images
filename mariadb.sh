@@ -13,7 +13,7 @@ git clone --depth=1 "https://${user}:${token}@github.com/wodby/mariadb" /tmp/mar
 cd /tmp/mariadb
 
 for version in "${versions[@]}"; do
-    tags=($(get_tags "mariadb" | grep -oP "^(${version/./\.}\.[0-9]+)$" | sort -rV))
+    tags=($(get_tags "mariadb" | grep -oP "^(${version/\./\\.}\.[0-9]+)$" | sort -rV))
     latest_ver="${tags[0]}"
 
     cur_ver=$(grep -oP "(?<=MARIADB_VER: )(${version}\.[0-9]+)" .circleci/config.yml)

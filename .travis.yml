@@ -15,6 +15,7 @@ env:
     - REPO=redis
     - REPO=solr
     - REPO=mariadb
+    - REPO=drupal-php
 
 script:
   - set -e
