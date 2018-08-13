@@ -20,14 +20,23 @@ git_commit()
 get_tags()
 {
     local repo=$1
-    local filter=$2
-
-    echo "${filter}"
 
     wget -q "https://registry.hub.docker.com/v1/repositories/${repo}/tags" -O - \
         | sed -e 's/[][]//g' -e 's/"//g' -e 's/ //g' \
         | tr '}' '\n' \
         | awk -F: '{print $3}'
+}
+
+get_timestamp()
+{
+    local repo=$1
+    local tag=$2
+
+    if [[ ! "${repo}" =~ / ]]; then
+        repo="library/${repo}"
+    fi
+
+    curl -L -s "https://registry.hub.docker.com/v2/repositories/${repo}/tags/${tag}" | jq -r '.last_updated'
 }
 
 validate_versions()

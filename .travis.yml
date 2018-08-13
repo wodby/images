@@ -14,7 +14,7 @@ env:
     - REPO=postgres
     - REPO=redis
     - REPO=solr
-#    - REPO=mariadb
+    - REPO=mariadb
 
 script:
   - set -e
