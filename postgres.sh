@@ -15,7 +15,7 @@ git clone --depth=1 "https://${user}:${token}@github.com/wodby/postgres" /tmp/po
 cd /tmp/postgres
 
 for version in "${versions[@]}"; do
-    tags=($(get_tags "${repo}" | grep -oP "^(${version/./\.}\.[0-9]+)(?=\-alpine$)" | sort -rV))
+    tags=($(get_tags "${repo}" | grep -oP "^(${version/\./\\.}\.[0-9]+)(?=\-alpine$)" | sort -rV))
     latest_ver="${tags[0]}"
 
     cur_ver=$(grep -oP "(?<=POSTGRES_VER=)(${version}\.[0-9]+)" .travis.yml)
