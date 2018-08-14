@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -e
+set -ex
 
 . lib.sh
 
@@ -11,7 +11,6 @@ token="${GITHUB_MACHINE_USER_API_TOKEN}"
 repo="wodby/php"
 
 git clone "https://${user}:${token}@github.com/wodby/drupal-php" /tmp/drupal-php
-git clone --depth=1 "https://git@github.com/wodby/php" /tmp/php
 cd /tmp/drupal-php
 
 for version in "${versions[@]}"; do
