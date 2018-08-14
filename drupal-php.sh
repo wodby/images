@@ -29,7 +29,7 @@ done
 
 # Updating stability tags
 git checkout 4.x
-git merge master --no-edit upstream/master
+git merge --no-edit master
 tag=""
 
 version="${versions[0]}"
