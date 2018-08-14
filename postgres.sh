@@ -37,7 +37,7 @@ for version in "${versions[@]}"; do
         if [[ "${cur_timestamp}" != "${latest_timestamp}" ]]; then
             echo "Base image has been updated. Triggering rebuild."
             sed -i "s/${cur_timestamp}/${latest_timestamp}/" .postgres
-            git_commit ./ "Update base image updated timestamp"
+            git_commit ./ "Update base image updated timestamp for ${version}"
         fi
     fi
 
