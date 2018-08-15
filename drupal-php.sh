@@ -45,7 +45,7 @@ fi
 
 git push origin
 
-if [[ -n "${tag}" ]]; then
+#if [[ -n "${tag}" ]]; then
     cur_tag=$(git describe --abbrev=0 --tags)
     patch_ver="${cur_tag##*.}"
     ((patch_ver++))
@@ -53,4 +53,4 @@ if [[ -n "${tag}" ]]; then
 
     git tag -m "Base image updated to ${latest_tag}" "${new_tag}"
     git push origin "${new_tag}"
-fi
+#fi
