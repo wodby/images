@@ -10,6 +10,7 @@ token="${GITHUB_MACHINE_USER_API_TOKEN}"
 image=$1
 versions=$2
 branch=$3
+base_image=$4
 
 git clone "https://${user}:${token}@github.com/${image}" "/tmp/${image#*/}"
 cd "/tmp/${image#*/}"
@@ -24,7 +25,9 @@ else
     dir="${version%%.*}"
 fi
 
-base_image=$(grep -oP "(?<=FROM ).+(?=:)" "${dir}/Dockerfile")
+if [[ -z "${base_image}" ]]; then
+    base_image=$(grep -oP "(?<=FROM ).+(?=:)" "${dir}/Dockerfile")
+fi
 
 if [[ -z "${branch}" ]]; then
     alpine=""
