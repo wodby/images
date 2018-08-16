@@ -16,6 +16,9 @@ env:
     - REPO=solr
     - REPO=mariadb
     - REPO=drupal-php
+    - REPO=drupal
+    - REPO=wordpress-php
+    - REPO=wordpress
 
 script:
   - set -e
