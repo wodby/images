@@ -116,7 +116,7 @@ update_timestamps()
 
     for version in "${versions[@]}"; do
         latest_timestamp=$(get_timestamp "${base_image}" "${version}")
-        cur_timestamp=$(grep -oP "(?<=^${version/\./\\.}#)(.+)$" ".${base_image#*/}")
+        cur_timestamp=$(cat ".${base_image#*/}" | grep "^${version}" | grep -oP "(?<=#)(.+)$")
 
         if [[ "${cur_timestamp}" != "${latest_timestamp}" ]]; then
             echo "Base image has been updated. Triggering rebuild."
