@@ -13,6 +13,7 @@ env:
     - REPO=apache
     - REPO=postgres
     - REPO=redis
+    - REPO=memcached
     - REPO=solr
     - REPO=mariadb
     - REPO=drupal-php

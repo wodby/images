@@ -81,7 +81,10 @@ update_versions()
         base_image_tags=($(get_tags "${base_image}" | grep -oP "^(${version/\./\\.}\.[0-9]+)${suffix}" | sort -rV))
         base_image_latest_ver="${base_image_tags[0]}"
 
-        cur_ver=$(grep -oP "(?<=${name^^}_VER=)(${version}\.[0-9]+)" .travis.yml)
+        cur_ver=$(grep -oP "(?<=${name^^}${version//.}=)(.+)" .travis.yml || true)
+        cur_ver=$(grep -oP "(?<=${name^^}_VER=)(${version/\./\\.}\.[0-9]+)" .travis.yml || true)
+
+        [[ -z "${cur_ver}" ]] && exit 1
 
         validate_versions "${version}" "${cur_ver}" "${base_image_latest_ver}"
         latest_timestamp=$(get_timestamp "${base_image}" "${cur_ver}")
@@ -89,7 +92,7 @@ update_versions()
         if [[ $(compare_semver "${base_image_latest_ver}" "${cur_ver}") == 0 ]]; then
             echo "${name^} ${cur_ver} is outdated, updating to ${base_image_latest_ver}"
 
-            sed -i -E "s/(${name^^}${version//.})=.+/\1=${base_image_latest_ver}/" .travis.yml
+            sed -i -E "s/(${name^^}${version//.})=.+/\1=${base_image_latest_ver}/" .travis.yml ||
             sed -i -E "s/(${name^^}_VER)=${version}\.[0-9]+/\1=${base_image_latest_ver}/" .travis.yml
 
             sed -i -E "s/(${name^^}_VER \?= )${cur_ver}/\1${base_image_latest_ver}/" "${dir}/Makefile"
@@ -128,9 +131,9 @@ update_timestamps()
 
 update_stability_tag()
 {
-    local version=$2
-    local base_image=$3
-    local branch=$1
+    local version=$1
+    local base_image=$2
+    local branch=$3
 
     git checkout "${branch}"
     git merge --no-edit master
