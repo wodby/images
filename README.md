@@ -24,6 +24,10 @@
 * [wodby/ruby] based on [wodby/base-ruby] image
 * [wodby/apache] based on [wodby/httpd] image
 * [wodby/mariadb]
+* [wodby/drupal-php] based on [wodby/php] image
+* [wodby/wordpress-php] based on [wodby/php] image
+* [wodby/drupal] based on [wodby/drupal-php] image
+* [wodby/wordpress] based on [wodby/wordpress-php] image
 
 
 [wodby/httpd]: https://github.com/wodby/httpd
@@ -47,4 +51,8 @@
 [wodby/python]: https://github.com/wodby/python
 [wodby/apache]: https://github.com/wodby/apache
 [wodby/mariadb]: https://github.com/wodby/mariadb
+[wodby/drupal-php]: https://github.com/wodby/drupal-php
+[wodby/wordpress-php]: https://github.com/wodby/wordpress-php
+[wodby/drupal]: https://github.com/wodby/drupal
+[wodby/wordpress]: https://github.com/wodby/wordpress
 
