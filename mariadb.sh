@@ -20,7 +20,7 @@ for version in "${versions[@]}"; do
 
     validate_versions "${version}" "${cur_ver}" "${latest_ver}"
 
-    if [[ "${cur_ver}" != "${latest_ver}" ]]; then
+    if [[ $(compare_semver "${latest_ver}" "${cur_ver}") == 0 ]]; then
         echo "MariaDB ${cur_ver} is outdated, updating to ${latest_ver}"
         sed -i -E "s/(MARIADB_VER): ${version}\.[0-9]+/\1: ${latest_ver}/" .circleci/config.yml
 
