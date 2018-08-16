@@ -2,6 +2,6 @@
 
 set -e
 
-versions=(7.2 7.1 7.0 5.6 5.3)
+versions=(8 7 6)
 
 ./update-image.sh "wodby/drupal" "${versions}" "4.x"
