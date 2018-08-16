@@ -77,15 +77,11 @@ update_versions()
 
     [[ -n "${alpine}" ]] && suffix="(?=\-alpine$)"
 
-    if [[ -f ".circleci/config.yml" ]]; then
-        circleci=1
-    fi
-
     for version in "${versions[@]}"; do
         base_image_tags=($(get_tags "${base_image}" | grep -oP "^(${version/\./\\.}\.[0-9]+)${suffix}" | sort -rV))
         base_image_latest_ver="${base_image_tags[0]}"
 
-        if [[ -n "${circleci}" ]]; then
+        if [[ -f .circleci/config.yml ]]; then
             cur_ver=$(grep -oP "(?<=${name^^}_VER: )(${version/\./\\.}\.[0-9]+)" .circleci/config.yml)
         else
             cur_ver=$(grep -oP "(?<=${name^^}${version//.}=)(.+)" .travis.yml || grep -oP "(?<=${name^^}_VER=)(${version/\./\\.}\.[0-9]+)" .travis.yml)
@@ -99,7 +95,7 @@ update_versions()
         if [[ $(compare_semver "${base_image_latest_ver}" "${cur_ver}") == 0 ]]; then
             echo "${name^} ${cur_ver} is outdated, updating to ${base_image_latest_ver}"
 
-            if [[ -n "${circleci}" ]]; then
+            if [[ -f .circleci/config.yml ]]; then
                 sed -i -E "s/(MARIADB_VER): ${version/\./\\.}\.[0-9]+/\1: ${base_image_latest_ver}/" .circleci/config.yml
             else
                 sed -i -E "s/(${name^^}${version//.})=.+/\1=${base_image_latest_ver}/" .travis.yml ||
