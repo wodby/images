@@ -2,6 +2,10 @@
 
 set -e
 
+# Init global git config.
+git config --global user.email "${GIT_USER_EMAIL}"
+git config --global user.name "Wodby Robot"
+
 git_commit()
 {
     local dir="${1}"
@@ -60,6 +64,55 @@ validate_versions()
     fi
 }
 
-# Init global git config.
-git config --global user.email "${GIT_USER_EMAIL}"
-git config --global user.name "Wodby Robot"
+update_timestamps()
+{
+    local versions=$1
+    local base_image=$2
+
+    for version in "${versions[@]}"; do
+        latest_timestamp=$(get_timestamp "${base_image}" "${version}")
+        cur_timestamp=$(grep -oP "(?<=^${version/\./\\.}#)(.+)$" ".${base_image}")
+
+        if [[ "${cur_timestamp}" != "${latest_timestamp}" ]]; then
+            echo "Base image has been updated. Triggering rebuild."
+            sed -i "s/${cur_timestamp}/${latest_timestamp}/" .php
+            git_commit ./ "Update base image updated timestamp for ${version}"
+        fi
+
+#        git push origin
+    done
+}
+
+update_stability_tag()
+{
+    local version=$2
+    local base_image=$3
+    local branch=$1
+
+    git checkout "${branch}"
+    git merge --no-edit master
+    tag=""
+
+    tags=($(get_tags "${base_image}" | grep -oP "(?<=${version/\./\\.}-)([0-9]\.){2}[0-9]$" | sort -rV))
+    latest_base_image_tag="${tags[0]}"
+
+    cur_base_image_tag=$(grep -oP "(?<=BASE_IMAGE_STABILITY_TAG=)([0-9]\.){2}[0-9]$" .travis.yml)
+
+    if [[ $(compare_semver "${latest_base_image_tag}" "${cur_base_image_tag}") == 0 ]]; then
+        sed -i -E "s/(BASE_IMAGE_STABILITY_TAG=)${cur_base_image_tag}/\1${latest_base_image_tag}/" .travis.yml
+        git_commit ./ "Update base image stability tag to ${latest_base_image_tag}"
+        tag=1
+    fi
+
+#    git push origin
+
+    if [[ -n "${tag}" ]]; then
+        cur_tag=$(git describe --abbrev=0 --tags)
+        patch_ver="${cur_tag##*.}"
+        patch_ver=$((patch_ver + 1))
+        new_tag="${cur_tag%.*}.${patch_ver}"
+
+        git tag -m "Base image updated to ${latest_tag}" "${new_tag}"
+#        git push origin "${new_tag}"
+    fi
+}
