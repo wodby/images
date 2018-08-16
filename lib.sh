@@ -81,8 +81,7 @@ update_versions()
         base_image_tags=($(get_tags "${base_image}" | grep -oP "^(${version/\./\\.}\.[0-9]+)${suffix}" | sort -rV))
         base_image_latest_ver="${base_image_tags[0]}"
 
-        cur_ver=$(grep -oP "(?<=${name^^}${version//.}=)(.+)" .travis.yml || true)
-        cur_ver=$(grep -oP "(?<=${name^^}_VER=)(${version/\./\\.}\.[0-9]+)" .travis.yml || true)
+        cur_ver=$(grep -oP "(?<=${name^^}${version//.}=)(.+)" .travis.yml || grep -oP "(?<=${name^^}_VER=)(${version/\./\\.}\.[0-9]+)" .travis.yml)
 
         [[ -z "${cur_ver}" ]] && exit 1
 
