@@ -71,7 +71,7 @@ update_timestamps()
 
     for version in "${versions[@]}"; do
         latest_timestamp=$(get_timestamp "${base_image}" "${version}")
-        cur_timestamp=$(grep -oP "(?<=^${version/\./\\.}#)(.+)$" ".${base_image}")
+        cur_timestamp=$(grep -oP "(?<=^${version/\./\\.}#)(.+)$" ".${base_image#*/}")
 
         if [[ "${cur_timestamp}" != "${latest_timestamp}" ]]; then
             echo "Base image has been updated. Triggering rebuild."
@@ -112,7 +112,7 @@ update_stability_tag()
         patch_ver=$((patch_ver + 1))
         new_tag="${cur_tag%.*}.${patch_ver}"
 
-        git tag -m "Base image updated to ${latest_tag}" "${new_tag}"
+        git tag -m "Base image updated to ${latest_base_image_tag}" "${new_tag}"
 #        git push origin "${new_tag}"
     fi
 }
