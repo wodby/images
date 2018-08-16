@@ -26,5 +26,20 @@ fi
 
 base_image=$(grep -oP "(?<=FROM ).+(?=:)" "${dir}/Dockerfile")
 
-update_timestamps "${versions}" "${base_image}"
-update_stability_tag "${version}" "${base_image}" "${branch}"
+if [[ -z "${branch}" ]]; then
+    alpine=""
+
+    if grep -P "BASE_IMAGE_TAG.+?-alpine" "${dir}/Makefile"; then
+        alpine=1
+    fi
+
+    update_versions "${image}" "${versions}" "${base_image}" "${dir}" "${alpine}"
+fi
+
+if [[ -f ".${base_image#*/}" ]]; then
+    update_timestamps "${versions}" "${base_image}"
+
+    if [[ -n "${branch}" ]]; then
+        update_stability_tag "${version}" "${base_image}" "${branch}"
+    fi
+fi

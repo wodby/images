@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -e
+set -ex
 
 # Init global git config.
 git config --global user.email "${GIT_USER_EMAIL}"
@@ -64,6 +64,49 @@ validate_versions()
     fi
 }
 
+update_versions()
+{
+    local image=$1
+    local versions=$2
+    local base_image=$3
+    local dir=$4
+    local alpine=$5
+
+    local name="${image#*/}"
+    local suffix=""
+
+    [[ -n "${alpine}" ]] && suffix="(?=\-alpine$)"
+
+    for version in "${versions[@]}"; do
+        base_image_tags=($(get_tags "${base_image}" | grep -oP "^(${version/\./\\.}\.[0-9]+)${suffix}" | sort -rV))
+        base_image_latest_ver="${base_image_tags[0]}"
+
+        cur_ver=$(grep -oP "(?<=${name^^}_VER=)(${version}\.[0-9]+)" .travis.yml)
+
+        validate_versions "${version}" "${cur_ver}" "${base_image_latest_ver}"
+        latest_timestamp=$(get_timestamp "${base_image}" "${cur_ver}")
+
+        if [[ $(compare_semver "${base_image_latest_ver}" "${cur_ver}") == 0 ]]; then
+            echo "${name^} ${cur_ver} is outdated, updating to ${base_image_latest_ver}"
+
+            sed -i -E "s/(${name^^}${version//.})=.+/\1=${base_image_latest_ver}/" .travis.yml
+            sed -i -E "s/(${name^^}_VER)=${version}\.[0-9]+/\1=${base_image_latest_ver}/" .travis.yml
+
+            sed -i -E "s/(${name^^}_VER \?= )${cur_ver}/\1${base_image_latest_ver}/" "${dir}/Makefile"
+
+            if [[ -f ".${base_image#*/}" ]]; then
+                sed -i "s/${cur_ver}#.*/${base_image_latest_ver}#${latest_timestamp}/" ".${base_image#*/}"
+            fi
+
+            git_commit ./ "Updating ${name^} to ${base_image_latest_ver}"
+        else
+            echo "Version ${cur_ver} is already the latest version"
+        fi
+    done
+
+#    git push origin
+}
+
 update_timestamps()
 {
     local versions=$1
@@ -75,12 +118,12 @@ update_timestamps()
 
         if [[ "${cur_timestamp}" != "${latest_timestamp}" ]]; then
             echo "Base image has been updated. Triggering rebuild."
-            sed -i "s/${cur_timestamp}/${latest_timestamp}/" .php
-            git_commit ./ "Update base image updated timestamp for ${version}"
+            sed -i "s/${cur_timestamp}/${latest_timestamp}/" ".${base_image#*/}"
+            git_commit ./ "Update base image timestamp (version ${version})"
         fi
+    done
 
 #        git push origin
-    done
 }
 
 update_stability_tag()
@@ -93,8 +136,8 @@ update_stability_tag()
     git merge --no-edit master
     tag=""
 
-    tags=($(get_tags "${base_image}" | grep -oP "(?<=${version/\./\\.}-)([0-9]\.){2}[0-9]$" | sort -rV))
-    latest_base_image_tag="${tags[0]}"
+    base_image_tags=($(get_tags "${base_image}" | grep -oP "(?<=${version/\./\\.}-)([0-9]\.){2}[0-9]$" | sort -rV))
+    latest_base_image_tag="${base_image_tags[0]}"
 
     cur_base_image_tag=$(grep -oP "(?<=BASE_IMAGE_STABILITY_TAG=)([0-9]\.){2}[0-9]$" .travis.yml)
 
@@ -102,6 +145,8 @@ update_stability_tag()
         sed -i -E "s/(BASE_IMAGE_STABILITY_TAG=)${cur_base_image_tag}/\1${latest_base_image_tag}/" .travis.yml
         git_commit ./ "Update base image stability tag to ${latest_base_image_tag}"
         tag=1
+    else
+        echo "Base image stability tag ${cur_base_image_tag} is already the latest"
     fi
 
 #    git push origin
