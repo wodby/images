@@ -19,6 +19,9 @@ env:
     - REPO=drupal
     - REPO=wordpress-php
     - REPO=wordpress
+    - REPO=cachet
+    - REPO=matomo
+    - REPO=webgrind
 
 script:
   - set -e

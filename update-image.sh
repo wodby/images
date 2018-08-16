@@ -11,7 +11,7 @@ image=$1
 versions=$2
 branch=$3
 
-git clone "https://${user}:${token}@github.com/wodby/${image}" "/tmp/${image#*/}"
+git clone "https://${user}:${token}@github.com/${image}" "/tmp/${image#*/}"
 cd "/tmp/${image#*/}"
 
 version="${versions[0]}"
