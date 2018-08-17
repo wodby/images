@@ -18,7 +18,7 @@
 | [wodby/memcached]     | [memcached]           | [memcached]         |
 | [wodby/matomo]        | [wodby/php]           |                     |
 | [wodby/nginx]         | [wodby/alpine]        | [nginx]             |
-| [wodby/node]          | [node]                | [node]             |
+| [wodby/node]          | [node]                | [node]              |
 | [wodby/php]           | [wodby/base-php]      | -//-                |
 | [wodby/postgres]      | [postgres]            | -//-                |
 | [wodby/python]        | [wodby/base-python]   | -//-                |
