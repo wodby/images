@@ -6,6 +6,23 @@ set -e
 git config --global user.email "${GIT_USER_EMAIL}"
 git config --global user.name "Wodby Robot"
 
+sync_fork()
+{
+    local repo=$1
+    local upstream=$2
+
+    git clone "https://${GITHUB_MACHINE_USER}:${GITHUB_MACHINE_USER_API_TOKEN}@github.com/${repo}" "/tmp/${repo#*/}"
+    cd "/tmp/${repo#*/}"
+    git remote add upstream "https://github.com/docker-library/${upstream}"
+    git fetch upstream
+    git merge --strategy-option ours --no-edit upstream/master
+
+    ./wodby-meta-update.sh
+
+    git_commit ./ "Update from upstream"
+    git push origin
+}
+
 git_commit()
 {
     local dir="${1}"

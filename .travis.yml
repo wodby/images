@@ -3,42 +3,34 @@ services: docker
 
 env:
   matrix:
-    # Do not change the order, the most basic images come first.
+    - REPO=apache
     - REPO=base-php
     - REPO=base-python
     - REPO=base-ruby
-    - REPO=httpd
-    - timeout=1
-    - REPO=mariadb
-    - REPO=memcached
-    - REPO=nginx
-    - REPO=node
-    - REPO=postgres
-    - REPO=redis
-    - REPO=solr
-    - REPO=php
-    - timeout=1
-    - REPO=apache
-    - REPO=python
-    - REPO=ruby
-    - REPO=drupal-php
-    - REPO=wordpress-php
-    - timeout=1
     - REPO=cachet
-    - REPO=matomo
-    - REPO=webgrind
+    - REPO=drupal-php
     - REPO=drupal6
     - REPO=drupal7
     - REPO=drupal8
+    - REPO=httpd
+    - REPO=mariadb
+    - REPO=matomo
+    - REPO=memcached
+    - REPO=nginx
+    - REPO=node
+    - REPO=php
+    - REPO=postgres
+    - REPO=python
+    - REPO=redis
+    - REPO=ruby
+    - REPO=solr
+    - REPO=webgrind
     - REPO=wordpress
+    - REPO=wordpress-php
 
 script:
   - set -e
   - |
-    if [[ -n "${timeout}" ]]; then
-      sleep 20
-    else
       docker run -e GITHUB_MACHINE_USER_API_TOKEN -e GITHUB_MACHINE_USER -e GIT_USER_EMAIL --rm -v $PWD:/images \
             wodby/alpine:dev sh -c "cd /images && ./${REPO}.sh"
-    fi
 
