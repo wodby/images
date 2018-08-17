@@ -107,6 +107,7 @@ update_versions()
 
     local name="${image#*/}"
     local suffix=""
+    local updated=()
 
     IFS=' ' read -r -a arr_versions <<< "${versions}"
 
@@ -114,8 +115,6 @@ update_versions()
     echo "============================"
 
     [[ -n "${alpine}" ]] && suffix="(?=\-alpine$)"
-
-    updated=()
 
     for version in "${arr_versions[@]}"; do
         base_image_tags=($(get_tags "${base_image}" | grep -oP "^(${version/\./\\.}\.[0-9]+)${suffix}" | sort -rV))
@@ -173,6 +172,7 @@ update_timestamps()
 {
     local versions=$1
     local base_image=$2
+    local updated=""
 
     IFS=' ' read -r -a arr_versions <<< "${versions}"
 
@@ -186,13 +186,16 @@ update_timestamps()
         if [[ "${cur_timestamp}" != "${latest_timestamp}" ]]; then
             echo "Base image has been updated. Triggering rebuild."
             sed -i "s/${cur_timestamp}/${latest_timestamp}/" ".${base_image#*/}"
-            git_commit ./ "Update base image timestamp (version ${version})"
-        else
-            echo "Base image timestamp of ${version} is up to date/"
+            updated=1
         fi
     done
 
-    git push origin
+    if [[ -n "${updated}" ]]; then
+        git_commit ./ "Rebuild against updated base image"
+        git push origin
+    else
+        echo "Base image hasn't changed"
+    fi
 }
 
 update_stability_tag()
@@ -200,13 +203,13 @@ update_stability_tag()
     local version=$1
     local base_image=$2
     local branch=$3
+    local tag=""
 
     echo "Checking for stability tag updates"
     echo "=================================="
 
     git checkout "${branch}"
     git merge --no-edit master
-    tag=""
 
     base_image_tags=($(get_tags "${base_image}" | grep -oP "(?<=${version/\./\\.}-)([0-9]\.){2}[0-9]$" | sort -rV))
     latest_base_image_tag="${base_image_tags[0]}"
