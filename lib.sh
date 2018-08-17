@@ -111,6 +111,7 @@ update_versions()
     IFS=' ' read -r -a arr_versions <<< "${versions}"
 
     echo "Checking for version updates"
+    echo "============================"
 
     [[ -n "${alpine}" ]] && suffix="(?=\-alpine$)"
 
@@ -176,6 +177,7 @@ update_timestamps()
     IFS=' ' read -r -a arr_versions <<< "${versions}"
 
     echo "Checking for timestamp updates"
+    echo "=============================="
 
     for version in "${arr_versions[@]}"; do
         latest_timestamp=$(get_timestamp "${base_image}" "${version}")
@@ -185,6 +187,8 @@ update_timestamps()
             echo "Base image has been updated. Triggering rebuild."
             sed -i "s/${cur_timestamp}/${latest_timestamp}/" ".${base_image#*/}"
             git_commit ./ "Update base image timestamp (version ${version})"
+        else
+            echo "Base image timestamp of ${version} is up to date/"
         fi
     done
 
@@ -198,6 +202,7 @@ update_stability_tag()
     local branch=$3
 
     echo "Checking for stability tag updates"
+    echo "=================================="
 
     git checkout "${branch}"
     git merge --no-edit master
