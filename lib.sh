@@ -81,16 +81,16 @@ release_tag()
     # Patch version changed.
     if [[ -n "${minor_update}" ]]; then
         patch_ver="${cur_tag##*.}"
-        patch_ver=$((patch_ver + 1))
-        tag="${cur_tag%.*}.${patch_ver}"
-    # Minor version changed.
-    else
-        patch_ver="${cur_tag##*.}"
         ver="${cur_tag%.*}"
         minor_ver="${ver#*.}"
         major_ver="${ver%.*}"
         minor_ver=$((minor_ver + 1))
         tag="${major_ver}.${minor_ver}.${patch_ver}"
+    # Minor version changed.
+    else
+        patch_ver="${cur_tag##*.}"
+        patch_ver=$((patch_ver + 1))
+        tag="${cur_tag%.*}.${patch_ver}"
     fi
 
     git tag -m "${message}" "${tag}"
