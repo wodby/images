@@ -6,7 +6,7 @@
 
 | Image                 | Base image            | Tracks updates from |
 | --------------------- | --------------------- | ------------------- |
-| [wodby/apache]        | [wodby/https]         | -//-                |
+| [wodby/apache]        | [wodby/httpd]         | -//-                |
 | [wodby/base-php]      | [wodby/alpine]        | [php]               |
 | [wodby/base-python]   | [wodby/alpine]        | [python]            |
 | [wodby/base-ruby]     | [wodby/alpine]        | [ruby]              |
@@ -40,6 +40,7 @@
 [redis]: https://github.com/docker-library/redis
 [ruby]: https://github.com/docker-library/ruby
 [solr]: https://github.com/docker-library/solr
+[wodby/alpine]: https://github.com/wodby/alpine
 [wodby/apache]: https://github.com/wodby/apache
 [wodby/base-php]: https://github.com/wodby/base-php
 [wodby/base-python]: https://github.com/wodby/base-python

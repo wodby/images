@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -ex
+set -e
 
 # Init global git config.
 git config --global user.email "${GIT_USER_EMAIL}"
@@ -75,6 +75,8 @@ update_versions()
     local name="${image#*/}"
     local suffix=""
 
+    echo "Checking for version updates"
+
     [[ -n "${alpine}" ]] && suffix="(?=\-alpine$)"
 
     for version in "${versions[@]}"; do
@@ -122,6 +124,8 @@ update_timestamps()
     local versions=$1
     local base_image=$2
 
+    echo "Checking for timestamp updates"
+
     for version in "${versions[@]}"; do
         latest_timestamp=$(get_timestamp "${base_image}" "${version}")
         cur_timestamp=$(cat ".${base_image#*/}" | grep "^${version}" | grep -oP "(?<=#)(.+)$")
@@ -141,6 +145,8 @@ update_stability_tag()
     local version=$1
     local base_image=$2
     local branch=$3
+
+    echo "Checking for stability tag updates"
 
     git checkout "${branch}"
     git merge --no-edit master
