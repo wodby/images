@@ -18,6 +18,7 @@
 | [wodby/memcached]     | [memcached]           | [memcached]         |
 | [wodby/matomo]        | [wodby/php]           |                     |
 | [wodby/nginx]         | [wodby/alpine]        | [nginx]             |
+| [wodby/node]          | [node]                | [node]             |
 | [wodby/php]           | [wodby/base-php]      | -//-                |
 | [wodby/postgres]      | [postgres]            | -//-                |
 | [wodby/python]        | [wodby/base-python]   | -//-                |
@@ -34,6 +35,7 @@
 [mariadb]: https://github.com/docker-library/mariadb
 [memcached]: https://github.com/docker-library/memcached
 [nginx]: https://github.com/docker-library/nginx
+[node]: https://github.com/docker-library/node
 [php]: https://github.com/docker-library/php
 [postgres]: https://github.com/docker-library/postgres
 [python]: https://github.com/docker-library/python
@@ -53,6 +55,7 @@
 [wodby/matomo]: https://github.com/wodby/matomo
 [wodby/memcached]: https://github.com/wodby/memcached
 [wodby/nginx]: https://github.com/wodby/nginx
+[wodby/node]: https://github.com/wodby/node
 [wodby/php]: https://github.com/wodby/php
 [wodby/postgres]: https://github.com/wodby/postgres
 [wodby/python]: https://github.com/wodby/python
