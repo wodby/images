@@ -64,6 +64,39 @@ validate_versions()
     fi
 }
 
+join_ws()
+{
+    local IFS=
+    local s="${*/#/$1}"
+    echo "${s#"$1$1$1"}"
+};
+
+release_tag()
+{
+    message=$1
+    minor_update=$2
+
+    cur_tag=$(git describe --abbrev=0 --tags)
+
+    # Patch version changed.
+    if [[ -n "${minor_update}" ]]; then
+        patch_ver="${cur_tag##*.}"
+        patch_ver=$((patch_ver + 1))
+        tag="${cur_tag%.*}.${patch_ver}"
+    # Minor version changed.
+    else
+        patch_ver="${cur_tag##*.}"
+        ver="${cur_tag%.*}"
+        minor_ver="${ver#*.}"
+        major_ver="${ver%.*}"
+        minor_ver=$((minor_ver + 1))
+        tag="${major_ver}.${minor_ver}.${patch_ver}"
+    fi
+
+    git tag -m "${message}" "${tag}"
+    git push origin "${tag}"
+}
+
 update_versions()
 {
     local image=$1
@@ -79,6 +112,8 @@ update_versions()
 
     [[ -n "${alpine}" ]] && suffix="(?=\-alpine$)"
 
+    updated=()
+
     for version in "${versions[@]}"; do
         base_image_tags=($(get_tags "${base_image}" | grep -oP "^(${version/\./\\.}\.[0-9]+)${suffix}" | sort -rV))
         base_image_latest_ver="${base_image_tags[0]}"
@@ -86,7 +121,14 @@ update_versions()
         if [[ -f .circleci/config.yml ]]; then
             cur_ver=$(grep -oP "(?<=${name^^}_VER: )(${version/\./\\.}\.[0-9]+)" .circleci/config.yml)
         else
-            cur_ver=$(grep -oP "(?<=${name^^}${version//.}=)(.+)" .travis.yml || grep -oP "(?<=${name^^}_VER=)(${version/\./\\.}\.[0-9]+)" .travis.yml)
+            cur_ver=$(grep -oP "(?<=${name^^}_VER=)(${version/\./\\.}\.[0-9]+)" .travis.yml || true)
+
+            if [[ -z "${cur_ver}" ]]; then
+                cur_ver=$(grep -oP "(?<=${name^^}${version//.}=)(.+)" .travis.yml)
+                regex="s/(${name^^}${version//.})=.+/\1=${base_image_latest_ver}/"
+            else
+                regex="s/(${name^^}_VER)=${version/\./\\.}\.[0-9]+/\1=${base_image_latest_ver}/"
+            fi
         fi
 
         [[ -z "${cur_ver}" ]] && exit 1
@@ -100,8 +142,7 @@ update_versions()
             if [[ -f .circleci/config.yml ]]; then
                 sed -i -E "s/(MARIADB_VER): ${version/\./\\.}\.[0-9]+/\1: ${base_image_latest_ver}/" .circleci/config.yml
             else
-                sed -i -E "s/(${name^^}${version//.})=.+/\1=${base_image_latest_ver}/" .travis.yml ||
-                sed -i -E "s/(${name^^}_VER)=${version/\./\\.}\.[0-9]+/\1=${base_image_latest_ver}/" .travis.yml
+                sed -i -E "${regex}" .travis.yml
             fi
 
             sed -i -E "s/(${name^^}_VER \?= )${cur_ver}/\1${base_image_latest_ver}/" "${dir}/Makefile"
@@ -110,13 +151,19 @@ update_versions()
                 sed -i "s/${cur_ver}#.*/${base_image_latest_ver}#${latest_timestamp}/" ".${base_image#*/}"
             fi
 
-            git_commit ./ "Updating ${name^} to ${base_image_latest_ver}"
+            git_commit ./ "Update ${name^} to ${base_image_latest_ver}"
+            updated+=("${base_image_latest_ver}")
         else
             echo "Version ${cur_ver} is already the latest version"
         fi
     done
 
     git push origin
+
+    if [[ "${#updated[@]}" != 0 ]]; then
+        ver=$(join_ws ", " "${updated[@]}")
+        release_tag "${name^} updated to ${ver}"
+    fi
 }
 
 update_timestamps()
@@ -168,12 +215,12 @@ update_stability_tag()
     git push origin
 
     if [[ -n "${tag}" ]]; then
-        cur_tag=$(git describe --abbrev=0 --tags)
-        patch_ver="${cur_tag##*.}"
-        patch_ver=$((patch_ver + 1))
-        new_tag="${cur_tag%.*}.${patch_ver}"
+        if [[ "${cur_base_image_tag%.*}" == "${latest_base_image_tag%.*}" ]]; then
+            minor_update=""
+        else
+            minor_update=1
+        fi
 
-        git tag -m "Base image updated to ${latest_base_image_tag}" "${new_tag}"
-        git push origin "${new_tag}"
+        release_tag "Base image updated to ${latest_base_image_tag}" "${minor_update}"
     fi
 }
