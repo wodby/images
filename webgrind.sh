@@ -2,4 +2,4 @@
 
 set -e
 
-./update-image.sh "wodby/webgrind" "7.1" "1.x"
+./update-image.sh "wodby/webgrind" "1" "" "github.com/jokkedk/webgrind"

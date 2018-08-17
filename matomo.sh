@@ -2,4 +2,4 @@
 
 set -e
 
-./update-image.sh "wodby/matomo" "7.1" "1.x"
+./update-image.sh "wodby/matomo" "3" "" "github.com/matomo-org/matomo"
