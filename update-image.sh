@@ -13,10 +13,12 @@ branch=$3
 base_image=$4
 dir=$5
 
+IFS=' ' read -r -a array <<< "${versions}"
+
 git clone "https://${user}:${token}@github.com/${image}" "/tmp/${image#*/}"
 cd "/tmp/${image#*/}"
 
-version="${versions[0]}"
+version="${array[0]}"
 
 if [[ -z "${dir}" ]]; then
     if [[ -f Dockerfile ]]; then
@@ -39,11 +41,11 @@ if [[ -z "${branch}" ]]; then
         alpine=1
     fi
 
-    update_versions "${image}" "${versions[@]}" "${base_image}" "${dir}" "${alpine}"
+    update_versions "${image}" "${versions}" "${base_image}" "${dir}" "${alpine}"
 fi
 
 if [[ -f ".${base_image#*/}" ]]; then
-    update_timestamps "${versions[@]}" "${base_image}"
+    update_timestamps "${versions}" "${base_image}"
 
     if [[ -n "${branch}" ]]; then
         update_stability_tag "${version}" "${base_image}" "${branch}"

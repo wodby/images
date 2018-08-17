@@ -108,13 +108,15 @@ update_versions()
     local name="${image#*/}"
     local suffix=""
 
+    IFS=' ' read -r -a arr_versions <<< "${versions}"
+
     echo "Checking for version updates"
 
     [[ -n "${alpine}" ]] && suffix="(?=\-alpine$)"
 
     updated=()
 
-    for version in "${versions[@]}"; do
+    for version in "${arr_versions[@]}"; do
         base_image_tags=($(get_tags "${base_image}" | grep -oP "^(${version/\./\\.}\.[0-9]+)${suffix}" | sort -rV))
         base_image_latest_ver="${base_image_tags[0]}"
 
@@ -171,9 +173,11 @@ update_timestamps()
     local versions=$1
     local base_image=$2
 
+    IFS=' ' read -r -a arr_versions <<< "${versions}"
+
     echo "Checking for timestamp updates"
 
-    for version in "${versions[@]}"; do
+    for version in "${arr_versions[@]}"; do
         latest_timestamp=$(get_timestamp "${base_image}" "${version}")
         cur_timestamp=$(cat ".${base_image#*/}" | grep "^${version}" | grep -oP "(?<=#)(.+)$")
 

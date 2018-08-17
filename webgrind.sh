@@ -2,6 +2,4 @@
 
 set -e
 
-versions=(7.1)
-
-./update-image.sh "wodby/webgrind" "${versions[@]}" "1.x"
+./update-image.sh "wodby/webgrind" "7.1" "1.x"
