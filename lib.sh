@@ -90,6 +90,7 @@ update_versions()
 
     IFS=' ' read -r -a arr_versions <<< "${versions}"
 
+    echo "============================"
     echo "Checking for version updates"
     echo "============================"
 
@@ -162,6 +163,7 @@ update_timestamps()
 
     IFS=' ' read -r -a arr_versions <<< "${versions}"
 
+    echo "=============================="
     echo "Checking for timestamp updates"
     echo "=============================="
 
@@ -191,6 +193,7 @@ update_stability_tag()
     local branch=$3
     local tag=""
 
+    echo "=================================="
     echo "Checking for stability tag updates"
     echo "=================================="
 
