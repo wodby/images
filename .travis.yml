@@ -3,26 +3,29 @@ services: docker
 
 env:
   matrix:
+    - REPO=apache
     - REPO=base-php
     - REPO=base-python
     - REPO=base-ruby
-    - REPO=httpd
-    - REPO=php
-    - REPO=python
-    - REPO=ruby
-    - REPO=apache
-    - REPO=postgres
-    - REPO=redis
-    - REPO=memcached
-    - REPO=solr
-    - REPO=mariadb
-    - REPO=drupal-php
-    - REPO=drupal
-    - REPO=wordpress-php
-    - REPO=wordpress
     - REPO=cachet
+    - REPO=drupal-php
+    - REPO=drupal6
+    - REPO=drupal7
+    - REPO=drupal8
+    - REPO=httpd
+    - REPO=mariadb
     - REPO=matomo
+    - REPO=memcached
+    - REPO=nginx
+    - REPO=php
+    - REPO=postgres
+    - REPO=python
+    - REPO=redis
+    - REPO=ruby
+    - REPO=solr
     - REPO=webgrind
+    - REPO=wordpress
+    - REPO=wordpress-php
 
 script:
   - set -e
