@@ -4,55 +4,61 @@
 
 ## Auto-updated images
 
-### Forks of the official images
+| Image                 | Base image            | Tracks updates from |
+| --------------------- | --------------------- | ------------------- |
+| [wodby/apache]        | [wodby/https]         | -//-                |
+| [wodby/base-php]      | [wodby/alpine]        | [php]               |
+| [wodby/base-python]   | [wodby/alpine]        | [python]            |
+| [wodby/base-ruby]     | [wodby/alpine]        | [ruby]              |
+| [wodby/cachet]        | [wodby/php]           |                     |
+| [wodby/drupal-php]    | [wodby/php]           | -//-                |
+| [wodby/drupal]        | [wodby/drupal-php]    | -//-                |
+| [wodby/httpd]         | [wodby/alpine]        | [httpd]             |
+| [wodby/mariadb]       | [wodby/alpine]        | [mariadb]           |
+| [wodby/memcached]     | [memcached]           | [memcached]         |
+| [wodby/matomo]        | [wodby/php]           |                     |
+| [wodby/nginx]         | [wodby/alpine]        | [nginx]             |
+| [wodby/php]           | [wodby/base-php]      | -//-                |
+| [wodby/postgres]      | [postgres]            | -//-                |
+| [wodby/python]        | [wodby/base-python]   | -//-                |
+| [wodby/redis]         | [redis]               | -//-                |
+| [wodby/ruby]          | [wodby/base-ruby]     | -//-                |
+| [wodby/solr]          | [solr]                | -//-                |
+| [wodby/webgrind]      | [wodby/php]           |                     |
+| [wodby/wordpress-php] | [wodby/php]           | -//-                |
+| [wodby/wordpress]     | [wodby/wordpress-php] | -//-                |
 
-* [wodby/httpd] fork of the official [httpd] image
-* [wodby/base-php] fork of the official [php] image
-* [wodby/base-python] fork of the official [python] image
-* [wodby/base-ruby] fork of the official [ruby] image
+`-//-` means same as the base image.
 
-### Based on the official docker images
-
-* [wodby/redis] based on [redis] image
-* [wodby/solr] based on [solr] image
-* [wodby/postgres] based on [postgres] image
-
-### Based on wodby/ images
-
-* [wodby/php] based on [wodby/base-php] image
-* [wodby/python] based on [wodby/base-python] image
-* [wodby/ruby] based on [wodby/base-ruby] image
-* [wodby/apache] based on [wodby/httpd] image
-* [wodby/mariadb]
-* [wodby/drupal-php] based on [wodby/php] image
-* [wodby/wordpress-php] based on [wodby/php] image
-* [wodby/drupal] based on [wodby/drupal-php] image
-* [wodby/wordpress] based on [wodby/wordpress-php] image
-
-
-[wodby/httpd]: https://github.com/wodby/httpd
-[wodby/base-php]: https://github.com/wodby/base-php
-[wodby/base-ruby]: https://github.com/wodby/base-ruby
-[wodby/base-python]: https://github.com/wodby/base-python
 [httpd]: https://github.com/docker-library/httpd
+[mariadb]: https://github.com/docker-library/mariadb
+[memcached]: https://github.com/docker-library/memcached
+[nginx]: https://github.com/docker-library/nginx
 [php]: https://github.com/docker-library/php
-[python]: https://github.com/docker-library/python
-[ruby]: https://github.com/docker-library/ruby
-
-[wodby/redis]: https://github.com/wodby/redis
-[wodby/solr]: https://github.com/wodby/solr
-[wodby/postgres]: https://github.com/wodby/postgres
-[redis]: https://github.com/docker-library/redis
-[solr]: https://github.com/docker-library/solr
 [postgres]: https://github.com/docker-library/postgres
-
-[wodby/php]: https://github.com/wodby/php
-[wodby/ruby]: https://github.com/wodby/ruby
-[wodby/python]: https://github.com/wodby/python
+[python]: https://github.com/docker-library/python
+[redis]: https://github.com/docker-library/redis
+[ruby]: https://github.com/docker-library/ruby
+[solr]: https://github.com/docker-library/solr
 [wodby/apache]: https://github.com/wodby/apache
-[wodby/mariadb]: https://github.com/wodby/mariadb
+[wodby/base-php]: https://github.com/wodby/base-php
+[wodby/base-python]: https://github.com/wodby/base-python
+[wodby/base-ruby]: https://github.com/wodby/base-ruby
+[wodby/cachet]: https://github.com/wodby/cachet
 [wodby/drupal-php]: https://github.com/wodby/drupal-php
-[wodby/wordpress-php]: https://github.com/wodby/wordpress-php
 [wodby/drupal]: https://github.com/wodby/drupal
+[wodby/httpd]: https://github.com/wodby/httpd
+[wodby/mariadb]: https://github.com/wodby/mariadb
+[wodby/matomo]: https://github.com/wodby/matomo
+[wodby/memcached]: https://github.com/wodby/memcached
+[wodby/nginx]: https://github.com/wodby/nginx
+[wodby/php]: https://github.com/wodby/php
+[wodby/postgres]: https://github.com/wodby/postgres
+[wodby/python]: https://github.com/wodby/python
+[wodby/redis]: https://github.com/wodby/redis
+[wodby/ruby]: https://github.com/wodby/ruby
+[wodby/solr]: https://github.com/wodby/solr
+[wodby/webgrind]: https://github.com/wodby/webgrind
+[wodby/wordpress-php]: https://github.com/wodby/wordpress-php
 [wodby/wordpress]: https://github.com/wodby/wordpress
 

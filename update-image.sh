@@ -11,18 +11,21 @@ image=$1
 versions=$2
 branch=$3
 base_image=$4
+dir=$5
 
 git clone "https://${user}:${token}@github.com/${image}" "/tmp/${image#*/}"
 cd "/tmp/${image#*/}"
 
 version="${versions[0]}"
 
-if [[ -f Dockerfile ]]; then
-    dir="."
-elif [[ -d "${version}" ]]; then
-    dir="${version}"
-else
-    dir="${version%%.*}"
+if [[ -z "${dir}" ]]; then
+    if [[ -f Dockerfile ]]; then
+        dir="."
+    elif [[ -d "${version}" ]]; then
+        dir="${version}"
+    else
+        dir="${version%%.*}"
+    fi
 fi
 
 if [[ -z "${base_image}" ]]; then
