@@ -60,7 +60,7 @@ validate_versions()
     fi
 
     if [[ "${current}" == "${latest}" ]]; then
-        echo "The current version ${current} is already the latest version of branch ${version}"
+        echo "The current version ${current} is already the latest version of line ${version}"
     fi
 }
 
@@ -116,7 +116,7 @@ update_versions()
         fi
     done
 
-#    git push origin
+    git push origin
 }
 
 update_timestamps()
@@ -137,7 +137,7 @@ update_timestamps()
         fi
     done
 
-#        git push origin
+    git push origin
 }
 
 update_stability_tag()
@@ -165,7 +165,7 @@ update_stability_tag()
         echo "Base image stability tag ${cur_base_image_tag} is already the latest"
     fi
 
-#    git push origin
+    git push origin
 
     if [[ -n "${tag}" ]]; then
         cur_tag=$(git describe --abbrev=0 --tags)
@@ -174,6 +174,6 @@ update_stability_tag()
         new_tag="${cur_tag%.*}.${patch_ver}"
 
         git tag -m "Base image updated to ${latest_base_image_tag}" "${new_tag}"
-#        git push origin "${new_tag}"
+        git push origin "${new_tag}"
     fi
 }
