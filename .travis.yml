@@ -3,34 +3,41 @@ services: docker
 
 env:
   matrix:
-    - REPO=apache
-    - REPO=base-php
-    - REPO=base-python
-    - REPO=base-ruby
-    - REPO=cachet
-    - REPO=drupal-php
-    - REPO=drupal6
-    - REPO=drupal7
-    - REPO=drupal8
-    - REPO=httpd
-    - REPO=mariadb
-    - REPO=matomo
-    - REPO=memcached
-    - REPO=nginx
-    - REPO=node
-    - REPO=php
-    - REPO=postgres
-    - REPO=python
-    - REPO=redis
-    - REPO=ruby
-    - REPO=solr
-    - REPO=webgrind
-    - REPO=wordpress
-    - REPO=wordpress-php
+    - script=adminer
+    - script=adminer-php
+    - script=apache
+    - script=base-php
+    - script=base-python
+    - script=base-ruby
+    - script=cachet
+    - script=cachet-php
+    - script=drupal
+    - script=drupal-6-php
+    - script=drupal-7-php
+    - script=drupal-8-php
+    - script=drupal-php
+    - script=httpd
+    - script=mariadb
+    - script=matomo
+    - script=matomo-php
+    - script=memcached
+    - script=nginx
+    - script=node
+    - script=php
+    - script=postgres
+    - script=python
+    - script=redis
+    - script=ruby
+    - script=solr
+    - script=webgrind
+    - script=webgrind-php
+    - script=wordpress
+    - script=wordpress-4-php
+    - script=wordpress-php
 
 script:
   - set -e
   - |
       docker run -e GITHUB_MACHINE_USER_API_TOKEN -e GITHUB_MACHINE_USER -e GIT_USER_EMAIL --rm -v $PWD:/images \
-            wodby/alpine:dev sh -c "cd /images && ./${REPO}.sh"
+            wodby/alpine:dev sh -c "cd /images && ./${script}.sh"
 

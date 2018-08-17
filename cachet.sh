@@ -2,4 +2,4 @@
 
 set -e
 
-./update-image.sh "wodby/cachet" "7.1" "1.x"
+./update-image.sh "wodby/drupal" "2" "" "github.com/CachetHQ/Cachet"

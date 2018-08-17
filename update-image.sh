@@ -9,9 +9,13 @@ token="${GITHUB_MACHINE_USER_API_TOKEN}"
 
 image=$1
 versions=$2
+# Some images have [version].x branches with base image stability tags.
 branch=$3
-base_image=$4
-dir=$5
+# May be a docker image different from base image or github repo.
+upstream=$4
+# When we need to update lang version for vanilla image, e.g. update PHP for vanilla drupal
+# vanilla version dir doesn't match lang version, so we should specify a concrete directory.
+subdir=$5
 
 IFS=' ' read -r -a array <<< "${versions}"
 
@@ -20,34 +24,20 @@ cd "/tmp/${image#*/}"
 
 version="${array[0]}"
 
-if [[ -z "${dir}" ]]; then
-    if [[ -f Dockerfile ]]; then
-        dir="."
-    elif [[ -d "${version}" ]]; then
-        dir="${version}"
-    else
-        dir="${version%%.*}"
-    fi
+if [[ -z "${upstream}" ]]; then
+    upstream=$(get_base_image)
 fi
 
-if [[ -z "${base_image}" ]]; then
-    base_image=$(grep -oP "(?<=FROM ).+(?=:)" "${dir}/Dockerfile")
-fi
-
+# Those with branches update via stability tags.
 if [[ -z "${branch}" ]]; then
-    alpine=""
-
-    if grep -P "BASE_IMAGE_TAG.+?-alpine" "${dir}/Makefile"; then
-        alpine=1
-    fi
-
-    update_versions "${image}" "${versions}" "${base_image}" "${dir}" "${alpine}"
+    update_versions "${versions}" "${upstream}" "${image#*/}" "${subdir}"
 fi
 
-if [[ -f ".${base_image#*/}" ]]; then
-    update_timestamps "${versions}" "${base_image}"
+# For docker images upstreams only.
+if [[ -f ".${upstream#*/}" ]]; then
+    update_timestamps "${versions}" "${upstream}"
 
     if [[ -n "${branch}" ]]; then
-        update_stability_tag "${version}" "${base_image}" "${branch}"
+        update_stability_tag "${version}" "${upstream}" "${branch}"
     fi
 fi
