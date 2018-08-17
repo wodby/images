@@ -39,11 +39,11 @@ if [[ -z "${branch}" ]]; then
         alpine=1
     fi
 
-    update_versions "${image}" "${versions}" "${base_image}" "${dir}" "${alpine}"
+    update_versions "${image}" "${versions[@]}" "${base_image}" "${dir}" "${alpine}"
 fi
 
 if [[ -f ".${base_image#*/}" ]]; then
-    update_timestamps "${versions}" "${base_image}"
+    update_timestamps "${versions[@]}" "${base_image}"
 
     if [[ -n "${branch}" ]]; then
         update_stability_tag "${version}" "${base_image}" "${branch}"
