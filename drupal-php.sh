@@ -4,4 +4,4 @@ set -e
 
 versions=(7.2 7.1 7.0 5.6 5.3)
 
-./update-image.sh "wodby/drupal-php" "${versions}" "4.x"
+./update-image.sh "wodby/drupal-php" "${versions[@]}" "4.x"

@@ -4,4 +4,4 @@ set -e
 
 versions=(7.2 7.1 7.0 5.6)
 
-./update-image.sh "wodby/php" "${versions}"
+./update-image.sh "wodby/php" "${versions[@]}"
