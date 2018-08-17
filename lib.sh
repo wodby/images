@@ -43,27 +43,6 @@ get_timestamp()
     curl -L -s "https://registry.hub.docker.com/v2/repositories/${repo}/tags/${tag}" | jq -r '.last_updated'
 }
 
-validate_versions()
-{
-    local version=$1
-    local current=$2
-    local latest=$3
-
-    if [[ -z "${latest}" ]]; then
-        echo "Couldn't find latest version of ${version}. Probably no longer supported!"
-        exit 1
-    fi
-
-    if [[ -z "${current}" ]]; then
-        echo "Couldn't get the current version of ${version}! Probably need to updated supported minor version!"
-        exit 1
-    fi
-
-    if [[ "${current}" == "${latest}" ]]; then
-        echo "The current version ${current} is already the latest version of line ${version}"
-    fi
-}
-
 join_ws()
 {
     local IFS=
@@ -120,6 +99,11 @@ update_versions()
         base_image_tags=($(get_tags "${base_image}" | grep -oP "^(${version/\./\\.}\.[0-9]+)${suffix}" | sort -rV))
         base_image_latest_ver="${base_image_tags[0]}"
 
+        if [[ -z "${base_image_latest_ver}" ]]; then
+            echo "Couldn't find latest version of ${version}. Probably no longer supported!"
+            exit 1
+        fi
+
         if [[ -f .circleci/config.yml ]]; then
             cur_ver=$(grep -oP "(?<=${name^^}_VER: )(${version/\./\\.}\.[0-9]+)" .circleci/config.yml)
         else
@@ -133,9 +117,11 @@ update_versions()
             fi
         fi
 
-        [[ -z "${cur_ver}" ]] && exit 1
+        if [[ -z "${cur_ver}" ]]; then
+            echo "Couldn't get the current version of ${version}! Probably need to update the list of supported versions!"
+            exit 1
+        fi
 
-        validate_versions "${version}" "${cur_ver}" "${base_image_latest_ver}"
         latest_timestamp=$(get_timestamp "${base_image}" "${cur_ver}")
 
         if [[ $(compare_semver "${base_image_latest_ver}" "${cur_ver}") == 0 ]]; then
