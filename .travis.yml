@@ -17,6 +17,7 @@ env:
     - REPO=matomo
     - REPO=memcached
     - REPO=nginx
+    - REPO=node
     - REPO=php
     - REPO=postgres
     - REPO=python
