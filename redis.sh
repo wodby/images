@@ -4,4 +4,4 @@ set -e
 
 versions=(4.0 3.2)
 
-./update-image.sh "wodby/redis" "${versions}"
+./update-image.sh "wodby/redis" "${versions[@]}"

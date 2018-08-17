@@ -4,4 +4,4 @@ set -e
 
 versions=(1.5)
 
-./update-image.sh "wodby/memcached" "${versions}"
+./update-image.sh "wodby/memcached" "${versions[@]}"
