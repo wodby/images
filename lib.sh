@@ -148,7 +148,7 @@ get_latest_version()
     # @todo add support for multiple versions.
     if [[ "${upstream}" == "github.com"* ]]; then
         url="https://api.github.com/repos/${upstream/github.com\//}/releases/latest"
-        latest_ver=$(github_get_latest_ver "${url}" | grep "^v?${version}\.")
+        latest_ver=$(github_get_latest_ver "${url}" | grep -P "^v?${version}\.")
     # Only patch updates.
     else
         base_image_tags=($(get_image_tags "${upstream}" | grep -oP "^(${version/\./\\.}\.[0-9]+)${suffix}" | sort -rV))
