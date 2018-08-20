@@ -125,7 +125,7 @@ get_suffix()
     local path=$(find . -name Makefile -maxdepth 2 | head -n 1)
     local suffix="(?=$)"
 
-    if grep -P "BASE_IMAGE_TAG.+?-alpine" "${path}"; then
+    if grep -qP "BASE_IMAGE_TAG.+?-alpine" "${path}"; then
         suffix="(?=\-alpine$)"
     fi
 

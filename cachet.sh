@@ -2,4 +2,4 @@
 
 set -e
 
-./update-image.sh "wodby/drupal" "2" "" "github.com/CachetHQ/Cachet"
+./update-image.sh "wodby/cachet" "2" "" "github.com/CachetHQ/Cachet"
