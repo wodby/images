@@ -141,7 +141,7 @@ get_latest_version()
 
     # Get latest stable version from github.
     # @todo add support for multiple versions.
-    if [[ "${upstream}" =~ "github\.com" ]]; then
+    if [[ "${upstream}" == "github.com"* ]]; then
         url="https://api.github.com/repos/${upstream/github.com\//}/releases/latest"
         latest_ver=$(curl --silent "${url}" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/' | grep "${version}")
     # Only patch updates.
@@ -151,7 +151,7 @@ get_latest_version()
     fi
 
     if [[ -z "${latest_ver}" ]]; then
-        echo "Couldn't find latest version of ${version}. Probably no longer supported!"
+        >&2 echo "Couldn't find latest version of ${version}. Probably no longer supported!"
         exit 1
     fi
 
@@ -188,7 +188,7 @@ update_versions()
         cur_ver=$(grep -oP "(?<=${name^^}_VER \?= ).+?$" "${dir}/Makefile")
 
         if [[ -z "${cur_ver}" ]]; then
-            echo "Couldn't get the current version of ${version}! Probably need to update the list of supported versions!"
+            >&2 echo "Couldn't get the current version of ${version}! Probably need to update the list of supported versions!"
             exit 1
         fi
 
