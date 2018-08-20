@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -e
+set -ex
 
 # Init global git config.
 git config --global user.email "${GIT_USER_EMAIL}"
