@@ -55,6 +55,7 @@ Vanilla PHP-based images:
 [ruby]: https://github.com/docker-library/ruby
 [solr]: https://github.com/docker-library/solr
 [vrana/adminer]: https://github.com/vrana/adminer
+[wodby/adminer]: https://github.com/wodby/adminer
 [wodby/alpine]: https://github.com/wodby/alpine
 [wodby/apache]: https://github.com/wodby/apache
 [wodby/base-php]: https://github.com/wodby/base-php
