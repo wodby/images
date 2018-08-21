@@ -16,13 +16,16 @@ env:
     - script=drupal-7-php
     - script=drupal-8-php
     - script=drupal-php
+    - script=elasticsearch
     - script=httpd
+    - script=kibana
     - script=mariadb
     - script=matomo
     - script=matomo-php
     - script=memcached
     - script=nginx
     - script=node
+    - script=openjdk
     - script=php
     - script=postgres
     - script=python

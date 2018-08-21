@@ -134,7 +134,20 @@ get_suffix()
 
 github_get_latest_ver()
 {
-    curl -s -u "${GITHUB_MACHINE_USER_API_TOKEN}:x-oauth-basic" "${1}" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/' | sed s/v//
+    version=$1
+    slug=$2
+
+    url="https://api.github.com/repos/${slug}/git/refs/tags"
+    user="${GITHUB_MACHINE_USER_API_TOKEN}:x-oauth-basic"
+    expr=".[] | select ( .ref | ltrimstr(\"refs/tags/\") | ltrimstr(\"v\") | startswith(\"${version}\")).ref"
+
+    versions=$(curl -s -u "${user}" "${url}" | jq -r "${expr}" | sed -E "s/refs\/tags\/v?//" | sort -rV)
+
+    if [[ "${#versions}" == 0 ]]; then
+        >&2 echo "Couldn't find latest version in line ${version} of ${slug}."
+    else
+        echo "${versions[0]}"
+    fi
 }
 
 get_latest_version()
@@ -145,18 +158,16 @@ get_latest_version()
     local suffix=$(get_suffix)
 
     # Get latest stable version from github.
-    # @todo add support for multiple versions.
     if [[ "${upstream}" == "github.com"* ]]; then
-        url="https://api.github.com/repos/${upstream/github.com\//}/releases/latest"
-        latest_ver=$(github_get_latest_ver "${url}" | grep "${version}.*")
-    # Only patch updates.
+        latest_ver=$(github_get_latest_ver "${version}" "${upstream/github.com\//}")
+    # From docker hub, only patch updates.
     else
-        base_image_tags=($(get_image_tags "${upstream}" | grep -oP "^(${version/\./\\.}\.[0-9]+)${suffix}" | sort -rV))
+        local base_image_tags=($(get_image_tags "${upstream}" | grep -oP "^(${version//\./\\.}\.[0-9]+)${suffix}" | sort -rV))
         latest_ver="${base_image_tags[0]}"
     fi
 
     if [[ -z "${latest_ver}" ]]; then
-        >&2 echo "Couldn't find latest version of ${version}. Probably no longer supported!"
+        >&2 echo "Couldn't find latest version of ${version}."
         exit 1
     fi
 
@@ -174,8 +185,6 @@ update_versions()
     local latest_ver
     local latest_timestamp
     local cur_ver
-
-    declare -a base_image_tags
 
     IFS=' ' read -r -a arr_versions <<< "${versions}"
 
@@ -203,13 +212,13 @@ update_versions()
             echo "${name^} ${cur_ver} is outdated, updating to ${latest_ver}"
 
             if [[ -f .circleci/config.yml ]]; then
-                sed -i -E "s/(${name^^}_VER): ${version/\./\\.}.*/\1: ${latest_ver}/" .circleci/config.yml
+                sed -i -E "s/(${name^^}_VER): ${version//\./\\.}.*/\1: ${latest_ver}/" .circleci/config.yml
             else
                 # There two ways how we specify versions in .travis.yml:
                 # 1. PHP72=7.2.8
                 # 2. PHP_VER=7.2.8
                 sed -i -E "s/(${name^^}${version//.})=.+/\1=${latest_ver}/" .travis.yml
-                sed -i -E "s/(${name^^}_VER)=${version/\./\\.}\.[0-9]+/\1=${latest_ver}/" .travis.yml
+                sed -i -E "s/(${name^^}_VER)=${version//\./\\.}\.[0-9]+/\1=${latest_ver}/" .travis.yml
             fi
 
             sed -i -E "s/(${name^^}_VER \?= )${cur_ver}/\1${latest_ver}/" "${dir}/Makefile"
@@ -284,7 +293,7 @@ update_stability_tag()
     git checkout "${branch}"
     git merge --no-edit master
 
-    local base_image_tags=($(get_image_tags "${base_image}" | grep -oP "(?<=${version/\./\\.}-)([0-9]\.){2}[0-9]$" | sort -rV))
+    local base_image_tags=($(get_image_tags "${base_image}" | grep -oP "(?<=${version//\./\\.}-)([0-9]\.){2}[0-9]$" | sort -rV))
     local latest_base_image_tag="${base_image_tags[0]}"
     local cur_base_image_tag=$(grep -oP "(?<=BASE_IMAGE_STABILITY_TAG=)([0-9]\.){2}[0-9]$" .travis.yml)
 
