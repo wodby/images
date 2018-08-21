@@ -141,10 +141,12 @@ github_get_latest_ver()
     user="${GITHUB_MACHINE_USER_API_TOKEN}:x-oauth-basic"
     expr=".[] | select ( .ref | ltrimstr(\"refs/tags/\") | ltrimstr(\"v\") | startswith(\"${version}\")).ref"
 
-    versions=$(curl -s -u "${user}" "${url}" | jq -r "${expr}" | sed -E "s/refs\/tags\/v?//" | sort -rV)
+    # Only stable versions.
+    versions=($(curl -s -u "${user}" "${url}" | jq -r "${expr}" | sed -E "s/refs\/tags\/v?//" | grep -oP "^[0-9\.]+$" | sort -rV))
 
     if [[ "${#versions}" == 0 ]]; then
         >&2 echo "Couldn't find latest version in line ${version} of ${slug}."
+        exit 1
     else
         echo "${versions[0]}"
     fi
