@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -ex
+set -e
 
 # Init global git config.
 git config --global user.email "${GIT_USER_EMAIL}"
@@ -90,7 +90,7 @@ release_tag()
     fi
 
     git tag -m "${message}" "${tag}"
-#    git push origin "${tag}"
+    git push origin "${tag}"
 }
 
 get_base_image()
@@ -238,7 +238,7 @@ update_versions()
         fi
     done
 
-#    git push origin
+    git push origin
 
     if [[ "${#updated[@]}" != 0 ]]; then
         ver=$(join_ws ", " "${updated[@]}")
