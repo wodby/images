@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -ex
+set -e
 
 # Init global git config.
 git config --global user.email "${GIT_USER_EMAIL}"
@@ -210,7 +210,7 @@ update_versions()
             # There two ways how we specify versions in .travis.yml (same used for updates below):
             # 1. PHP72=7.2.8
             # 2. PHP_VER=7.2.8
-            cur_ver=$(grep -oP "(?<=${name^^}${version//.}=)[0-9\.]+" .travis.yml)
+            cur_ver=$(grep -oP "(?<=${name^^}${version//.}=)[0-9\.]+" .travis.yml || true)
 
             if [[ -z "${cur_ver}" ]]; then
                 cur_ver=$(grep -oP "(?<=${name^^}_VER=)${version//\./\\.}[0-9\.]+" .travis.yml)
