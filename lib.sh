@@ -242,7 +242,7 @@ update_versions()
                 sed -i "s/${cur_ver}#.*/${latest_ver}#${latest_timestamp}/" ".${upstream#*/}"
             fi
 
-            _git_commit ./ "Update ${name^} to ${latest_ver}"
+            _git_commit ./ "Update ${name} to ${latest_ver}"
             updated+=("${latest_ver}")
         else
             echo "Version ${cur_ver} is already the latest version"
@@ -325,6 +325,6 @@ update_stability_tag()
             minor_update=1
         fi
 
-        _release_tag "Base image updated to ${latest_base_image_tag}" "${minor_update}"
+        _release_tag "Base image stability tag updated to ${latest_base_image_tag}" "${minor_update}"
     fi
 }
