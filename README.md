@@ -4,7 +4,9 @@
 
 ## Auto-updated images
 
-Forks:
+### Forks
+
+Just syncing with upstream
 
 | Image                 | Upstream  |
 | --------------------- | --------- |
@@ -14,7 +16,10 @@ Forks:
 | [wodby/httpd]         | [httpd]   |
 | [wodby/openjdk]       | [openjdk] |
 
-Patch updates from base docker images (patch updates only):
+### Images based on official images or their forks
+
+* Patch version updates
+* New stability tags release
 
 | Image                 | Upstream (base image) | Versions                                               |
 | --------------------- | --------------------- | ------------------------------------------------------ |
@@ -28,7 +33,11 @@ Patch updates from base docker images (patch updates only):
 | [wodby/ruby]          | [wodby/base-ruby]     | `2.5`, `2.4`, `2.3`                                    |
 | [wodby/solr]          | [solr]                | `7.4`, `7.3`, `7.2`, `7.1`, `6.6`, `6.4`, `5.5`, `5.4` |
 
-Rebuild against updated base image, rebase to newer stability tags, issuing new stability tags:
+### Descendant images
+
+* Rebuild against updated base image
+* Rebase to newer stability tags
+* New stability tags release
 
 | Image                 | Upstream (base image) | Stability branch |
 | --------------------- | --------------------- | ---------------- |
@@ -41,7 +50,10 @@ Rebuild against updated base image, rebase to newer stability tags, issuing new 
 | [wodby/wordpress]     | [wodby/wordpress-php] | `4.x`            |
 | [wodby/webgrind]      | [wodby/php]           | `1.x`            |
 
-Patch and minor updates from upstream other than base image:
+### Version updates from upstream other than base image
+
+* Minor and patch version updates
+* New stability tags release
 
 | Image                 | Upstream                | Version                                         |
 | --------------------- | ----------------------- | ----------------------------------------------- |
