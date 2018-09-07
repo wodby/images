@@ -2,4 +2,6 @@
 
 set -e
 
-update.sh "wodby/redis" "4.0 3.2"
+. ../update.sh
+
+update_from_base_image "wodby/redis" "4.0 3.2"

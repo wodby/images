@@ -2,4 +2,6 @@
 
 set -e
 
-update.sh "wodby/apache" "2.4"
+. ../update.sh
+
+update_from_base_image "wodby/apache" "2.4"

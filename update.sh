@@ -153,7 +153,7 @@ _get_latest_version()
     echo "${latest_ver}"
 }
 
-git_clone()
+_git_clone()
 {
     local image="${1}"
 
@@ -161,7 +161,7 @@ git_clone()
     cd "/tmp/${image#*/}"
 }
 
-get_base_image()
+_get_base_image()
 {
     local path=$(find . -name Dockerfile -maxdepth 2 | head -n 1)
     local base_image=""
@@ -169,24 +169,7 @@ get_base_image()
     grep -oP "(?<=FROM ).+(?=:)" "${path}"
 }
 
-sync_fork()
-{
-    local repo="${1}"
-    local upstream="${2}"
-
-    git clone "https://${GITHUB_MACHINE_USER}:${GITHUB_MACHINE_USER_API_TOKEN}@github.com/${repo}" "/tmp/${repo#*/}"
-    cd "/tmp/${repo#*/}"
-    git remote add upstream "https://github.com/docker-library/${upstream}"
-    git fetch upstream
-    git merge --strategy-option ours --no-edit upstream/master
-
-    ./wodby-meta-update.sh
-
-    _git_commit ./ "Update from upstream"
-    git push origin
-}
-
-update_versions()
+_update_versions()
 {
     local versions="${1}"
     local upstream="${2}"
@@ -260,7 +243,7 @@ update_versions()
     fi
 }
 
-update_timestamps()
+_update_timestamps()
 {
     local versions="${1}"
     local base_image="${2}"
@@ -294,7 +277,7 @@ update_timestamps()
     fi
 }
 
-update_stability_tag()
+_update_stability_tag()
 {
     local version="${1}"
     local base_image="${2}"
@@ -330,4 +313,73 @@ update_stability_tag()
 
         _release_tag "Base image stability tag updated to ${latest_base_image_tag}" "${minor_update}"
     fi
+}
+
+sync_fork()
+{
+    local repo="${1}"
+    local upstream="${2}"
+
+    git clone "https://${GITHUB_MACHINE_USER}:${GITHUB_MACHINE_USER_API_TOKEN}@github.com/${repo}" "/tmp/${repo#*/}"
+    cd "/tmp/${repo#*/}"
+    git remote add upstream "https://github.com/docker-library/${upstream}"
+    git fetch upstream
+    git merge --strategy-option ours --no-edit upstream/master
+
+    ./wodby-meta-update.sh
+
+    _git_commit ./ "Update from upstream"
+    git push origin
+}
+
+update_from_base_image()
+{
+    image="${1}"
+    versions="${2}"
+
+    _git_clone "${image}"
+
+    upstream=$(_get_base_image)
+
+    if [[ -f ".${upstream#*/}" ]]; then
+        echo "ERROR: Missing .${upstream#*/} file!"
+        exit 1
+    fi
+
+    _update_versions "${versions}" "${upstream}" "${image#*/}"
+    _update_timestamps "${versions}" "${upstream}"
+}
+
+rebuild_and_rebase()
+{
+    image="${1}"
+    versions="${2}"
+    branch="${3}"
+
+    _git_clone "${image}"
+
+    upstream=$(_get_base_image)
+
+    if [[ -f ".${upstream#*/}" ]]; then
+        echo "ERROR: Missing .${upstream#*/} file!"
+        exit 1
+    fi
+
+    IFS=' ' read -r -a array <<< "${versions}"
+
+    ver="${array[0]}"
+
+    _update_timestamps "${versions}" "${upstream}"
+    _update_stability_tag "${ver}" "${upstream}" "${branch}"
+}
+
+update_from_upstream()
+{
+    image="${1}"
+    versions="${2}"
+    upstream="${3}"
+
+    _git_clone "${image}"
+
+    _update_versions "${versions}" "${upstream}" "${image#*/}"
 }

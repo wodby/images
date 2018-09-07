@@ -2,4 +2,6 @@
 
 set -e
 
-update.sh "wodby/drupal" "5.6 5.3" "4.x"
+. ../update.sh
+
+rebuild_and_rebase "wodby/drupal" "5.6 5.3" "4.x"
