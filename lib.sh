@@ -153,6 +153,14 @@ _get_latest_version()
     echo "${latest_ver}"
 }
 
+git_clone()
+{
+    local image="${1}"
+
+    git clone "https://${GITHUB_MACHINE_USER}:${GITHUB_MACHINE_USER_API_TOKEN}@github.com/${image}" "/tmp/${image#*/}"
+    cd "/tmp/${image#*/}"
+}
+
 get_base_image()
 {
     local path=$(find . -name Dockerfile -maxdepth 2 | head -n 1)
@@ -183,7 +191,6 @@ update_versions()
     local versions="${1}"
     local upstream="${2}"
     local name="${3}"
-    local subdir="${4}"
 
     local updated=()
     local latest_ver
@@ -198,11 +205,7 @@ update_versions()
     echo "============================"
 
     for version in "${arr_versions[@]}"; do
-        if [[ -n "${subdir}" ]]; then
-            dir="${subdir}"
-        else
-            dir=$(_get_dir "${version}")
-        fi
+        dir=$(_get_dir "${version}")
 
         if [[ -f .circleci/config.yml ]]; then
             cur_ver=$(grep -oP "(?<=${name^^}_VER: )${version//\./\\.}\.[0-9\.]+" .circleci/config.yml)

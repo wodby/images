@@ -3,44 +3,48 @@ services: docker
 
 env:
   matrix:
-    - script=adminer
-    - script=adminer-php
-    - script=apache
-    - script=base-php
-    - script=base-python
-    - script=base-ruby
-    - script=cachet
-    - script=cachet-php
-    - script=drupal
-    - script=drupal-6-php
-    - script=drupal-7-php
-    - script=drupal-8-php
-    - script=drupal-php
-    - script=elasticsearch
-    - script=httpd
-    - script=kibana
-    - script=mariadb
-    - script=matomo
-    - script=matomo-php
-    - script=memcached
-    - script=nginx
-    - script=node
-    - script=openjdk
-    - script=php
-    - script=postgres
-    - script=python
-    - script=redis
-    - script=ruby
-    - script=solr
-    - script=webgrind
-    - script=webgrind-php
-    - script=wordpress
-    - script=wordpress-4-php
-    - script=wordpress-php
+    - script=forks/base-php
+    - script=forks/base-python
+    - script=forks/base-ruby
+    - script=forks/httpd
+    - script=forks/openjdk
+
+    - script=images/apache
+    - script=images/memcached
+    - script=images/node
+    - script=images/php
+    - script=images/postgres
+    - script=images/python
+    - script=images/redis
+    - script=images/ruby
+    - script=images/solr
+
+    - script=vanilla/adminer
+    - script=vanilla/cachet
+    - script=vanilla/drupal
+    - script=vanilla/elasticsearch
+    - script=vanilla/kibana
+    - script=vanilla/mariadb
+    - script=vanilla/matomo
+    - script=vanilla/nginx
+    - script=vanilla/webgrind
+    - script=vanilla/wordpress
+
+    # Do not change sorting, the order is important to avoid parallel pushes.
+    - script=stability-tags/drupal-php
+    - script=stability-tags/wordpress-php
+    - script=stability-tags/adminer-php
+    - script=stability-tags/cachet-php
+    - script=stability-tags/drupal-8-php
+    - script=stability-tags/matomo-php
+    - script=stability-tags/webgrind-php
+    - script=stability-tags/drupal-7-php
+    - script=stability-tags/wordpress-4-php
+    - script=stability-tags/drupal-6-php
 
 script:
   - set -e
   - |
       docker run -e GITHUB_MACHINE_USER_API_TOKEN -e GITHUB_MACHINE_USER -e GIT_USER_EMAIL --rm -v $PWD:/images \
-            wodby/alpine:dev sh -c "cd /images && ./${script}.sh"
+            wodby/alpine:3.8-dev-2.1.0 sh -c "cd /images && ./${script}.sh"
 
