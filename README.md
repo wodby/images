@@ -4,44 +4,61 @@
 
 ## Auto-updated images
 
-Generic usage images:
+Forks:
 
-| Image                 | Base image            | Updates source          |
-| --------------------- | --------------------- | ----------------------- |
-| [wodby/apache]        | [wodby/httpd]         | -//-                    |
-| [wodby/base-php]      | [wodby/alpine]        | [php]                   |
-| [wodby/base-python]   | [wodby/alpine]        | [python]                |
-| [wodby/base-ruby]     | [wodby/alpine]        | [ruby]                  |
-| [wodby/drupal-php]    | [wodby/php]           | -//-                    |
-| [wodby/elasticsearch] | [wodby/openjdk]       | [elastic/elasticsearch] |
-| [wodby/httpd]         | [wodby/alpine]        | [httpd]                 |
-| [wodby/kibana]        | [wodby/openjdk]       | [elastic/kibana]        |
-| [wodby/mariadb]       | [wodby/alpine]        | [mariadb]               |
-| [wodby/memcached]     | [memcached]           | -//-                    |
-| [wodby/nginx]         | [wodby/alpine]        | [nginx]                 |
-| [wodby/node]          | [node]                | -//-                    |
-| [wodby/openjdk]       | [wodby/alpine]        | [openjdk]               |
-| [wodby/php]           | [wodby/base-php]      | -//-                    |
-| [wodby/postgres]      | [postgres]            | -//-                    |
-| [wodby/python]        | [wodby/base-python]   | -//-                    |
-| [wodby/redis]         | [redis]               | -//-                    |
-| [wodby/ruby]          | [wodby/base-ruby]     | -//-                    |
-| [wodby/solr]          | [solr]                | -//-                    |
-| [wodby/wordpress-php] | [wodby/php]           | -//-                    |
+| Image                 | Upstream  |
+| --------------------- | --------- |
+| [wodby/base-php]      | [php]     |
+| [wodby/base-python]   | [python]  |
+| [wodby/base-ruby]     | [ruby]    |
+| [wodby/httpd]         | [httpd]   |
+| [wodby/openjdk]       | [openjdk] |
 
-Vanilla PHP-based images:
+Update versions from base docker images (patch updates only):
 
-| Image                 | Base image (PHP updates) | Vanilla updates source |
-| --------------------- | ------------------------ | ---------------------- |
-| [wodby/adminer]       | [wodby/php]              | [vrana/adminer]        |
-| [wodby/cachet]        | [wodby/php]              | [CachetHQ/Cachet]      |
-| [wodby/drupal]        | [wodby/drupal-php]       | [drupal]               |
-| [wodby/matomo]        | [wodby/php]              | [matomo-org/matomo]    |
-| [wodby/webgrind]      | [wodby/php]              | [jokkedk/webgrind]     |
-| [wodby/wordpress]     | [wodby/wordpress-php]    | [wordpress]            |
+| Image                 | Upstream (base image) | Versions                                               |
+| --------------------- | --------------------- | -----------------------------------------------        |
+| [wodby/apache]        | [wodby/httpd]         | `2.4`                                                  |
+| [wodby/memcached]     | [memcached]           | `1.5`                                                  |
+| [wodby/node]          | [node]                | `10.9`, `8.11`, `6.14`                                 |
+| [wodby/php]           | [wodby/base-php]      | `7.2`, `7.1`, `7.0`, `5.6`                             |
+| [wodby/postgres]      | [postgres]            | `10`, `9.6`, `9.5`, `9.4`, `9.3`                       |
+| [wodby/python]        | [wodby/base-python]   | `3.7`, `3.6`, `3.5`, `3.4`, `2.7`                      |
+| [wodby/redis]         | [redis]               | `4.0`, `3.2`                                           |
+| [wodby/ruby]          | [wodby/base-ruby]     | `2.5`, `2.4`, `2.3`                                    |
+| [wodby/solr]          | [solr]                | `7.4`, `7.3`, `7.2`, `7.1`, `6.6`, `6.4`, `5.5`, `5.4` |
 
-Manual updates:
+Rebuild against updated base image, rebase to newer stability tags, issuing new tags:
 
+| Image                 | Upstream (base image) |
+| --------------------- | --------------------- |
+| [wodby/adminer]       | [wodby/php]           |
+| [wodby/cachet]        | [wodby/php]           |
+| [wodby/drupal-php]    | [wodby/php]           |
+| [wodby/drupal]        | [wodby/drupal-php]    |
+| [wodby/matomo]        | [wodby/php]           |
+| [wodby/wordpress-php] | [wodby/php]           |
+| [wodby/wordpress]     | [wodby/wordpress-php] |
+| [wodby/webgrind]      | [wodby/php]           |
+
+Vanilla updates:
+
+| Image                 | Upstream                | Version                                         |
+| --------------------- | ----------------------- | ----------------------------------------------- |
+| [wodby/elasticsearch] | [elastic/elasticsearch] | `6.3`, `6.2`, `6.1`, `6.0`, `5.6`, `5.5`, `5.4` |
+| [wodby/kibana]        | [elastic/kibana]        | `6.3`, `6.2`, `6.1`, `6.0`, `5.6`, `5.5`, `5.4` |
+| [wodby/mariadb]       | [mariadb]               | `10.3`, `10.2`, `10.1`                          |
+| [wodby/nginx]         | [nginx]                 | `1.15`, `1.14`, `1.13`                          |
+| [wodby/adminer]       | [vrana/adminer]         | `4`                                             |
+| [wodby/cachet]        | [CachetHQ/Cachet]       | `2`                                             |
+| [wodby/drupal]        | [drupal]                | `8`, `7`                                        |
+| [wodby/matomo]        | [matomo-org/matomo]     | `3`                                             |
+| [wodby/webgrind]      | [jokkedk/webgrind]      | `1`                                             |
+| [wodby/wordpress]     | [wordpress]             | `4`                                             |
+
+Not automated:
+
+* Adding new minor version, setting a new minor version as latest
 * Java version for [wodby/elasticsearch] and [wodby/kibana]
 * [wodby/alpine]
 * [wodby/opensmtpd]
