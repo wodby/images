@@ -2,6 +2,6 @@
 
 set -e
 
-. ../lib.sh
+. ../update.sh
 
 sync_fork "wodby/httpd" "httpd"

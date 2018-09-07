@@ -31,16 +31,16 @@ env:
     - dir=stability-tags script=wordpress-4-php
     - dir=stability-tags script=drupal-6-php
 
-    - dir=vanilla script=adminer
-    - dir=vanilla script=cachet
-    - dir=vanilla script=drupal
-    - dir=vanilla script=elasticsearch
-    - dir=vanilla script=kibana
-    - dir=vanilla script=mariadb
-    - dir=vanilla script=matomo
-    - dir=vanilla script=nginx
-    - dir=vanilla script=webgrind
-    - dir=vanilla script=wordpress
+    - dir=upstream script=adminer
+    - dir=upstream script=cachet
+    - dir=upstream script=drupal
+    - dir=upstream script=elasticsearch
+    - dir=upstream script=kibana
+    - dir=upstream script=mariadb
+    - dir=upstream script=matomo
+    - dir=upstream script=nginx
+    - dir=upstream script=webgrind
+    - dir=upstream script=wordpress
 
 script:
   - set -e

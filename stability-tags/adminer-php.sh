@@ -2,4 +2,6 @@
 
 set -e
 
-update.sh "wodby/adminer" "4" "1.x"
+. ../update.sh
+
+rebuild_and_rebase "wodby/adminer" "4" "1.x"

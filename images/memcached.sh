@@ -2,4 +2,6 @@
 
 set -e
 
-update.sh "wodby/memcached" "1.5"
+. ../update.sh
+
+update_from_base_image "wodby/memcached" "1.5"

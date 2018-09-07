@@ -14,10 +14,10 @@ Forks:
 | [wodby/httpd]         | [httpd]   |
 | [wodby/openjdk]       | [openjdk] |
 
-Update versions from base docker images (patch updates only):
+Patch updates from base docker images (patch updates only):
 
 | Image                 | Upstream (base image) | Versions                                               |
-| --------------------- | --------------------- | -----------------------------------------------        |
+| --------------------- | --------------------- | ------------------------------------------------------ |
 | [wodby/apache]        | [wodby/httpd]         | `2.4`                                                  |
 | [wodby/memcached]     | [memcached]           | `1.5`                                                  |
 | [wodby/node]          | [node]                | `10.9`, `8.11`, `6.14`                                 |
@@ -28,20 +28,20 @@ Update versions from base docker images (patch updates only):
 | [wodby/ruby]          | [wodby/base-ruby]     | `2.5`, `2.4`, `2.3`                                    |
 | [wodby/solr]          | [solr]                | `7.4`, `7.3`, `7.2`, `7.1`, `6.6`, `6.4`, `5.5`, `5.4` |
 
-Rebuild against updated base image, rebase to newer stability tags, issuing new tags:
+Rebuild against updated base image, rebase to newer stability tags, issuing new stability tags:
 
-| Image                 | Upstream (base image) |
-| --------------------- | --------------------- |
-| [wodby/adminer]       | [wodby/php]           |
-| [wodby/cachet]        | [wodby/php]           |
-| [wodby/drupal-php]    | [wodby/php]           |
-| [wodby/drupal]        | [wodby/drupal-php]    |
-| [wodby/matomo]        | [wodby/php]           |
-| [wodby/wordpress-php] | [wodby/php]           |
-| [wodby/wordpress]     | [wodby/wordpress-php] |
-| [wodby/webgrind]      | [wodby/php]           |
+| Image                 | Upstream (base image) | Stability branch |
+| --------------------- | --------------------- | ---------------- |
+| [wodby/adminer]       | [wodby/php]           | `1.x`            |
+| [wodby/cachet]        | [wodby/php]           | `1.x`            |
+| [wodby/drupal-php]    | [wodby/php]           | `4.x`            |
+| [wodby/drupal]        | [wodby/drupal-php]    | `4.x`            |
+| [wodby/matomo]        | [wodby/php]           | `1.x`            |
+| [wodby/wordpress-php] | [wodby/php]           | `4.x`            |
+| [wodby/wordpress]     | [wodby/wordpress-php] | `4.x`            |
+| [wodby/webgrind]      | [wodby/php]           | `1.x`            |
 
-Vanilla updates:
+Patch and minor updates from upstream other than base image:
 
 | Image                 | Upstream                | Version                                         |
 | --------------------- | ----------------------- | ----------------------------------------------- |
@@ -59,6 +59,7 @@ Vanilla updates:
 Not automated:
 
 * Adding new minor version, setting a new minor version as latest
+* Updates to stability branches 
 * Java version for [wodby/elasticsearch] and [wodby/kibana]
 * [wodby/alpine]
 * [wodby/opensmtpd]
