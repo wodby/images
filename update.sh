@@ -341,7 +341,7 @@ update_from_base_image()
 
     upstream=$(_get_base_image)
 
-    if [[ -f ".${upstream#*/}" ]]; then
+    if [[ ! -f ".${upstream#*/}" ]]; then
         echo "ERROR: Missing .${upstream#*/} file!"
         exit 1
     fi
@@ -360,7 +360,7 @@ rebuild_and_rebase()
 
     upstream=$(_get_base_image)
 
-    if [[ -f ".${upstream#*/}" ]]; then
+    if [[ ! -f ".${upstream#*/}" ]]; then
         echo "ERROR: Missing .${upstream#*/} file!"
         exit 1
     fi
