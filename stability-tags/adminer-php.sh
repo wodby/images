@@ -4,4 +4,4 @@ set -e
 
 . ../update.sh
 
-rebuild_and_rebase "wodby/adminer" "4" "1.x"
+rebuild_and_rebase "wodby/adminer" "7.1" "1.x"
