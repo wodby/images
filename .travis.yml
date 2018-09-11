@@ -45,6 +45,6 @@ env:
 script:
   - set -e
   - |
-      docker run -e GITHUB_MACHINE_USER_API_TOKEN -e GITHUB_MACHINE_USER -e GIT_USER_EMAIL --rm -v $PWD:/images \
-            wodby/alpine:3.8-dev-2.1.0 sh -c "cd /images/${dir} && ./${script}.sh"
+      docker run -e GITHUB_MACHINE_USER_API_TOKEN -e GITHUB_MACHINE_USER -e GIT_USER_EMAIL -e GIT_USER_NAME \
+            --rm -v $PWD:/images wodby/alpine:3.8-dev-2.1.0 sh -c "cd /images/${dir} && ./${script}.sh"
 
