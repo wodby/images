@@ -41,7 +41,7 @@ Just syncing with upstream
 
 | Image                 | Upstream (base image) | Stability branch |
 | --------------------- | --------------------- | ---------------- |
-| [wodby/adminer]       | [wodby/php]           | `1.x`            |
+| [wodby/adminer]       | [wodby/php]           | `2.x`            |
 | [wodby/cachet]        | [wodby/php]           | `1.x`            |
 | [wodby/drupal-php]    | [wodby/php]           | `4.x`            |
 | [wodby/drupal]        | [wodby/drupal-php]    | `4.x`            |
