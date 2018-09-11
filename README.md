@@ -77,8 +77,6 @@ Not automated:
 * [wodby/opensmtpd]
 * [wodby/varnish]
 
-`-//-` means same as the base image.
-
 [CachetHQ/Cachet]: https://github.com/CachetHQ/Cachet
 [drupal]: https://github.com/docker-library/drupal
 [elastic/elasticsearch]: https://github.com/elastic/elasticsearch

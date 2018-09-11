@@ -2,9 +2,13 @@
 
 set -e
 
+#if [[ -n "${DEBUG}" ]]; then
+    set -x
+#fi
+
 # Init global git config.
 git config --global user.email "${GIT_USER_EMAIL}"
-git config --global user.name "Wodby Robot"
+git config --global user.name "${GIT_USER_NAME}"
 
 _git_commit()
 {
@@ -218,6 +222,13 @@ _update_versions()
             else
                 sed -i -E "s/(${name^^}${version//.})=.+/\1=${latest_ver}/" .travis.yml
                 sed -i -E "s/(${name^^}_VER)=${version//\./\\.}\.[0-9\.]+/\1=${latest_ver}/" .travis.yml
+            fi
+
+            # If version is major we should also update minor tags.
+            if [[ "${version}" =~ ^[0-9]+$ ]]; then
+                sed -i -E "s/(TAGS)=.+?${version//\./\\.}\.[0-9\.]+,/\1=${latest_ver%.*},/" .travis.yml
+                sed -i -E "s/\`${version//\./\\.}\.[0-9\.]+\`/\`${latest_ver%.*}\`/" README.md
+                sed -i -E "s/\:${version//\./\\.}\.[0-9\.]+(-X\.X\.X)/:${latest_ver%.*}\1/" README.md
             fi
 
             sed -i -E "s/(${name^^}_VER \?= )${cur_ver}/\1${latest_ver}/" "${dir}/Makefile"
