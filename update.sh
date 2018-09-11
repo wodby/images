@@ -185,6 +185,8 @@ _update_versions()
     local cur_ver
     local dir
 
+    local minor_update
+
     IFS=' ' read -r -a arr_versions <<< "${versions}"
 
     echo "============================"
@@ -226,6 +228,7 @@ _update_versions()
 
             # If version is major we should also update minor tags.
             if [[ "${version}" =~ ^[0-9]+$ ]]; then
+                minor_update=1
                 sed -i -E "s/(TAGS)=.+?${version//\./\\.}\.[0-9\.]+,/\1=${latest_ver%.*},/" .travis.yml
                 sed -i -E "s/\`${version//\./\\.}\.[0-9\.]+\`/\`${latest_ver%.*}\`/" README.md
                 sed -i -E "s/\:${version//\./\\.}\.[0-9\.]+(-X\.X\.X)/:${latest_ver%.*}\1/" README.md
@@ -250,7 +253,7 @@ _update_versions()
 
     if [[ "${#updated[@]}" != 0 ]]; then
         ver=$(_join_ws ", " "${updated[@]}")
-        _release_tag "${name^} updated to ${ver}"
+        _release_tag "${name^} updated to ${ver}" "${minor_update}"
     fi
 }
 
