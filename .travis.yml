@@ -3,44 +3,44 @@ services: docker
 
 env:
   matrix:
-#    - dir=forks script=base-php
-#    - dir=forks script=base-python
-#    - dir=forks script=base-ruby
-#    - dir=forks script=httpd
-#    - dir=forks script=openjdk
-#
-#    - dir=images script=apache
-#    - dir=images script=memcached
-#    - dir=images script=node
-#    - dir=images script=php
-#    - dir=images script=postgres
-#    - dir=images script=python
-#    - dir=images script=redis
-#    - dir=images script=ruby
-#    - dir=images script=solr
-#
-#    # Do not change sorting, the order is important to avoid parallel pushes.
-#    - dir=stability-tags script=drupal-php
-#    - dir=stability-tags script=wordpress-php
-#    - dir=stability-tags script=adminer-php
-#    - dir=stability-tags script=cachet-php
-#    - dir=stability-tags script=drupal-8-php
-#    - dir=stability-tags script=matomo-php
-#    - dir=stability-tags script=webgrind-php
-#    - dir=stability-tags script=drupal-7-php
-#    - dir=stability-tags script=wordpress-4-php
-#    - dir=stability-tags script=drupal-6-php
-#
-#    - dir=upstream script=adminer
-#    - dir=upstream script=cachet
-#    - dir=upstream script=drupal
-#    - dir=upstream script=elasticsearch
-#    - dir=upstream script=kibana
-#    - dir=upstream script=mariadb
-#    - dir=upstream script=matomo
-#    - dir=upstream script=nginx
-#    - dir=upstream script=webgrind
-#    - dir=upstream script=wordpress
+    - dir=forks script=base-php
+    - dir=forks script=base-python
+    - dir=forks script=base-ruby
+    - dir=forks script=httpd
+    - dir=forks script=openjdk
+
+    - dir=images script=apache
+    - dir=images script=memcached
+    - dir=images script=node
+    - dir=images script=php
+    - dir=images script=postgres
+    - dir=images script=python
+    - dir=images script=redis
+    - dir=images script=ruby
+    - dir=images script=solr
+
+    # Do not change sorting, the order is important to avoid parallel pushes.
+    - dir=stability-tags script=drupal-php
+    - dir=stability-tags script=wordpress-php
+    - dir=stability-tags script=adminer-php
+    - dir=stability-tags script=cachet-php
+    - dir=stability-tags script=drupal-8-php
+    - dir=stability-tags script=matomo-php
+    - dir=stability-tags script=webgrind-php
+    - dir=stability-tags script=drupal-7-php
+    - dir=stability-tags script=wordpress-4-php
+    - dir=stability-tags script=drupal-6-php
+
+    - dir=upstream script=adminer
+    - dir=upstream script=cachet
+    - dir=upstream script=drupal
+    - dir=upstream script=elasticsearch
+    - dir=upstream script=kibana
+    - dir=upstream script=mariadb
+    - dir=upstream script=matomo
+    - dir=upstream script=nginx
+    - dir=upstream script=webgrind
+    - dir=upstream script=wordpress
 
     - dir=docker4x script=drupal
     - dir=docker4x script=php

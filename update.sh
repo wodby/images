@@ -444,9 +444,8 @@ update_docker4x()
                 find tests/ -name .env -exec sed -i -E "s/(${name^^}_STABILITY_TAG)=${current}/\1=${latest}/" .env {} +
             fi
 
-            git diff
             _git_commit ./ "Update ${name} stability tag to ${latest}"
-#            git push origin
+            git push origin
         else
             echo "${name}: stability tag ${current} is already latest"
         fi
