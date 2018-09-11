@@ -42,6 +42,11 @@ env:
     - dir=upstream script=webgrind
     - dir=upstream script=wordpress
 
+    - dir=docker4x script=drupal
+    - dir=docker4x script=php
+    - dir=docker4x script=ruby
+    - dir=docker4x script=wordpress
+
 script:
   - set -e
   - |

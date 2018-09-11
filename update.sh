@@ -2,9 +2,9 @@
 
 set -e
 
-if [[ -n "${DEBUG}" ]]; then
+#if [[ -n "${DEBUG}" ]]; then
     set -x
-fi
+#fi
 
 # Init global git config.
 git config --global user.email "${GIT_USER_EMAIL}"
@@ -159,10 +159,10 @@ _get_latest_version()
 
 _git_clone()
 {
-    local image="${1}"
+    local slug="${1}"
 
-    git clone "https://${GITHUB_MACHINE_USER}:${GITHUB_MACHINE_USER_API_TOKEN}@github.com/${image}" "/tmp/${image#*/}"
-    cd "/tmp/${image#*/}"
+    git clone "https://${GITHUB_MACHINE_USER}:${GITHUB_MACHINE_USER_API_TOKEN}@github.com/${slug}" "/tmp/${slug#*/}"
+    cd "/tmp/${slug#*/}"
 }
 
 _get_base_image()
@@ -306,26 +306,25 @@ _update_stability_tag()
     git checkout "${branch}"
     git merge --no-edit master
 
-    local base_image_tags=($(_get_image_tags "${base_image}" | grep -oP "(?<=${version//\./\\.}-)[0-9\.]+$" | sort -rV))
-    local latest_base_image_tag="${base_image_tags[0]}"
-    local cur_base_image_tag=$(grep -oP "(?<=BASE_IMAGE_STABILITY_TAG=)[0-9\.]+$" .travis.yml)
+    local latest=$(_get_image_tags "${base_image}" | grep -oP "(?<=${version//\./\\.}-)[0-9\.]+$" | sort -rV | head -n1)
+    local current=$(grep -oP "(?<=BASE_IMAGE_STABILITY_TAG=)[0-9\.]+$" .travis.yml)
 
-    if [[ $(compare_semver "${latest_base_image_tag}" "${cur_base_image_tag}") == 0 ]]; then
-        sed -i -E "s/(BASE_IMAGE_STABILITY_TAG=)${cur_base_image_tag}/\1${latest_base_image_tag}/" .travis.yml
-        _git_commit ./ "Update base image stability tag to ${latest_base_image_tag}"
+    if [[ $(compare_semver "${latest}" "${current}") == 0 ]]; then
+        sed -i -E "s/(BASE_IMAGE_STABILITY_TAG=)${current}/\1${latest}/" .travis.yml
+        _git_commit ./ "Update base image stability tag to ${latest}"
         tag=1
     else
-        echo "Base image stability tag ${cur_base_image_tag} is already the latest"
+        echo "Base image stability tag ${current} is already the latest"
     fi
 
     git push origin
 
     if [[ -n "${tag}" ]]; then
-        if [[ "${cur_base_image_tag%.*}" != "${latest_base_image_tag%.*}" ]]; then
+        if [[ "${current%.*}" != "${latest%.*}" ]]; then
             minor_update=1
         fi
 
-        _release_tag "Base image stability tag updated to ${latest_base_image_tag}" "${minor_update}"
+        _release_tag "Base image stability tag updated to ${latest}" "${minor_update}"
     fi
 }
 
@@ -348,12 +347,12 @@ sync_fork()
 
 update_from_base_image()
 {
-    image="${1}"
-    versions="${2}"
+    local image="${1}"
+    local versions="${2}"
 
     _git_clone "${image}"
 
-    upstream=$(_get_base_image)
+    local upstream=$(_get_base_image)
 
     if [[ ! -f ".${upstream#*/}" ]]; then
         echo "ERROR: Missing .${upstream#*/} file!"
@@ -366,13 +365,13 @@ update_from_base_image()
 
 rebuild_and_rebase()
 {
-    image="${1}"
-    versions="${2}"
-    branch="${3}"
+    local image="${1}"
+    local versions="${2}"
+    local branch="${3}"
 
     _git_clone "${image}"
 
-    upstream=$(_get_base_image)
+    local upstream=$(_get_base_image)
 
     if [[ ! -f ".${upstream#*/}" ]]; then
         echo "ERROR: Missing .${upstream#*/} file!"
@@ -381,19 +380,59 @@ rebuild_and_rebase()
 
     IFS=' ' read -r -a array <<< "${versions}"
 
-    ver="${array[0]}"
-
     _update_timestamps "${versions}" "${upstream}"
-    _update_stability_tag "${ver}" "${upstream}" "${branch}"
+    _update_stability_tag "${array[0]}" "${upstream}" "${branch}"
 }
 
 update_from_upstream()
 {
-    image="${1}"
-    versions="${2}"
-    upstream="${3}"
+    local image="${1}"
+    local versions="${2}"
+    local upstream="${3}"
 
     _git_clone "${image}"
 
     _update_versions "${versions}" "${upstream}" "${image#*/}"
+}
+
+update_docker4x()
+{
+    local project="${1}"
+
+    local lines=()
+    local image
+    local env_var
+    local tags
+    local current
+    local latest
+
+    _git_clone "${project}"
+
+    lines=($(grep -hoP "(?<=image: )wodby\/.+" docker-compose*.yml))
+
+    for line in "${lines[@]}"; do
+        [[ "${line}" =~ (.+?):\$(.+) ]]
+
+        image="${BASH_REMATCH[1]}"
+        env_var="${BASH_REMATCH[2]}"
+
+        tags=($(grep -oP "(?<=${env_var}=).+" .env))
+
+        if [[ "${tags[0]}" == "latest" ]]; then
+            continue
+        fi
+
+        current="${tags[0]##*-}"
+        latest=$(_get_image_tags "${image}" | grep -oP "(?<=-)[0-9\.]+$" | sort -rV | head -n1)
+        name="${image#*/}"
+
+        if [[ $(compare_semver "${latest}" "${current}") == 0 ]]; then
+            sed -i -E "s/(${env_var}=.+?)-${current}/\1-${latest}/" .env
+            git diff
+            _git_commit ./ "Update ${image#*/} stability tag to ${latest}"
+#            git push origin
+        else
+            echo "${image#*/}: stability tag ${current} is already latest"
+        fi
+    done
 }

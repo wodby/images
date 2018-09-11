@@ -68,6 +68,17 @@ Just syncing with upstream
 | [wodby/webgrind]      | [jokkedk/webgrind]      | `1`                                             |
 | [wodby/wordpress]     | [wordpress]             | `4`                                             |
 
+### Docker4X projects
+
+Update images stability tags
+
+| Project                  |
+| ------------------------ |
+| [wodby/docker4drupal]    |
+| [wodby/docker4php]       |
+| [wodby/docker4ruby]      |
+| [wodby/docker4wordpress] |
+
 Not automated:
 
 * Adding new minor version, setting a new minor version as latest
