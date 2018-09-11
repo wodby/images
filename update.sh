@@ -2,9 +2,9 @@
 
 set -e
 
-#if [[ -n "${DEBUG}" ]]; then
+if [[ -n "${DEBUG}" ]]; then
     set -x
-#fi
+fi
 
 # Init global git config.
 git config --global user.email "${GIT_USER_EMAIL}"
@@ -407,6 +407,8 @@ update_docker4x()
     local current
     local latest
 
+    local name="${image#*/}"
+
     _git_clone "${project}"
 
     lines=($(grep -hoP "(?<=image: )wodby\/.+" docker-compose*.yml))
@@ -429,11 +431,20 @@ update_docker4x()
 
         if [[ $(compare_semver "${latest}" "${current}") == 0 ]]; then
             sed -i -E "s/(${env_var}=.+?)-${current}/\1-${latest}/" .env
+
+            # Update tests.
+            find tests/ -name .env -exec sed -i -E "s/(${env_var}=.+?)-${current}/\1-${latest}/" .env {} +
+
+            # Update env var like like $DRUPAL_STABILITY_TAG in tests.
+            if [[ "${name}" == "${project#*docker4}" ]]; then
+                find tests/ -name .env -exec sed -i -E "s/(${name^^}_STABILITY_TAG)=${current}/\1=${latest}/" .env {} +
+            fi
+
             git diff
-            _git_commit ./ "Update ${image#*/} stability tag to ${latest}"
+            _git_commit ./ "Update ${name} stability tag to ${latest}"
 #            git push origin
         else
-            echo "${image#*/}: stability tag ${current} is already latest"
+            echo "${name}: stability tag ${current} is already latest"
         fi
     done
 }
