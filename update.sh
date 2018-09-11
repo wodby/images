@@ -398,6 +398,7 @@ update_from_upstream()
 update_docker4x()
 {
     local project="${1}"
+    local branch="${2}"
 
     local lines=()
     local image
@@ -407,6 +408,11 @@ update_docker4x()
     local latest
 
     _git_clone "${project}"
+
+    if [[ -n "${branch}" ]]; then
+        git checkout "${branch}"
+        git merge --no-edit master
+    fi
 
     lines=($(grep -hoP "(?<=image: )wodby\/.+" docker-compose*.yml))
 
@@ -423,7 +429,7 @@ update_docker4x()
         fi
 
         current="${tags[0]##*-}"
-        latest=$(_get_image_tags "${image}" | grep -oP "(?<=-)[0-9\.]+$" | sort -rV | head -n1)
+        latest=$(_get_image_tags "${image}" | grep -oP "(?<=-)([0-9]+\.){2}[0-9]+$" | sort -rV | head -n1)
         name="${image#*/}"
 
         if [[ $(compare_semver "${latest}" "${current}") == 0 ]]; then

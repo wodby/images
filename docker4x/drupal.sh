@@ -4,5 +4,4 @@ set -e
 
 . ../update.sh
 
-update_docker4x "wodby/docker4php"
-
+update_docker4x "wodby/docker4drupal" "5.x"
