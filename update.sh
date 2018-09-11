@@ -409,11 +409,6 @@ update_docker4x()
 
     _git_clone "${project}"
 
-    if [[ -n "${branch}" ]]; then
-        git checkout "${branch}"
-        git merge --no-edit master
-    fi
-
     lines=($(grep -hoP "(?<=image: )wodby\/.+" docker-compose*.yml))
 
     for line in "${lines[@]}"; do
