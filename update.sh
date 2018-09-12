@@ -429,10 +429,6 @@ update_docker4x()
         latest=$(_get_image_tags "${image}" | grep -oP "(?<=-)([0-9]+\.){2}[0-9]+$" | sort -rV | head -n1)
         name="${image#*/}"
 
-        if [[ "${name}" == "${project#*docker4}" ]]; then
-            find tests/ -name .env -exec sed -i -E "s/(${name^^}_STABILITY_TAG)=${current}/\1=X.X.X/" .env {} +
-        fi
-
         if [[ $(compare_semver "${latest}" "${current}") == 0 ]]; then
             sed -i -E "s/(${env_var}=.+?)-${current}/\1-${latest}/" .env
 
