@@ -59,24 +59,18 @@ _release_tag()
     local message="${1}"
     local minor_update="${2}"
 
-    local cur_tag=$(git describe --abbrev=0 --tags)
-    local patch_ver
-    local tag
+    IFS="." read -r -a sem_ver <<< $(git describe --abbrev=0 --tags)
 
-    # Patch version changed.
-    if [[ -n "${minor_update}" ]]; then
-        patch_ver="${cur_tag##*.}"
-        local ver="${cur_tag%.*}"
-        local minor_ver="${ver#*.}"
-        local major_ver="${ver%.*}"
-        minor_ver=$((minor_ver + 1))
-        tag="${major_ver}.${minor_ver}.${patch_ver}"
     # Minor version changed.
+    if [[ -n "${minor_update}" ]]; then
+        (( sem_ver[1]++ ))
+        sem_ver[2]=0
+    # Patch version changed.
     else
-        patch_ver="${cur_tag##*.}"
-        patch_ver=$((patch_ver + 1))
-        tag="${cur_tag%.*}.${patch_ver}"
+        (( sem_ver[2]++ ))
     fi
+
+    local tag=$(_join_ws "." "${sem_ver[@]}")
 
     git tag -m "${message}" "${tag}"
     git push origin "${tag}"
