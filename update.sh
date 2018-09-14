@@ -238,7 +238,7 @@ _update_versions()
 
             # Update base image timestamps.
             if [[ -f ".${upstream#*/}" ]]; then
-                latest_timestamp=$(_get_timestamp "${upstream}" "${cur_ver}")
+                latest_timestamp=$(_get_timestamp "${upstream}" "${latest_ver}")
                 sed -i "s/${cur_ver}#.*/${latest_ver}#${latest_timestamp}/" ".${upstream#*/}"
             fi
 
