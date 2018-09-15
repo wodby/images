@@ -24,12 +24,10 @@ env:
     - dir=stability-tags script=wordpress-php
     - dir=stability-tags script=adminer-php
     - dir=stability-tags script=cachet-php
-    - dir=stability-tags script=drupal-8-php
     - dir=stability-tags script=matomo-php
     - dir=stability-tags script=webgrind-php
-    - dir=stability-tags script=drupal-7-php
-    - dir=stability-tags script=wordpress-4-php
-    - dir=stability-tags script=drupal-6-php
+    - dir=stability-tags script=drupal
+    - dir=stability-tags script=wordpress
 
     - dir=upstream script=adminer
     - dir=upstream script=cachet
