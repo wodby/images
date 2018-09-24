@@ -2,9 +2,9 @@
 
 set -e
 
-#if [[ -n "${DEBUG}" ]]; then
+if [[ -n "${DEBUG}" ]]; then
     set -x
-#fi
+fi
 
 # Init global git config.
 git config --global user.email "${GIT_USER_EMAIL}"
@@ -63,11 +63,11 @@ _release_tag()
 
     # Minor version changed.
     if [[ -n "${minor_update}" ]]; then
-        (( sem_ver[1]++ ))
+        (( ++sem_ver[1] ))
         sem_ver[2]=0
     # Patch version changed.
     else
-        (( sem_ver[2]++ ))
+        (( ++sem_ver[2] ))
     fi
 
     local tag=$(_join_ws "." "${sem_ver[@]}")
