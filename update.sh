@@ -2,9 +2,9 @@
 
 set -e
 
-if [[ -n "${DEBUG}" ]]; then
+#if [[ -n "${DEBUG}" ]]; then
     set -x
-fi
+#fi
 
 # Init global git config.
 git config --global user.email "${GIT_USER_EMAIL}"
