@@ -39,34 +39,34 @@ Just syncing with upstream
 * Rebase to newer stability tags
 * New stability tags release
 
-| Image                 | Upstream (base image) | Stability branch |
-| --------------------- | --------------------- | ---------------- |
-| [wodby/adminer]       | [wodby/php]           | `2.x`            |
-| [wodby/cachet]        | [wodby/php]           | `1.x`            |
-| [wodby/drupal-php]    | [wodby/php]           | `4.x`            |
-| [wodby/drupal]        | [wodby/drupal-php]    | `4.x`            |
-| [wodby/matomo]        | [wodby/php]           | `1.x`            |
-| [wodby/wordpress-php] | [wodby/php]           | `4.x`            |
-| [wodby/wordpress]     | [wodby/wordpress-php] | `4.x`            |
-| [wodby/webgrind]      | [wodby/php]           | `1.x`            |
+| Image                 | Upstream (base image) | Version branch |
+| --------------------- | --------------------- | -------------- |
+| [wodby/adminer]       | [wodby/php]           | `2.x`          |
+| [wodby/cachet]        | [wodby/php]           | `1.x`          |
+| [wodby/drupal-php]    | [wodby/php]           | `4.x`          |
+| [wodby/drupal]        | [wodby/drupal-php]    | `4.x`          |
+| [wodby/matomo]        | [wodby/php]           | `1.x`          |
+| [wodby/wordpress-php] | [wodby/php]           | `4.x`          |
+| [wodby/wordpress]     | [wodby/wordpress-php] | `4.x`          |
+| [wodby/webgrind]      | [wodby/php]           | `1.x`          |
 
 ### Version updates from upstream other than base image
 
 * Minor and patch version updates
 * New stability tags release
 
-| Image                 | Upstream                | Version                                         |
-| --------------------- | ----------------------- | ----------------------------------------------- |
-| [wodby/elasticsearch] | [elastic/elasticsearch] | `6.3`, `6.2`, `6.1`, `6.0`, `5.6`, `5.5`, `5.4` |
-| [wodby/kibana]        | [elastic/kibana]        | `6.3`, `6.2`, `6.1`, `6.0`, `5.6`, `5.5`, `5.4` |
-| [wodby/mariadb]       | [mariadb]               | `10.3`, `10.2`, `10.1`                          |
-| [wodby/nginx]         | [nginx]                 | `1.15`, `1.14`, `1.13`                          |
-| [wodby/adminer]       | [vrana/adminer]         | `4`                                             |
-| [wodby/cachet]        | [CachetHQ/Cachet]       | `2`                                             |
-| [wodby/drupal]        | [drupal]                | `8`, `7`                                        |
-| [wodby/matomo]        | [matomo-org/matomo]     | `3`                                             |
-| [wodby/webgrind]      | [jokkedk/webgrind]      | `1`                                             |
-| [wodby/wordpress]     | [wordpress]             | `4`                                             |
+| Image                 | Upstream                | Version                                         | Version branch |
+| --------------------- | ----------------------- | ----------------------------------------------- | -------------- |
+| [wodby/elasticsearch] | [elastic/elasticsearch] | `6.3`, `6.2`, `6.1`, `6.0`, `5.6`, `5.5`, `5.4` |                |
+| [wodby/kibana]        | [elastic/kibana]        | `6.3`, `6.2`, `6.1`, `6.0`, `5.6`, `5.5`, `5.4` |                |
+| [wodby/mariadb]       | [mariadb]               | `10.3`, `10.2`, `10.1`                          |                |
+| [wodby/nginx]         | [nginx]                 | `1.15`, `1.14`, `1.13`                          |                |
+| [wodby/adminer]       | [vrana/adminer]         | `4`                                             | `2.x`          |
+| [wodby/cachet]        | [CachetHQ/Cachet]       | `2`                                             | `1.x`          |
+| [wodby/drupal]        | [drupal]                | `8`, `7`                                        | `4.x`          |
+| [wodby/matomo]        | [matomo-org/matomo]     | `3`                                             | `1.x`          |
+| [wodby/webgrind]      | [jokkedk/webgrind]      | `1`                                             | `1.x`          |
+| [wodby/wordpress]     | [wordpress]             | `4`                                             | `4.x`          |
 
 ### Docker4X projects
 
@@ -82,7 +82,7 @@ Update images stability tags
 Not automated:
 
 * Adding new minor version, setting a new minor version as latest
-* Updates to stability branches 
+* Major version updates including stability tags and new version branches
 * Java version for [wodby/elasticsearch] and [wodby/kibana]
 * [wodby/alpine]
 * [wodby/opensmtpd]

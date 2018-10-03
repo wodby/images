@@ -4,4 +4,4 @@ set -e
 
 . ../update.sh
 
-update_from_upstream "wodby/webgrind" "1" "github.com/jokkedk/webgrind"
+update_from_upstream "wodby/webgrind" "1" "github.com/jokkedk/webgrind" "1.x"
