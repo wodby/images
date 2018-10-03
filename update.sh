@@ -172,6 +172,7 @@ _update_versions()
     local versions="${1}"
     local upstream="${2}"
     local name="${3}"
+    local branch="${4}"
 
     local updated=()
     local latest_ver
@@ -247,6 +248,13 @@ _update_versions()
 
     if [[ "${#updated[@]}" != 0 ]]; then
         ver=$(_join_ws ", " "${updated[@]}")
+
+        if [[ -n "${branch}" ]]; then
+            git checkout "${branch}"
+            git merge --no-edit master
+            git push origin
+        fi
+
         _release_tag "${name^} updated to ${ver}" "${minor_update}"
     fi
 }
@@ -383,10 +391,11 @@ update_from_upstream()
     local image="${1}"
     local versions="${2}"
     local upstream="${3}"
+    local branch="${4}"
 
     _git_clone "${image}"
 
-    _update_versions "${versions}" "${upstream}" "${image#*/}"
+    _update_versions "${versions}" "${upstream}" "${image#*/}" "${branch}"
 }
 
 update_docker4x()
