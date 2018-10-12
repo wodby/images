@@ -24,12 +24,12 @@ Just syncing with upstream
 | Image                 | Upstream (base image) | Versions                                               |
 | --------------------- | --------------------- | ------------------------------------------------------ |
 | [wodby/apache]        | [wodby/httpd]         | `2.4`                                                  |
-| [wodby/memcached]     | [memcached]           | `1.5`                                                  |
-| [wodby/node]          | [node]                | `10.9`, `8.11`, `6.14`                                 |
+| [wodby/memcached]     | [memcached]           | `1`                                                    |
+| [wodby/node]          | [node]                | `10`, `8`, `6`                                         |
 | [wodby/php]           | [wodby/base-php]      | `7.2`, `7.1`, `5.6`                                    |
 | [wodby/postgres]      | [postgres]            | `10`, `9.6`, `9.5`, `9.4`, `9.3`                       |
 | [wodby/python]        | [wodby/base-python]   | `3.7`, `3.6`, `3.5`, `3.4`, `2.7`                      |
-| [wodby/redis]         | [redis]               | `4.0`, `3.2`                                           |
+| [wodby/redis]         | [redis]               | `4`, `3`                                               |
 | [wodby/ruby]          | [wodby/base-ruby]     | `2.5`, `2.4`, `2.3`                                    |
 | [wodby/solr]          | [solr]                | `7.4`, `7.3`, `7.2`, `7.1`, `6.6`, `6.4`, `5.5`, `5.4` |
 

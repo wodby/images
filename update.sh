@@ -192,7 +192,7 @@ _update_versions()
         dir=$(_get_dir "${version}")
 
         if [[ -f .circleci/config.yml ]]; then
-            cur_ver=$(grep -oP "(?<=${name^^}_VER: )${version//\./\\.}\.[0-9\.]+" .circleci/config.yml)
+            cur_ver=$(grep -oP "(?<=${name^^}_VER: )${version//\./\\.}\.[0-9\.]+" .circleci/config.yml || true)
         else
             # There two ways how we specify versions in .travis.yml (same used for updates below):
             # 1. PHP72=7.2.8
@@ -200,7 +200,7 @@ _update_versions()
             cur_ver=$(grep -oP "(?<=${name^^}${version//.}=)[0-9\.]+" .travis.yml || true)
 
             if [[ -z "${cur_ver}" ]]; then
-                cur_ver=$(grep -oP "(?<=${name^^}_VER=)${version//\./\\.}[0-9\.]+" .travis.yml)
+                cur_ver=$(grep -oP "(?<=${name^^}_VER=)${version//\./\\.}[0-9\.]+" .travis.yml || true)
             fi
         fi
 
