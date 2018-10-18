@@ -309,6 +309,12 @@ _update_stability_tag()
     git merge --no-edit master
 
     local latest=$(_get_image_tags "${base_image}" | grep -oP "(?<=${version//\./\\.}-)[0-9\.]+$" | sort -rV | head -n1)
+
+    if [[ -z "${latest}" ]]; then
+        >&2 echo "Failed to acquire latest image tag"
+        exit 1
+    fi
+
     local current=$(grep -oP "(?<=BASE_IMAGE_STABILITY_TAG=)[0-9\.]+$" .travis.yml)
 
     if [[ $(compare_semver "${latest}" "${current}") == 0 ]]; then
@@ -357,7 +363,7 @@ update_from_base_image()
     local upstream=$(_get_base_image)
 
     if [[ ! -f ".${upstream#*/}" ]]; then
-        echo "ERROR: Missing .${upstream#*/} file!"
+        >&2 echo "ERROR: Missing .${upstream#*/} file!"
         exit 1
     fi
 
@@ -376,7 +382,7 @@ rebuild_and_rebase()
     local upstream=$(_get_base_image)
 
     if [[ ! -f ".${upstream#*/}" ]]; then
-        echo "ERROR: Missing .${upstream#*/} file!"
+        >&2 echo "ERROR: Missing .${upstream#*/} file!"
         exit 1
     fi
 
@@ -429,8 +435,14 @@ update_docker4x()
         fi
 
         current="${tags[0]##*-}"
-        latest=$(_get_image_tags "${image}" | grep -oP "(?<=-)([0-9]+\.){2}[0-9]+$" | sort -rV | head -n1)
         name="${image#*/}"
+
+        latest=$(_get_image_tags "${image}" | grep -oP "(?<=-)([0-9]+\.){2}[0-9]+$" | sort -rV | head -n1)
+
+        if [[ -z "${latest}" ]]; then
+            >&2 echo "Failed to acquire latest image tag"
+            exit 1
+        fi
 
         if [[ $(compare_semver "${latest}" "${current}") == 0 ]]; then
             sed -i -E "s/(${env_var}=.+?)-${current}/\1-${latest}/" .env
