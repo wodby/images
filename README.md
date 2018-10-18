@@ -137,3 +137,7 @@ Not automated:
 [wodby/wordpress-php]: https://github.com/wodby/wordpress-php
 [wodby/wordpress]: https://github.com/wodby/wordpress
 [wordpress]: https://github.com/docker-library/wordpress
+[wodby/docker4drupal]: https://github.com/wodby/docker4drupal
+[wodby/docker4wordpress]: https://github.com/wodby/docker4wordpress
+[wodby/docker4php]: https://github.com/wodby/docker4php
+[wodby/docker4ruby]: https://github.com/wodby/docker4ruby
