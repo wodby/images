@@ -179,6 +179,7 @@ _update_versions()
     local latest_timestamp
     local cur_ver
     local dir
+    local message
 
     local minor_update
 
@@ -237,7 +238,13 @@ _update_versions()
                 sed -i "s/${cur_ver}#.*/${latest_ver}#${latest_timestamp}/" ".${upstream#*/}"
             fi
 
-            _git_commit ./ "Update ${name} to ${latest_ver}"
+            if [[ -n "${minor_update}" ]]; then
+                message="${name^} minor update to ${latest_ver}"
+            else
+                message="${name^} patch update to ${latest_ver}"
+            fi
+
+            _git_commit ./ "${message}"
             updated+=("${latest_ver}")
         else
             echo "Version ${cur_ver} is already the latest version"
@@ -247,15 +254,21 @@ _update_versions()
     git push origin
 
     if [[ "${#updated[@]}" != 0 ]]; then
-        ver=$(_join_ws ", " "${updated[@]}")
-
         if [[ -n "${branch}" ]]; then
             git checkout "${branch}"
             git merge --no-edit master
             git push origin
         fi
 
-        _release_tag "${name^} updated to ${ver}" "${minor_update}"
+        local ver=$(_join_ws ", " "${updated[@]}")
+
+        if [[ -n "${minor_update}" ]]; then
+            message="${name^} minor update to ${ver}"
+        else
+            message="${name^} patch update to ${ver}"
+        fi
+
+        _release_tag "${message}" "${minor_update}"
     fi
 }
 
