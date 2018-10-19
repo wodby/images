@@ -263,9 +263,9 @@ _update_versions()
         local ver=$(_join_ws ", " "${updated[@]}")
 
         if [[ -n "${minor_update}" ]]; then
-            message="${name^} minor update to ${ver}"
+            message="${name^} minor updates: ${ver}"
         else
-            message="${name^} patch update to ${ver}"
+            message="${name^} patch updates: ${ver}"
         fi
 
         _release_tag "${message}" "${minor_update}"
