@@ -28,6 +28,7 @@ env:
     - dir=stability-tags script=webgrind-php
     - dir=stability-tags script=drupal
     - dir=stability-tags script=wordpress
+    - dir=stability-tags script=xhprof
 
     - dir=upstream script=adminer
     - dir=upstream script=cachet
