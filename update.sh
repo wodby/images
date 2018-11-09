@@ -239,9 +239,9 @@ _update_versions()
             fi
 
             if [[ -n "${minor_update}" ]]; then
-                message="${name^} minor update to ${latest_ver}"
+                message="${name} minor update to ${latest_ver}"
             else
-                message="${name^} patch update to ${latest_ver}"
+                message="${name} patch update to ${latest_ver}"
             fi
 
             _git_commit ./ "${message}"
@@ -263,9 +263,9 @@ _update_versions()
         local ver=$(_join_ws ", " "${updated[@]}")
 
         if [[ -n "${minor_update}" ]]; then
-            message="${name^} minor updates: ${ver}"
+            message="${name} minor updates: ${ver}"
         else
-            message="${name^} patch updates: ${ver}"
+            message="${name} patch updates: ${ver}"
         fi
 
         _release_tag "${message}" "${minor_update}"
