@@ -9,6 +9,7 @@ env:
     - dir=forks script=httpd
     - dir=forks script=openjdk
 
+    - dir=images script=alpine
     - dir=images script=apache
     - dir=images script=memcached
     - dir=images script=node
