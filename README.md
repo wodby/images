@@ -8,13 +8,13 @@
 
 Just syncing with upstream
 
-| Image                 | Upstream  |
-| --------------------- | --------- |
-| [wodby/base-php]      | [php]     |
-| [wodby/base-python]   | [python]  |
-| [wodby/base-ruby]     | [ruby]    |
-| [wodby/httpd]         | [httpd]   |
-| [wodby/openjdk]       | [openjdk] |
+| Image                 | Upstream  | Base image     |
+| --------------------- | --------- | -------------- |
+| [wodby/base-php]      | [php]     | [wodby/alpine] |
+| [wodby/base-python]   | [python]  | [wodby/alpine] |
+| [wodby/base-ruby]     | [ruby]    | [wodby/alpine] |
+| [wodby/httpd]         | [httpd]   | [wodby/alpine] |
+| [wodby/openjdk]       | [openjdk] | [wodby/alpine] |
 
 ### Images based on official images or their forks
 
@@ -23,6 +23,7 @@ Just syncing with upstream
 
 | Image                 | Upstream (base image) | Versions                                               |
 | --------------------- | --------------------- | ------------------------------------------------------ |
+| [wodby/alpine]        | [alpine]              | `3.8`, `3.7`, `3.6`                                    |
 | [wodby/apache]        | [wodby/httpd]         | `2.4`                                                  |
 | [wodby/memcached]     | [memcached]           | `1`                                                    |
 | [wodby/node]          | [node]                | `10`, `8`, `6`                                         |
@@ -82,19 +83,22 @@ Update images stability tags
 
 Not automated:
 
-* Adding new minor version, setting a new minor version as latest
-* Major version updates including stability tags and new version branches
+* Adding new minor/major version
+* Switch latest version
+* New stability branches for major stability tags updates
 * Java version for [wodby/elasticsearch] and [wodby/kibana]
+* Search API Solr module updates for [wodby/solr]
 * [wodby/alpine]
-* [wodby/opensmtpd]
-* [wodby/varnish]
+* [wodby/opensmtpd] (from Alpine repository)
+* [wodby/varnish] (from Alpine repository)
 
+[alpine]: https://github.com/gliderlabs/docker-alpine
 [CachetHQ/Cachet]: https://github.com/CachetHQ/Cachet
-[drupal]: https://github.com/docker-library/drupal
+[drupal]: https://github.com/drupal/drupal
 [elastic/elasticsearch]: https://github.com/elastic/elasticsearch
+[elastic/kibana]: https://github.com/elastic/kibana
 [httpd]: https://github.com/docker-library/httpd
 [jokkedk/webgrind]: https://github.com/jokkedk/webgrind
-[elastic/kibana]: https://github.com/elastic/kibana
 [mariadb]: https://github.com/docker-library/mariadb
 [matomo-org/matomo]: https://github.com/matomo-org/matomo
 [memcached]: https://github.com/docker-library/memcached
@@ -115,6 +119,10 @@ Not automated:
 [wodby/base-python]: https://github.com/wodby/base-python
 [wodby/base-ruby]: https://github.com/wodby/base-ruby
 [wodby/cachet]: https://github.com/wodby/cachet
+[wodby/docker4drupal]: https://github.com/wodby/docker4drupal
+[wodby/docker4php]: https://github.com/wodby/docker4php
+[wodby/docker4ruby]: https://github.com/wodby/docker4ruby
+[wodby/docker4wordpress]: https://github.com/wodby/docker4wordpress
 [wodby/drupal-php]: https://github.com/wodby/drupal-php
 [wodby/drupal]: https://github.com/wodby/drupal
 [wodby/elasticsearch]: https://github.com/wodby/elasticsearch
@@ -137,8 +145,5 @@ Not automated:
 [wodby/webgrind]: https://github.com/wodby/webgrind
 [wodby/wordpress-php]: https://github.com/wodby/wordpress-php
 [wodby/wordpress]: https://github.com/wodby/wordpress
-[wordpress]: https://github.com/docker-library/wordpress
-[wodby/docker4drupal]: https://github.com/wodby/docker4drupal
-[wodby/docker4wordpress]: https://github.com/wodby/docker4wordpress
-[wodby/docker4php]: https://github.com/wodby/docker4php
-[wodby/docker4ruby]: https://github.com/wodby/docker4ruby
+[wodby/xhprof]: https://github.com/wodby/xhprof
+[wordpress]: https://github.com/WordPress/WordPress
