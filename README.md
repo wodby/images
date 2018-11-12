@@ -23,7 +23,6 @@ Just syncing with upstream
 
 | Image                 | Upstream (base image) | Versions                                               |
 | --------------------- | --------------------- | ------------------------------------------------------ |
-| [wodby/alpine]        | [alpine]              | `3.8`, `3.7`, `3.6`                                    |
 | [wodby/apache]        | [wodby/httpd]         | `2.4`                                                  |
 | [wodby/memcached]     | [memcached]           | `1`                                                    |
 | [wodby/node]          | [node]                | `10`, `8`, `6`                                         |
