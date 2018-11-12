@@ -223,10 +223,8 @@ _update_versions()
                 sed -i -E "s/(${name^^}_VER)=${version//\./\\.}\.[0-9\.]+/\1=${latest_ver}/" .travis.yml
             fi
 
-            dots="${latest_ver//[^.]}"
-
-            # Unless it's a patch update we should update tags info.
-            if [[ "${#dots}" < 2 || "${latest_ver%.*}" != "${cur_ver%.*}" ]]; then
+            # For semver minor updates we should also update tags info.
+            if [[ "${latest_ver%.*}" != "${cur_ver%.*}" ]]; then
                 minor_update=1
                 sed -i -E "s/(TAGS)=.+?${version//\./\\.}\.[0-9\.]+,/\1=${latest_ver%.*},/" .travis.yml
                 sed -i -E "s/\`${version//\./\\.}\.[0-9\.]+\`/\`${latest_ver%.*}\`/" README.md
