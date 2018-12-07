@@ -179,7 +179,6 @@ _update_versions()
     local latest_timestamp
     local cur_ver
     local dir
-    local message
     local dots
 
     local minor_update
@@ -239,13 +238,7 @@ _update_versions()
                 sed -i "s/${cur_ver}#.*/${latest_ver}#${latest_timestamp}/" ".${upstream#*/}"
             fi
 
-            if [[ -n "${minor_update}" ]]; then
-                message="${name} minor update to ${latest_ver}"
-            else
-                message="${name} patch update to ${latest_ver}"
-            fi
-
-            _git_commit ./ "${message}"
+            _git_commit ./ "Update ${name} to ${latest_ver}"
             updated+=("${latest_ver}")
         else
             echo "Version ${cur_ver} is already the latest version"
@@ -263,13 +256,7 @@ _update_versions()
 
         local ver=$(_join_ws ", " "${updated[@]}")
 
-        if [[ -n "${minor_update}" ]]; then
-            message="${name} minor updates: ${ver}"
-        else
-            message="${name} patch updates: ${ver}"
-        fi
-
-        _release_tag "${message}" "${minor_update}"
+        _release_tag "${name} updates: ${ver}" "${minor_update}"
     fi
 }
 
