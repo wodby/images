@@ -26,7 +26,7 @@ Just syncing with upstream
 | [wodby/apache]        | [wodby/httpd]         | `2.4`                                                  |
 | [wodby/memcached]     | [memcached]           | `1`                                                    |
 | [wodby/node]          | [node]                | `10`, `8`, `6`                                         |
-| [wodby/php]           | [wodby/base-php]      | `7.2`, `7.1`, `5.6`                                    |
+| [wodby/php]           | [wodby/base-php]      | `7.3`, `7.2`, `7.1`, `5.6`                             |
 | [wodby/postgres]      | [postgres]            | `11`, `10`, `9.6`, `9.5`, `9.4`, `9.3`                 |
 | [wodby/python]        | [wodby/base-python]   | `3.7`, `3.6`, `3.5`, `3.4`, `2.7`                      |
 | [wodby/redis]         | [redis]               | `5`, `4`                                               |
@@ -39,17 +39,17 @@ Just syncing with upstream
 * Rebase to newer stability tags
 * New stability tags release
 
-| Image                 | Upstream (base image) | Versions            | Stability branch |
-| --------------------- | --------------------- | ------------------- | --------------   |
-| [wodby/adminer]       | [wodby/php]           | `7.1`               | `2.x`            |
-| [wodby/cachet]        | [wodby/php]           | `7.1`               | `1.x`            |
-| [wodby/drupal-php]    | [wodby/php]           | `7.2`, `7.1`, `5.6` | `4.x`            |
-| [wodby/drupal]        | [wodby/drupal-php]    | `7.2`, `7.1`, `5.6` | `4.x`            |
-| [wodby/matomo]        | [wodby/php]           | `7.1`               | `1.x`            |
-| [wodby/wordpress-php] | [wodby/php]           | `7.2`, `7.1`, `5.6` | `4.x`            |
-| [wodby/wordpress]     | [wodby/wordpress-php] | `7.2`, `7.1`, `5.6` | `4.x`            |
-| [wodby/webgrind]      | [wodby/php]           | `7.1`               | `1.x`            |
-| [wodby/xhprof]        | [wodby/php]           | `7.1`               | `1.x`            |
+| Image                 | Upstream (base image) | Versions                   | Stability branch |
+| --------------------- | --------------------- | -------------------        | --------------   |
+| [wodby/adminer]       | [wodby/php]           | `7.1`                      | `2.x`            |
+| [wodby/cachet]        | [wodby/php]           | `7.1`                      | `1.x`            |
+| [wodby/drupal-php]    | [wodby/php]           | `7.3`, `7.2`, `7.1`, `5.6` | `4.x`            |
+| [wodby/drupal]        | [wodby/drupal-php]    | `7.3`, `7.2`, `7.1`, `5.6` | `4.x`            |
+| [wodby/matomo]        | [wodby/php]           | `7.1`                      | `1.x`            |
+| [wodby/wordpress-php] | [wodby/php]           | `7.3`, `7.2`, `7.1`, `5.6` | `4.x`            |
+| [wodby/wordpress]     | [wodby/wordpress-php] | `7.3`, `7.2`, `7.1`, `5.6` | `4.x`            |
+| [wodby/webgrind]      | [wodby/php]           | `7.1`                      | `1.x`            |
+| [wodby/xhprof]        | [wodby/php]           | `7.1`                      | `1.x`            |
 
 ### Version updates from upstream other than base image
 
@@ -67,7 +67,7 @@ Just syncing with upstream
 | [wodby/drupal]        | [drupal]                | `8`, `7`                                        | `4.x`            |
 | [wodby/matomo]        | [matomo-org/matomo]     | `3`                                             | `1.x`            |
 | [wodby/webgrind]      | [jokkedk/webgrind]      | `1`                                             | `1.x`            |
-| [wodby/wordpress]     | [wordpress]             | `4`                                             | `4.x`            |
+| [wodby/wordpress]     | [wordpress]             | `5`                                             | `4.x`            |
 
 ### Docker4X projects
 
