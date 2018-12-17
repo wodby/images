@@ -111,13 +111,14 @@ _github_get_latest_ver()
 {
     local version="${1}"
     local slug="${2}"
+    local name="${3}"
 
     local url="https://api.github.com/repos/${slug}/git/refs/tags"
     local user="${GITHUB_MACHINE_USER_API_TOKEN}:x-oauth-basic"
-    local expr=".[] | select ( .ref | ltrimstr(\"refs/tags/\") | ltrimstr(\"v\") | startswith(\"${version}\")).ref"
+    local expr=".[] | select ( .ref | ltrimstr(\"refs/tags/\") | ltrimstr(\"${name}-\") | ltrimstr(\"v\") | startswith(\"${version}\")).ref"
 
     # Only stable versions.
-    local versions=($(curl -s -u "${user}" "${url}" | jq -r "${expr}" | sed -E "s/refs\/tags\/v?//" | grep -oP "^[0-9\.]+$" | sort -rV))
+    local versions=($(curl -s -u "${user}" "${url}" | jq -r "${expr}" | sed -E "s/refs\/tags\/(v|${name})?//" | grep -oP "^[0-9\.]+$" | sort -rV))
 
     if [[ "${#versions}" == 0 ]]; then
         >&2 echo "Couldn't find latest version in line ${version} of ${slug}."
@@ -131,12 +132,13 @@ _get_latest_version()
 {
     local upstream="${1}"
     local version="${2}"
+    local name="${3}"
 
     local suffix=$(_get_suffix)
 
     # Get latest stable version from github.
     if [[ "${upstream}" == "github.com"* ]]; then
-        latest_ver=$(_github_get_latest_ver "${version}" "${upstream/github.com\//}")
+        latest_ver=$(_github_get_latest_ver "${version}" "${upstream/github.com\//}" "${name}")
     # From docker hub, only patch updates.
     else
         local base_image_tags=($(_get_image_tags "${upstream}" | grep -oP "^(${version//\./\\.}\.[0-9\.]+)${suffix}" | sort -rV))
@@ -210,7 +212,7 @@ _update_versions()
             exit 1
         fi
 
-        latest_ver=$(_get_latest_version "${upstream}" "${version}")
+        latest_ver=$(_get_latest_version "${upstream}" "${version}" "${name}")
 
         if [[ $(compare_semver "${latest_ver}" "${cur_ver}") == 0 ]]; then
             echo "${name^} ${cur_ver} is outdated, updating to ${latest_ver}"
