@@ -39,6 +39,7 @@ env:
     - dir=upstream script=mariadb
     - dir=upstream script=matomo
     - dir=upstream script=nginx
+    - dir=upstream script=varnish
     - dir=upstream script=webgrind
     - dir=upstream script=wordpress
 
