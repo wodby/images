@@ -118,7 +118,7 @@ _github_get_latest_ver()
     local expr=".[] | select ( .ref | ltrimstr(\"refs/tags/\") | ltrimstr(\"${name}-\") | ltrimstr(\"v\") | startswith(\"${version}\")).ref"
 
     # Only stable versions.
-    local versions=($(curl -s -u "${user}" "${url}" | jq -r "${expr}" | sed -E "s/refs\/tags\/(v|${name})?//" | grep -oP "^[0-9\.]+$" | sort -rV))
+    local versions=($(curl -s -u "${user}" "${url}" | jq -r "${expr}" | sed -E "s/refs\/tags\/(v|${name}-)?//" | grep -oP "^[0-9\.]+$" | sort -rV))
 
     if [[ "${#versions}" == 0 ]]; then
         >&2 echo "Couldn't find latest version in line ${version} of ${slug}."
