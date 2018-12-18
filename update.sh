@@ -440,8 +440,12 @@ update_docker4x()
         current="${tags[0]##*-}"
         name="${image#*/}"
 
-        # Get stability tags with and without versions.
-        latest=$(_get_image_tags "${image}" | grep -oP "(?<=-)?([0-9]+\.){2}[0-9]+$" | sort -rV | head -n1)
+        latest=$(_get_image_tags "${image}" | grep -oP "(?<=-)([0-9]+\.){2}[0-9]+$" | sort -rV | head -n1)
+
+        # If no stability tags have been found, try searching one without a version (e.g. xhprof image).
+        if [[ -z "${latest}" ]]; then
+            latest=$(_get_image_tags "${image}" | grep -oP "^([0-9]+\.){2}[0-9]+$" | sort -rV | head -n1)
+        fi
 
         if [[ -z "${latest}" ]]; then
             >&2 echo "Failed to acquire latest image tag"
