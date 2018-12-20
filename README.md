@@ -78,6 +78,7 @@ Update images stability tags
 | ------------------------ |
 | [wodby/docker4drupal]    |
 | [wodby/docker4php]       |
+| [wodby/docker4python]    |
 | [wodby/docker4ruby]      |
 | [wodby/docker4wordpress] |
 
@@ -121,6 +122,7 @@ Not automated:
 [wodby/cachet]: https://github.com/wodby/cachet
 [wodby/docker4drupal]: https://github.com/wodby/docker4drupal
 [wodby/docker4php]: https://github.com/wodby/docker4php
+[wodby/docker4python]: https://github.com/wodby/docker4python
 [wodby/docker4ruby]: https://github.com/wodby/docker4ruby
 [wodby/docker4wordpress]: https://github.com/wodby/docker4wordpress
 [wodby/drupal-php]: https://github.com/wodby/drupal-php
