@@ -396,20 +396,23 @@ rebuild_and_rebase()
     local image="${1}"
     local versions="${2}"
     local branch="${3}"
+    local base_image="${4}"
 
     _git_clone "${image}"
 
-    local upstream=$(_get_base_image)
+    if [[ -z "${base_image}" ]]; then
+        base_image=$(_get_base_image)
+    fi
 
-    if [[ ! -f ".${upstream#*/}" ]]; then
-        >&2 echo "ERROR: Missing .${upstream#*/} file!"
+    if [[ ! -f ".${base_image#*/}" ]]; then
+        >&2 echo "ERROR: Missing .${base_image#*/} file!"
         exit 1
     fi
 
     IFS=' ' read -r -a array <<< "${versions}"
 
-    _update_timestamps "${versions}" "${upstream}"
-    _update_stability_tag "${array[0]}" "${upstream}" "${branch}"
+    _update_timestamps "${versions}" "${base_image}"
+    _update_stability_tag "${array[0]}" "${base_image}" "${branch}"
 }
 
 update_from_upstream()

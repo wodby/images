@@ -23,6 +23,7 @@ Just syncing with upstream
 
 | Image                 | Upstream (base image) | Versions                                                      |
 | --------------------- | --------------------- | ------------------------------------------------------        |
+| [wodby/alpine]        | [alpine]              | `3.8`, `3.7`, `3.6`                                           |
 | [wodby/apache]        | [wodby/httpd]         | `2.4`                                                         |
 | [wodby/memcached]     | [memcached]           | `1`                                                           |
 | [wodby/node]          | [node]                | `10`, `8`, `6`                                                |
@@ -88,8 +89,7 @@ Not automated:
 * Switch latest version
 * New stability branches for major stability tags updates
 * Java version for [wodby/elasticsearch] and [wodby/kibana]
-* Search API Solr module updates for [wodby/solr]
-* [wodby/alpine]
+* Config set updates from Search API Solr module for [wodby/solr]
 * [wodby/opensmtpd] (from Alpine repository)
 
 [alpine]: https://github.com/gliderlabs/docker-alpine
