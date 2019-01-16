@@ -21,6 +21,11 @@ env:
     - dir=images script=solr
 
     # Do not change sorting, the order is important to avoid parallel pushes.
+    - dir=stability-tags script=base-php
+    - dir=stability-tags script=base-python
+    - dir=stability-tags script=base-ruby
+    - dir=stability-tags script=httpd
+    - dir=stability-tags script=openjdk
     - dir=stability-tags script=drupal-php
     - dir=stability-tags script=wordpress-php
     - dir=stability-tags script=adminer-php
