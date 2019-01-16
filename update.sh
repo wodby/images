@@ -296,6 +296,44 @@ _update_timestamps()
     fi
 }
 
+_update_base_alpine_image()
+{
+    local version="${1}"
+    local base_image="${2}"
+    local current
+
+    echo "=========================================="
+    echo "Checking for alpine base image tag updates"
+    echo "=========================================="
+
+    local latest=$(_get_image_tags "${base_image}" | grep -oP "(?<=${version//\./\\.}-)[0-9\.]+$" | sort -rV | head -n1)
+
+    if [[ -z "${latest}" ]]; then
+        >&2 echo "Failed to acquire latest image tag"
+        exit 1
+    fi
+
+    if [[ -f .circleci/config.yml ]]; then
+        current=$(grep -oP "(?<=BASE_IMAGE_STABILITY_TAG: )[0-9\.]+$" .circleci/config.yml)
+    else
+        current=$(grep -oP "(?<=BASE_IMAGE_STABILITY_TAG=)[0-9\.]+$" .travis.yml)
+    fi
+
+    if [[ $(compare_semver "${latest}" "${current}") == 0 ]]; then
+        if [[ -f .circleci/config.yml ]]; then
+            sed -i -E "s/(BASE_IMAGE_STABILITY_TAG: )${current}/\1${latest}/" .circleci/config.yml
+        else
+            sed -i -E "s/(BASE_IMAGE_STABILITY_TAG=)${current}/\1${latest}/" .travis.yml
+        fi
+
+        _git_commit ./ "Update base image stability tag to ${latest}"
+    else
+        echo "Base image stability tag ${current} is already the latest"
+    fi
+
+    git push origin
+}
+
 _update_stability_tag()
 {
     local version="${1}"
@@ -330,7 +368,7 @@ _update_stability_tag()
 
     git push origin
 
-    if [[ -n "${tag}" ]]; then
+    if [[ -n "${tag}" && -z "${skip_release}" ]]; then
         if [[ "${current%.*}" != "${latest%.*}" ]]; then
             minor_update=1
         fi
@@ -396,13 +434,10 @@ rebuild_and_rebase()
     local image="${1}"
     local versions="${2}"
     local branch="${3}"
-    local base_image="${4}"
 
     _git_clone "${image}"
 
-    if [[ -z "${base_image}" ]]; then
-        base_image=$(_get_base_image)
-    fi
+    local base_image=$(_get_base_image)
 
     if [[ ! -f ".${base_image#*/}" ]]; then
         >&2 echo "ERROR: Missing .${base_image#*/} file!"
@@ -413,6 +448,24 @@ rebuild_and_rebase()
 
     _update_timestamps "${versions}" "${base_image}"
     _update_stability_tag "${array[0]}" "${base_image}" "${branch}"
+}
+
+update_base_alpine()
+{
+    local image="${1}"
+    local version="${2}"
+
+    local base_image="wodby/alpine"
+
+    _git_clone "${image}"
+
+    if [[ ! -f ".alpine" ]]; then
+        >&2 echo "ERROR: Missing .alpine file!"
+        exit 1
+    fi
+
+    _update_timestamps "${version}" "${base_image}"
+    _update_base_alpine_image "${version}" "${base_image}"
 }
 
 update_from_upstream()

@@ -6,15 +6,28 @@
 
 ### Forks
 
-Just syncing with upstream
+Syncing with upstream.
 
-| Image                 | Upstream  | Base image     |
-| --------------------- | --------- | -------------- |
-| [wodby/base-php]      | [php]     | [wodby/alpine] |
-| [wodby/base-python]   | [python]  | [wodby/alpine] |
-| [wodby/base-ruby]     | [ruby]    | [wodby/alpine] |
-| [wodby/httpd]         | [httpd]   | [wodby/alpine] |
-| [wodby/openjdk]       | [openjdk] | [wodby/alpine] |
+| Image                 | Upstream  |
+| --------------------- | --------- |
+| [wodby/base-php]      | [php]     |
+| [wodby/base-python]   | [python]  |
+| [wodby/base-ruby]     | [ruby]    |
+| [wodby/httpd]         | [httpd]   |
+| [wodby/openjdk]       | [openjdk] |
+
+### Alpine base image
+
+| Image                 | Alpine version |
+| --------------------- | -------------- |
+| [wodby/base-php]      | `3.8`          |
+| [wodby/base-python]   | `3.8`          |
+| [wodby/base-ruby]     | `3.8`          |
+| [wodby/httpd]         | `3.8`          |
+| [wodby/openjdk]       | `3.8`          |
+| [wodby/mariadb]       | `3.8`          |
+| [wodby/varnish]       | `3.8`          |
+| [wodby/nginx]         | `3.8`          |
 
 ### Images based on official images or their forks
 
@@ -86,6 +99,7 @@ Update images stability tags
 Not automated:
 
 * Adding new minor/major version
+* Rebase to a new minor Alpine version
 * Switch latest version
 * New stability branches for major stability tags updates
 * Java version for [wodby/elasticsearch] and [wodby/kibana]

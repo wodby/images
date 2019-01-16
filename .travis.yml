@@ -9,6 +9,15 @@ env:
     - dir=forks script=httpd
     - dir=forks script=openjdk
 
+    - dir=alpine script=base-php
+    - dir=alpine script=base-python
+    - dir=alpine script=base-ruby
+    - dir=alpine script=httpd
+    - dir=alpine script=openjdk
+    - dir=alpine script=varnish
+    - dir=alpine script=nginx
+    - dir=alpine script=mariadb
+
     - dir=images script=alpine
     - dir=images script=apache
     - dir=images script=memcached
