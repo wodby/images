@@ -4,4 +4,4 @@ set -e
 
 . ../update.sh
 
-update_base_alpine "wodby/base-python" "3.8"
+update_base_alpine "wodby/base-ruby" "3.8"

@@ -300,6 +300,7 @@ _update_base_alpine_image()
 {
     local version="${1}"
     local base_image="${2}"
+    local release_tag="${3}"
     local current
 
     echo "=========================================="
@@ -314,7 +315,7 @@ _update_base_alpine_image()
     fi
 
     if [[ -f .circleci/config.yml ]]; then
-        current=$(grep -oP "(?<=BASE_IMAGE_STABILITY_TAG: )[0-9\.]+$" .circleci/config.yml)
+        current=$(grep -oP "(?<=BASE_IMAGE_STABILITY_TAG: )[0-9\.]+$" .circleci/config.yml | head -n1)
     else
         current=$(grep -oP "(?<=BASE_IMAGE_STABILITY_TAG=)[0-9\.]+$" .travis.yml)
     fi
@@ -328,10 +329,19 @@ _update_base_alpine_image()
 
         _git_commit ./ "Update base image stability tag to ${latest}"
     else
+        release_tag=""
         echo "Base image stability tag ${current} is already the latest"
     fi
 
     git push origin
+
+    if [[ -n "${release_tag}" ]]; then
+        if [[ "${current%.*}" != "${latest%.*}" ]]; then
+            minor_update=1
+        fi
+
+        _release_tag "Base image stability tag updated to ${latest}" "${minor_update}"
+    fi
 }
 
 _update_stability_tag()
@@ -368,7 +378,7 @@ _update_stability_tag()
 
     git push origin
 
-    if [[ -n "${tag}" && -z "${skip_release}" ]]; then
+    if [[ -n "${tag}" ]]; then
         if [[ "${current%.*}" != "${latest%.*}" ]]; then
             minor_update=1
         fi
@@ -454,6 +464,7 @@ update_base_alpine()
 {
     local image="${1}"
     local version="${2}"
+    local release_tag="${3}"
 
     local base_image="wodby/alpine"
 
@@ -465,7 +476,7 @@ update_base_alpine()
     fi
 
     _update_timestamps "${version}" "${base_image}"
-    _update_base_alpine_image "${version}" "${base_image}"
+    _update_base_alpine_image "${version}" "${base_image}" "${release_tag}"
 }
 
 update_from_upstream()

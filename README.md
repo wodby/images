@@ -100,11 +100,12 @@ Not automated:
 
 * Adding new minor/major version
 * Rebase to a new minor Alpine version
-* Switch latest version
+* Stability tag releases for [wodby/alpine]
+* Switching latest version
 * New stability branches for major stability tags updates
-* Java version for [wodby/elasticsearch] and [wodby/kibana]
+* Java version updates for [wodby/elasticsearch] and [wodby/kibana]
 * Config set updates from Search API Solr module for [wodby/solr]
-* [wodby/opensmtpd] (from Alpine repository)
+* [wodby/opensmtpd] (installed from Alpine repository package)
 
 [alpine]: https://github.com/gliderlabs/docker-alpine
 [CachetHQ/Cachet]: https://github.com/CachetHQ/Cachet
