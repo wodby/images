@@ -540,7 +540,7 @@ update_docker4x()
             sed -i -E "s/^(${env_var}=[0-9\.-]+?)${current}$/\1${latest}/" .env
 
             # Update tests.
-            find tests/ -name .env -exec sed -i -E "s/^(${env_var}=[0-9\.-]+?)${current}$/\1${latest}/" .env {} +
+            find tests/ -name .env -exec sed -i -E "s/^(#?${env_var}=[0-9\.-]+?(:?dev-)?)${current}$/\1${latest}/" .env {} +
 
             # Update env var like like $DRUPAL_STABILITY_TAG in tests.
             if [[ "${name}" == "${project#*docker4}" ]]; then
