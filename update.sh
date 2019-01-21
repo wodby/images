@@ -509,6 +509,16 @@ update_docker4x()
 
     lines=($(grep -hoP "(?<=image: )wodby\/.+" docker-compose*.yml))
 
+    if [[ -f Dockerfile ]]; then
+        if grep -q "FROM wodby/python" Dockerfile; then
+            lines+=(wodby/python:\$PYTHON_TAG)
+        fi
+
+        if grep -q "FROM wodby/ruby" Dockerfile; then
+            lines+=(wodby/ruby:\$RUBY_TAG)
+        fi
+    fi
+
     for line in "${lines[@]}"; do
         [[ "${line}" =~ (.+?):\$(.+) ]]
 
