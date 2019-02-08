@@ -20,13 +20,13 @@ Syncing with upstream.
 
 | Image                 | Alpine version |
 | --------------------- | -------------- |
-| [wodby/base-php]      | `3.8`          |
-| [wodby/base-python]   | `3.8`          |
-| [wodby/base-ruby]     | `3.8`          |
-| [wodby/httpd]         | `3.8`          |
-| [wodby/openjdk]       | `3.8`          |
+| [wodby/base-php]      | `3.9`          |
+| [wodby/base-python]   | `3.9`          |
+| [wodby/base-ruby]     | `3.9`          |
+| [wodby/httpd]         | `3.9`          |
+| [wodby/openjdk]       | `3.9`          |
 | [wodby/mariadb]       | `3.8`          |
-| [wodby/varnish]       | `3.8`          |
+| [wodby/varnish]       | `3.9`          |
 | [wodby/nginx]         | `3.8`          |
 
 ### Images based on official images or their forks
