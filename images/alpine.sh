@@ -4,4 +4,4 @@ set -e
 
 . ../update.sh
 
-rebuild_from_base_image "wodby/alpine" "3.9 3.8"
+update_from_base_image "wodby/alpine" "3.9 3.8"

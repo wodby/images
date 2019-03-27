@@ -422,23 +422,6 @@ update_from_base_image()
     _update_timestamps "${versions}" "${upstream}"
 }
 
-rebuild_from_base_image()
-{
-    local image="${1}"
-    local versions="${2}"
-
-    _git_clone "${image}"
-
-    local upstream=$(_get_base_image)
-
-    if [[ ! -f ".${upstream#*/}" ]]; then
-        >&2 echo "ERROR: Missing .${upstream#*/} file!"
-        exit 1
-    fi
-
-    _update_timestamps "${versions}" "${upstream}"
-}
-
 rebuild_and_rebase()
 {
     local image="${1}"
