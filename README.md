@@ -11,20 +11,13 @@ Syncing with upstream.
 | Image                 | Upstream  |
 | --------------------- | --------- |
 | [wodby/base-php]      | [php]     |
-| [wodby/base-python]   | [python]  |
-| [wodby/base-ruby]     | [ruby]    |
-| [wodby/httpd]         | [httpd]   |
-| [wodby/openjdk]       | [openjdk] |
 
 ### Alpine base image
 
 | Image                 | Alpine version |
 | --------------------- | -------------- |
 | [wodby/base-php]      | `3.9`          |
-| [wodby/base-python]   | `3.9`          |
-| [wodby/base-ruby]     | `3.9`          |
-| [wodby/httpd]         | `3.9`          |
-| [wodby/openjdk]       | `3.9`          |
+| [wodby/elasticsearch] | `3.9`          |
 | [wodby/mariadb]       | `3.8`          |
 | [wodby/varnish]       | `3.9`          |
 | [wodby/nginx]         | `3.8`          |
@@ -37,14 +30,14 @@ Syncing with upstream.
 | Image                 | Upstream (base image) | Versions                                                      |
 | --------------------- | --------------------- | ------------------------------------------------------        |
 | [wodby/alpine]        | [alpine]              | `3.9`, `3.8`                                                  |
-| [wodby/apache]        | [wodby/httpd]         | `2.4`                                                         |
+| [wodby/apache]        | [httpd]               | `2.4`                                                         |
 | [wodby/memcached]     | [memcached]           | `1`                                                           |
 | [wodby/node]          | [node]                | `10`, `8`, `6`                                                |
 | [wodby/php]           | [wodby/base-php]      | `7.3`, `7.2`, `7.1`, `5.6`                                    |
 | [wodby/postgres]      | [postgres]            | `11`, `10`, `9.6`, `9.5`, `9.4`                               |
-| [wodby/python]        | [wodby/base-python]   | `3.7`, `3.6`, `3.5`, `3.4`, `2.7`                             |
+| [wodby/python]        | [python]              | `3.7`, `3.6`, `3.5`, `2.7`                                    |
 | [wodby/redis]         | [redis]               | `5`, `4`                                                      |
-| [wodby/ruby]          | [wodby/base-ruby]     | `2.6`, `2.5`, `2.4`                                           |
+| [wodby/ruby]          | [ruby]                | `2.6`, `2.5`, `2.4`                                           |
 | [wodby/solr]          | [solr]                | `7.5`, `7.4`, `7.3`, `7.2`, `7.1`, `6.6`, `6.4`, `5.5`, `5.4` |
 
 ### Descendant images
@@ -119,7 +112,6 @@ Not automated:
 [memcached]: https://github.com/docker-library/memcached
 [nginx]: https://github.com/docker-library/nginx
 [node]: https://github.com/docker-library/node
-[openjdk]: https://github.com/docker-library/openjdk
 [php]: https://github.com/docker-library/php
 [postgres]: https://github.com/docker-library/postgres
 [python]: https://github.com/docker-library/python
@@ -132,8 +124,6 @@ Not automated:
 [wodby/alpine]: https://github.com/wodby/alpine
 [wodby/apache]: https://github.com/wodby/apache
 [wodby/base-php]: https://github.com/wodby/base-php
-[wodby/base-python]: https://github.com/wodby/base-python
-[wodby/base-ruby]: https://github.com/wodby/base-ruby
 [wodby/cachet]: https://github.com/wodby/cachet
 [wodby/docker4drupal]: https://github.com/wodby/docker4drupal
 [wodby/docker4php]: https://github.com/wodby/docker4php
@@ -143,14 +133,12 @@ Not automated:
 [wodby/drupal-php]: https://github.com/wodby/drupal-php
 [wodby/drupal]: https://github.com/wodby/drupal
 [wodby/elasticsearch]: https://github.com/wodby/elasticsearch
-[wodby/httpd]: https://github.com/wodby/httpd
 [wodby/kibana]: https://github.com/wodby/kibana
 [wodby/mariadb]: https://github.com/wodby/mariadb
 [wodby/matomo]: https://github.com/wodby/matomo
 [wodby/memcached]: https://github.com/wodby/memcached
 [wodby/nginx]: https://github.com/wodby/nginx
 [wodby/node]: https://github.com/wodby/node
-[wodby/openjdk]: https://github.com/wodby/openjdk
 [wodby/opensmtpd]: https://github.com/wodby/opensmtpd
 [wodby/php]: https://github.com/wodby/php
 [wodby/postgres]: https://github.com/wodby/postgres
