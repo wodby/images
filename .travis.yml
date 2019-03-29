@@ -4,16 +4,9 @@ services: docker
 env:
   matrix:
     - dir=forks script=base-php
-    - dir=forks script=base-python
-    - dir=forks script=base-ruby
-    - dir=forks script=httpd
-    - dir=forks script=openjdk
 
     - dir=alpine script=base-php
-    - dir=alpine script=base-python
-    - dir=alpine script=base-ruby
-    - dir=alpine script=httpd
-    - dir=alpine script=openjdk
+    - dir=alpine script=elasticsearch
     - dir=alpine script=varnish
     - dir=alpine script=nginx
     - dir=alpine script=mariadb
