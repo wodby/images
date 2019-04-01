@@ -4,4 +4,4 @@ set -e
 
 . ../update.sh
 
-update_from_base_image "wodby/solr" "7.5 7.4 7.3 7.2 7.1 6.6 6.4 5.5 5.4"
+update_from_base_image "wodby/solr" "7.7 7.6 7.5 6.6 5.5"

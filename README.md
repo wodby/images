@@ -27,18 +27,18 @@ Syncing with upstream.
 * Patch version updates
 * New stability tags release
 
-| Image                 | Upstream (base image) | Versions                                                      |
-| --------------------- | --------------------- | ------------------------------------------------------        |
-| [wodby/alpine]        | [alpine]              | `3.9`, `3.8`                                                  |
-| [wodby/apache]        | [httpd]               | `2.4`                                                         |
-| [wodby/memcached]     | [memcached]           | `1`                                                           |
-| [wodby/node]          | [node]                | `10`, `8`, `6`                                                |
-| [wodby/php]           | [wodby/base-php]      | `7.3`, `7.2`, `7.1`, `5.6`                                    |
-| [wodby/postgres]      | [postgres]            | `11`, `10`, `9.6`, `9.5`, `9.4`                               |
-| [wodby/python]        | [python]              | `3.7`, `3.6`, `3.5`, `2.7`                                    |
-| [wodby/redis]         | [redis]               | `5`, `4`                                                      |
-| [wodby/ruby]          | [ruby]                | `2.6`, `2.5`, `2.4`                                           |
-| [wodby/solr]          | [solr]                | `7.5`, `7.4`, `7.3`, `7.2`, `7.1`, `6.6`, `6.4`, `5.5`, `5.4` |
+| Image                 | Upstream (base image) | Versions                          |
+| --------------------- | --------------------- | --------------------------------- |
+| [wodby/alpine]        | [alpine]              | `3.9`, `3.8`                      |
+| [wodby/apache]        | [httpd]               | `2.4`                             |
+| [wodby/memcached]     | [memcached]           | `1`                               |
+| [wodby/node]          | [node]                | `10`, `8`, `6`                    |
+| [wodby/php]           | [wodby/base-php]      | `7.3`, `7.2`, `7.1`, `5.6`        |
+| [wodby/postgres]      | [postgres]            | `11`, `10`, `9.6`, `9.5`, `9.4`   |
+| [wodby/python]        | [python]              | `3.7`, `3.6`, `3.5`, `2.7`        |
+| [wodby/redis]         | [redis]               | `5`, `4`                          |
+| [wodby/ruby]          | [ruby]                | `2.6`, `2.5`, `2.4`               |
+| [wodby/solr]          | [solr]                | `7.7`, `7.6`, `7.5`, `6.6`, `5.5` |
 
 ### Descendant images
 
