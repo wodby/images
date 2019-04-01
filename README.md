@@ -63,19 +63,19 @@ Syncing with upstream.
 * Minor and patch version updates
 * New stability tags release
 
-| Image                 | Upstream                     | Versions                                                      | Stability branch |
-| --------------------- | -----------------------      | -----------------------------------------------               | --------------   |
-| [wodby/elasticsearch] | [elastic/elasticsearch]      | `6.7`, `6.6`, `6.5`, `6.4`, `6.3`, `6.2`, `6.1`, `6.0`, `5.6` |                  |
-| [wodby/kibana]        | [elastic/kibana]             | `6.7`, `6.6`, `6.5`, `6.4`, `6.3`, `6.2`, `6.1`, `6.0`, `5.6` |                  |
-| [wodby/mariadb]       | [mariadb]                    | `10.3`, `10.2`, `10.1`                                        |                  |
-| [wodby/nginx]         | [nginx]                      | `1.15`, `1.14`, `1.13`                                        |                  |
-| [wodby/adminer]       | [vrana/adminer]              | `4`                                                           | `2.x`            |
-| [wodby/cachet]        | [CachetHQ/Cachet]            | `2`                                                           | `1.x`            |
-| [wodby/drupal]        | [drupal]                     | `8`, `7`                                                      | `4.x`            |
-| [wodby/matomo]        | [matomo-org/matomo]          | `3`                                                           | `1.x`            |
-| [wodby/varnish]       | [varnishcache/varnish-cache] | `6.0`, `4.1`                                                  |                  |
-| [wodby/webgrind]      | [jokkedk/webgrind]           | `1`                                                           | `1.x`            |
-| [wodby/wordpress]     | [wordpress]                  | `5`                                                           | `4.x`            |
+| Image                 | Upstream                     | Versions               | Stability branch |
+| --------------------- | -----------------------      | ---------------------  | --------------   |
+| [wodby/elasticsearch] | [elastic/elasticsearch]      | `6.7`, `5.6`           |                  |
+| [wodby/kibana]        | [elastic/kibana]             | `6.7`, `5.6`           |                  |
+| [wodby/mariadb]       | [mariadb]                    | `10.3`, `10.2`, `10.1` |                  |
+| [wodby/nginx]         | [nginx]                      | `1.15`, `1.14`, `1.13` |                  |
+| [wodby/adminer]       | [vrana/adminer]              | `4`                    | `2.x`            |
+| [wodby/cachet]        | [CachetHQ/Cachet]            | `2`                    | `1.x`            |
+| [wodby/drupal]        | [drupal]                     | `8`, `7`               | `4.x`            |
+| [wodby/matomo]        | [matomo-org/matomo]          | `3`                    | `1.x`            |
+| [wodby/varnish]       | [varnishcache/varnish-cache] | `6.0`, `4.1`           |                  |
+| [wodby/webgrind]      | [jokkedk/webgrind]           | `1`                    | `1.x`            |
+| [wodby/wordpress]     | [wordpress]                  | `5`                    | `4.x`            |
 
 ### Docker4X projects
 
