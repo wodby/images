@@ -51,6 +51,12 @@ env:
     - dir=docker4x script=ruby
     - dir=docker4x script=wordpress
 
+before_install:
+- |
+    if [[ "${dir}" == "forks"  ]]; then
+      sudo apt-get install -y gawk
+    fi
+
 script:
   - set -e
   - cd ${dir} && ./${script}.sh
