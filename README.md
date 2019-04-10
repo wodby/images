@@ -22,10 +22,12 @@ Syncing with upstream.
 | [wodby/varnish]       | `3.9`          |
 | [wodby/nginx]         | `3.8`          |
 
-### Images based on official images or their forks
+### Images based on official images (or forks)
 
-* Patch version updates
-* New stability tags release
+- Minor/patch version update
+- Rebuild against updated base image
+- New stability tag release on version update
+- New stability tag release on Alpine Linux update
 
 | Image                 | Upstream (base image) | Versions                          |
 | --------------------- | --------------------- | --------------------------------- |
@@ -42,9 +44,9 @@ Syncing with upstream.
 
 ### Descendant images
 
-* Rebuild against updated base image
-* Rebase to newer stability tags
-* New stability tags release
+- Rebuild against updated base image
+- Rebase to newer stability tag
+- New stability tag release
 
 | Image                 | Upstream (base image) | Versions                   | Stability branch |
 | --------------------- | --------------------- | -------------------        | --------------   |
@@ -60,8 +62,8 @@ Syncing with upstream.
 
 ### Version updates from upstream other than base image
 
-* Minor and patch version updates
-* New stability tags release
+- Minor/patch version updates
+- New stability tag release
 
 | Image                 | Upstream                     | Versions               | Stability branch |
 | --------------------- | -----------------------      | ---------------------  | --------------   |
@@ -91,14 +93,12 @@ Update images stability tags
 
 Not automated:
 
-* Adding new minor/major version
-* Rebase to a new minor Alpine version
-* Stability tag releases for [wodby/alpine]
-* Switching latest version
-* New stability branches for major stability tags updates
-* Java version updates for [wodby/elasticsearch] and [wodby/kibana]
-* Config set updates from Search API Solr module for [wodby/solr]
-* [wodby/opensmtpd] (installed from Alpine repository package)
+- Adding new minor/major version
+- Rebase to a new major Alpine version
+- Switching latest version
+- New stability branches for major stability tags updates
+- Config set updates from Search API Solr module for [wodby/solr]
+- [wodby/opensmtpd] (installed from Alpine repository package)
 
 [alpine]: https://github.com/gliderlabs/docker-alpine
 [CachetHQ/Cachet]: https://github.com/CachetHQ/Cachet

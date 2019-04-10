@@ -296,6 +296,43 @@ _update_timestamps()
     fi
 }
 
+_get_alpine_ver()
+{
+    local image="${1}"
+    local ver
+
+    ver=$(docker run --rm "${image}" sh -c 'cat /etc/os-release' | grep -oP '(?<=VERSION_ID=)[0-9\.]+')
+
+    if [[ -z "${ver}" ]]; then
+        >&2 echo "Failed to detect alpine version"
+        exit 1
+    fi
+
+    echo "${ver}"
+}
+
+_update_alpine()
+{
+    local image="${1}"
+    local base_image="${2}"
+    local minor_update
+
+    echo "================================="
+    echo "Checking for Alpine Linux updates"
+    echo "================================="
+
+    local cur_ver=$(_get_alpine_ver "${image}")
+    local latest_ver=$(_get_alpine_ver "${base_image}")
+
+    if [[ $(compare_semver "${latest_ver}" "${cur_ver}") == 0 ]]; then
+        if [[ "${latest_ver%.*}" != "${cur_ver%.*}" ]]; then
+            minor_update=1
+        fi
+
+        _release_tag "Alpine Linux updated to ${latest_ver}" "${minor_update}"
+    fi
+}
+
 _update_base_alpine_image()
 {
     local version="${1}"
@@ -411,15 +448,16 @@ update_from_base_image()
 
     _git_clone "${image}"
 
-    local upstream=$(_get_base_image)
+    local base_image=$(_get_base_image)
 
-    if [[ ! -f ".${upstream#*/}" ]]; then
-        >&2 echo "ERROR: Missing .${upstream#*/} file!"
+    if [[ ! -f ".${base_image#*/}" ]]; then
+        >&2 echo "ERROR: Missing .${base_image#*/} file!"
         exit 1
     fi
 
-    _update_versions "${versions}" "${upstream}" "${image#*/}"
-    _update_timestamps "${versions}" "${upstream}"
+    _update_versions "${versions}" "${base_image}" "${image#*/}"
+    _update_timestamps "${versions}" "${base_image}"
+    _update_alpine "${image}" "${base_image}"
 }
 
 rebuild_and_rebase()
