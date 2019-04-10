@@ -330,7 +330,7 @@ _update_alpine()
             minor_update=1
         fi
 
-        _release_tag "Alpine Linux updated to ${latest_ver}" "${minor_update}"
+#        _release_tag "Alpine Linux updated to ${latest_ver}" "${minor_update}"
     fi
 }
 
