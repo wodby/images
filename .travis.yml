@@ -53,7 +53,10 @@ env:
 
 script:
   - set -e
-  - docker run -e GITHUB_MACHINE_USER_API_TOKEN -e GITHUB_MACHINE_USER -e GIT_USER_EMAIL -e GIT_USER_NAME -e DEBUG --rm -v $PWD:/images wodby/alpine:dev sh -c "cd /images/${dir} && ./${script}.sh"
+  - |
+    docker run -e GITHUB_MACHINE_USER_API_TOKEN -e GITHUB_MACHINE_USER -e GIT_USER_EMAIL -e GIT_USER_NAME -e DEBUG \
+      --rm -v $PWD:/images wodby/docker:dev -v /var/run/docker.sock:/var/run/docker.sock \
+      sh -c "cd /images/${dir} && ./${script}.sh"
 
 notifications:
   email:

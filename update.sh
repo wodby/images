@@ -54,6 +54,7 @@ _join_ws()
     echo "${s#"$1$1$1"}"
 }
 
+
 _release_tag()
 {
     local message="${1}"
