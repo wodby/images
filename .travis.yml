@@ -51,9 +51,9 @@ env:
     - dir=docker4x script=ruby
     - dir=docker4x script=wordpress
 
-script:
-  - set -e
-  - cd ${dir} && ./${script}.sh
+before_script: cd $dir
+
+script: ${script}.sh
 #  - |
 #    docker run -e GITHUB_MACHINE_USER_API_TOKEN -e GITHUB_MACHINE_USER -e GIT_USER_EMAIL -e GIT_USER_NAME -e DEBUG \
 #      --rm -v $PWD:/images -v /var/run/docker.sock:/var/run/docker.sock wodby/docker:dev \
