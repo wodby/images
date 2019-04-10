@@ -53,7 +53,7 @@ env:
 
 script:
   - set -e
-  - cd /images/${dir} && ./${script}.sh
+  - cd ${dir} && ./${script}.sh
 
 notifications:
   email:
