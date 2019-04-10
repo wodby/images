@@ -6,10 +6,6 @@ if [[ -n "${DEBUG}" ]]; then
     set -x
 fi
 
-# Init global git config.
-git config --global user.email "${GIT_USER_EMAIL}"
-git config --global user.name "${GIT_USER_NAME}"
-
 _git_commit()
 {
     local dir="${1}"
