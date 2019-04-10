@@ -56,7 +56,7 @@ script:
   - |
     docker run -e GITHUB_MACHINE_USER_API_TOKEN -e GITHUB_MACHINE_USER -e GIT_USER_EMAIL -e GIT_USER_NAME -e DEBUG \
       --rm -v $PWD:/images -v /var/run/docker.sock:/var/run/docker.sock wodby/docker:dev \
-      sh -c "cd /images/${dir} && ./${script}.sh"
+      bash -c "cd /images/${dir} && ./${script}.sh"
 
 notifications:
   email:
