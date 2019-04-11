@@ -182,7 +182,7 @@ _get_alpine_ver()
     local image="${1}"
     local ver
 
-    (docker pull "${image}")
+    docker pull "${image}" >/dev/null
     ver=$(docker run --rm "${image}" sh -c 'cat /etc/os-release' | grep -oP '(?<=VERSION_ID=)[0-9\.]+')
 
     if [[ -z "${ver}" ]]; then
