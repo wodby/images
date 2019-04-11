@@ -342,6 +342,8 @@ _update_alpine()
     local cur_ver=$(_get_alpine_ver "${image}") || exit $?
     local latest_ver=$(_get_alpine_ver "${base_image}") || exit $?
 
+    _get_alpine_ver "${base_image}"
+
     if [[ $(compare_semver "${latest_ver}" "${cur_ver}") == 0 ]]; then
         if [[ "${latest_ver%.*}" != "${cur_ver%.*}" ]]; then
             minor_update=1
@@ -470,7 +472,10 @@ update_from_base_image()
 
     _update_versions "${versions}" "${base_image}" "${image#*/}"
     _update_timestamps "${versions}" "${base_image}"
-    _update_alpine "${image}" "${base_image}"
+
+    if [[ "${base_image}" != "alpine" ]]; then
+        _update_alpine "${image}" "${base_image}"
+    fi
 }
 
 rebuild_and_rebase()
