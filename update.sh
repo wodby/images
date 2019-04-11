@@ -6,6 +6,9 @@ if [[ -n "${DEBUG}" ]]; then
     set -x
 fi
 
+git config --global user.email "${GIT_USER_EMAIL}"
+git config --global user.name "${GIT_USER_NAME}"
+
 _git_commit()
 {
     local dir="${1}"
@@ -35,12 +38,20 @@ _get_timestamp()
 {
     local repo="${1}"
     local tag="${2}"
+    local timestamp
 
     if [[ ! "${repo}" =~ / ]]; then
         repo="library/${repo}"
     fi
 
-    curl -L -s "https://registry.hub.docker.com/v2/repositories/${repo}/tags/${tag}" | jq -r '.last_updated'
+    timestamp=$(curl -L -s "https://registry.hub.docker.com/v2/repositories/${repo}/tags/${tag}" | jq -r '.last_updated')
+
+    if [[ -z "${timestamp}" ]]; then
+        >&2 echo "Couldn't fetch latest timestamp"
+        exit 1
+    fi
+
+    echo "${timestamp}"
 }
 
 _join_ws()
@@ -85,8 +96,6 @@ _get_dir()
         dir="${version}"
     elif [[ -f "${version%%.*}/Dockerfile" ]]; then
         dir="${version%%.*}"
-    else
-        exit 1
     fi
 
     echo "${dir}"
@@ -117,12 +126,7 @@ _github_get_latest_ver()
     # Only stable versions.
     local versions=($(curl -s -u "${user}" "${url}" | jq -r "${expr}" | sed -E "s/refs\/tags\/(v|${name}-)?//" | grep -oP "^[0-9\.]+$" | sort -rV))
 
-    if [[ "${#versions}" == 0 ]]; then
-        >&2 echo "Couldn't find latest version in line ${version} of ${slug}."
-        exit 1
-    else
-        echo "${versions[0]}"
-    fi
+    echo "${versions[0]}"
 }
 
 _get_latest_version()
@@ -130,7 +134,7 @@ _get_latest_version()
     local upstream="${1}"
     local version="${2}"
     local name="${3}"
-
+    local latest_ver
     local suffix=$(_get_suffix)
 
     # Get latest stable version from github.
@@ -161,9 +165,16 @@ _git_clone()
 _get_base_image()
 {
     local path=$(find . -name Dockerfile -maxdepth 2 | head -n 1)
-    local base_image=""
+    local base_image
 
-    grep -oP "(?<=FROM ).+(?=:)" "${path}"
+    base_image=$(grep -oP "(?<=FROM ).+(?=:)" "${path}")
+
+    if [[ -z "${base_image}" ]]; then
+        >&2 echo "Failed to identify base image"
+        exit 1
+    fi
+
+    echo "${base_image}"
 }
 
 _update_versions()
@@ -191,6 +202,11 @@ _update_versions()
     for version in "${arr_versions[@]}"; do
         dir=$(_get_dir "${version}")
 
+        if [[ -z "${dir}" ]]; then
+            >&2 echo "Couldn't detect build directory"
+            exit 1
+        fi
+
         if [[ -f .circleci/config.yml ]]; then
             cur_ver=$(grep -oP -m1 "(?<=${name^^}_VER: )${version//\./\\.}\.[0-9\.]+" .circleci/config.yml || true)
         else
@@ -209,7 +225,7 @@ _update_versions()
             exit 1
         fi
 
-        latest_ver=$(_get_latest_version "${upstream}" "${version}" "${name}")
+        latest_ver=$(_get_latest_version "${upstream}" "${version}" "${name}") || exit $?
 
         if [[ $(compare_semver "${latest_ver}" "${cur_ver}") == 0 ]]; then
             echo "${name^} ${cur_ver} is outdated, updating to ${latest_ver}"
@@ -233,7 +249,7 @@ _update_versions()
 
             # Update base image timestamps.
             if [[ -f ".${upstream#*/}" ]]; then
-                latest_timestamp=$(_get_timestamp "${upstream}" "${latest_ver}")
+                latest_timestamp=$(_get_timestamp "${upstream}" "${latest_ver}") || exit $?
                 sed -i "s/${cur_ver}#.*/${latest_ver}#${latest_timestamp}/" ".${upstream#*/}"
             fi
 
@@ -275,8 +291,13 @@ _update_timestamps()
     echo "=============================="
 
     for version in "${arr_versions[@]}"; do
-        latest_timestamp=$(_get_timestamp "${base_image}" "${version}")
+        latest_timestamp=$(_get_timestamp "${base_image}" "${version}") || exit $?
         cur_timestamp=$(cat ".${base_image#*/}" | grep "^${version}" | grep -oP "(?<=#)(.+)$")
+
+        if [[ -z "${cur_timestamp}" ]]; then
+            >&2 echo "Couldn't find current timestamp for ${version}"
+            exit 1
+        fi
 
         if [[ "${cur_timestamp}" != "${latest_timestamp}" ]]; then
             echo "Base image has been updated. Triggering rebuild."
@@ -318,8 +339,8 @@ _update_alpine()
     echo "Checking for Alpine Linux updates"
     echo "================================="
 
-    local cur_ver=$(_get_alpine_ver "${image}")
-    local latest_ver=$(_get_alpine_ver "${base_image}")
+    local cur_ver=$(_get_alpine_ver "${image}") || exit $?
+    local latest_ver=$(_get_alpine_ver "${base_image}") || exit $?
 
     if [[ $(compare_semver "${latest_ver}" "${cur_ver}") == 0 ]]; then
         if [[ "${latest_ver%.*}" != "${cur_ver%.*}" ]]; then
@@ -445,12 +466,7 @@ update_from_base_image()
 
     _git_clone "${image}"
 
-    local base_image=$(_get_base_image)
-
-    if [[ ! -f ".${base_image#*/}" ]]; then
-        >&2 echo "ERROR: Missing .${base_image#*/} file!"
-        exit 1
-    fi
+    local base_image=$(_get_base_image) || exit $?
 
     _update_versions "${versions}" "${base_image}" "${image#*/}"
     _update_timestamps "${versions}" "${base_image}"
@@ -466,11 +482,6 @@ rebuild_and_rebase()
     _git_clone "${image}"
 
     local base_image=$(_get_base_image)
-
-    if [[ ! -f ".${base_image#*/}" ]]; then
-        >&2 echo "ERROR: Missing .${base_image#*/} file!"
-        exit 1
-    fi
 
     IFS=' ' read -r -a array <<< "${versions}"
 
