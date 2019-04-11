@@ -19,8 +19,9 @@ Syncing with upstream.
 | [wodby/base-php]      | `3.9`          |
 | [wodby/elasticsearch] | `3.9`          |
 | [wodby/mariadb]       | `3.8`          |
-| [wodby/varnish]       | `3.9`          |
 | [wodby/nginx]         | `3.8`          |
+| [wodby/opensmtpd]     | `3.9`          |
+| [wodby/varnish]       | `3.9`          |
 
 ### Images based on official images (or forks)
 
@@ -55,9 +56,9 @@ Syncing with upstream.
 | [wodby/drupal-php]    | [wodby/php]           | `7.3`, `7.2`, `7.1`, `5.6` | `4.x`            |
 | [wodby/drupal]        | [wodby/drupal-php]    | `7.3`, `7.2`, `7.1`, `5.6` | `4.x`            |
 | [wodby/matomo]        | [wodby/php]           | `7.1`                      | `1.x`            |
+| [wodby/webgrind]      | [wodby/php]           | `7.1`                      | `1.x`            |
 | [wodby/wordpress-php] | [wodby/php]           | `7.3`, `7.2`, `7.1`, `5.6` | `4.x`            |
 | [wodby/wordpress]     | [wodby/wordpress-php] | `7.3`, `7.2`, `7.1`, `5.6` | `4.x`            |
-| [wodby/webgrind]      | [wodby/php]           | `7.1`                      | `1.x`            |
 | [wodby/xhprof]        | [wodby/php]           | `7.1`                      | `1.x`            |
 
 ### Version updates from upstream other than base image
@@ -67,14 +68,14 @@ Syncing with upstream.
 
 | Image                 | Upstream                     | Versions               | Stability branch |
 | --------------------- | -----------------------      | ---------------------  | --------------   |
-| [wodby/elasticsearch] | [elastic/elasticsearch]      | `6.7`, `5.6`           |                  |
-| [wodby/kibana]        | [elastic/kibana]             | `6.7`, `5.6`           |                  |
-| [wodby/mariadb]       | [mariadb]                    | `10.3`, `10.2`, `10.1` |                  |
-| [wodby/nginx]         | [nginx]                      | `1.15`, `1.14`, `1.13` |                  |
 | [wodby/adminer]       | [vrana/adminer]              | `4`                    | `2.x`            |
 | [wodby/cachet]        | [CachetHQ/Cachet]            | `2`                    | `1.x`            |
 | [wodby/drupal]        | [drupal]                     | `8`, `7`               | `4.x`            |
+| [wodby/elasticsearch] | [elastic/elasticsearch]      | `6.7`, `5.6`           |                  |
+| [wodby/kibana]        | [elastic/kibana]             | `6.7`, `5.6`           |                  |
+| [wodby/mariadb]       | [mariadb]                    | `10.3`, `10.2`, `10.1` |                  |
 | [wodby/matomo]        | [matomo-org/matomo]          | `3`                    | `1.x`            |
+| [wodby/nginx]         | [nginx]                      | `1.15`, `1.14`, `1.13` |                  |
 | [wodby/varnish]       | [varnishcache/varnish-cache] | `6.0`, `4.1`           |                  |
 | [wodby/webgrind]      | [jokkedk/webgrind]           | `1`                    | `1.x`            |
 | [wodby/wordpress]     | [wordpress]                  | `5`                    | `4.x`            |
