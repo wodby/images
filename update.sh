@@ -481,7 +481,7 @@ rebuild_and_rebase()
 
     _git_clone "${image}"
 
-    local base_image=$(_get_base_image)
+    local base_image=$(_get_base_image) || exit $?
 
     IFS=' ' read -r -a array <<< "${versions}"
 
