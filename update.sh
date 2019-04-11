@@ -345,14 +345,12 @@ _update_timestamps()
 
     if [[ -n "${updated}" ]]; then
         _git_commit ./ "Rebuild against updated base image"
-#        git push origin
+        git push origin
 
         # Release tags on alpine updates.
         if [[ "${#ver_with_updated_alpine[@]}" != 0 ]]; then
             ver_list=$(_join_ws ", " "${ver_with_updated_alpine[@]}")
-            echo "Alpine Linux updated to ${latest_alpine_ver} for versions: ${ver_list}"
-            echo "${minor_update}"
-    #        _release_tag "Alpine Linux updated to ${latest_ver} for versions: ${ver_list}" "${minor_update}"
+            _release_tag "Alpine Linux updated to ${latest_alpine_ver} for versions: ${ver_list}" "${minor_update}"
         fi
     else
         echo "Base image hasn't changed"
