@@ -95,20 +95,6 @@ _get_dir()
     echo "${dir}"
 }
 
-_get_suffix()
-{
-    local path
-    local suffix="(?=$)"
-
-    path=$(find . -name Makefile -maxdepth 2 | head -n 1)
-
-    if grep -qP "BASE_IMAGE_TAG.+?-alpine" "${path}"; then
-        suffix="(?=\-alpine$)"
-    fi
-
-    echo "${suffix}"
-}
-
 _github_get_latest_ver()
 {
     local version="${1}"
@@ -137,15 +123,23 @@ _get_latest_version()
     local upstream="${1}"
     local version="${2}"
     local name="${3}"
-    local suffix
-
-    suffix=$(_get_suffix)
+    local latest_ver
 
     # Get latest stable version from github.
     if [[ "${upstream}" == "github.com"* ]]; then
         latest_ver=$(_github_get_latest_ver "${version}" "${upstream/github.com\//}" "${name}")
     # From docker hub, only patch updates.
     else
+        local path
+        local suffix="(?=$)"
+
+        path=$(find . -name Makefile -maxdepth 2 | head -n 1)
+
+        # Alpine-only tags.
+        if grep -qP "BASE_IMAGE_TAG.+?-alpine" "${path}"; then
+            suffix="(?=\-alpine$)"
+        fi
+
         local -a base_image_tags
         base_image_tags=($(_get_image_tags "${upstream}" | grep -oP "^(${version//\./\\.}\.[0-9\.]+)${suffix}" | sort -rV))
         latest_ver="${base_image_tags[0]}"
@@ -328,25 +322,39 @@ _get_alpine_ver()
 
 _update_alpine()
 {
-    local image="${1}"
-    local base_image="${2}"
+    local versions="${1}"
+    local image="${2}"
+    local base_image="${3}"
     local minor_update
     local cur_ver
     local latest_ver
+    local -a updated
+    local ver_list
+
+    IFS=' ' read -r -a arr_versions <<< "${versions}"
 
     echo "================================="
     echo "Checking for Alpine Linux updates"
     echo "================================="
 
-    cur_ver=$(_get_alpine_ver "${image}")
-    latest_ver=$(_get_alpine_ver "${base_image}")
+    for version in "${arr_versions[@]}"; do
+        cur_ver=$(_get_alpine_ver "${image}:${version}")
+        latest_ver=$(_get_alpine_ver "${base_image}:${version}-alpine")
 
-    if [[ $(compare_semver "${latest_ver}" "${cur_ver}") == 0 ]]; then
-        if [[ "${latest_ver%.*}" != "${cur_ver%.*}" ]]; then
-            minor_update=1
+        if [[ $(compare_semver "${latest_ver}" "${cur_ver}") == 0 ]]; then
+            if [[ "${latest_ver%.*}" != "${cur_ver%.*}" ]]; then
+                minor_update=1
+            fi
+
+            updated+=("${version}")
         fi
+    done
 
-#        _release_tag "Alpine Linux updated to ${latest_ver}" "${minor_update}"
+    if [[ "${#updated[@]}" != 0 ]]; then
+        ver_list=$(_join_ws ", " "${updated[@]}")
+        echo "Alpine Linux updated to ${latest_ver} for versions: ${ver_list}"
+        echo "${minor_update}"
+#        _release_tag "Alpine Linux updated to ${latest_ver} for versions: ${ver_list}" "${minor_update}"
     fi
 }
 
@@ -473,7 +481,10 @@ update_from_base_image()
 
     _update_versions "${versions}" "${base_image}" "${image#*/}"
     _update_timestamps "${versions}" "${base_image}"
-    _update_alpine "${image}" "${base_image}"
+
+    if [[ "${base_image}" != "alpine" ]]; then
+        _update_alpine "${versions}" "${image}" "${base_image}"
+    fi
 }
 
 rebuild_and_rebase()
