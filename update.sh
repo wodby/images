@@ -290,8 +290,10 @@ _update_versions()
 _update_timestamps()
 {
     local versions="${1}"
-    local image="${2}"
-    local base_image="${3}"
+    local base_image="${2}"
+
+    # When passed we also check for Alpine update and release versions.
+    local image="${3:-}"
     local updated
 
     local latest_timestamp
@@ -326,7 +328,7 @@ _update_timestamps()
             updated=1
 
             # Check for Alpine updates.
-            if [[ "${base_image}" != "alpine" ]]; then
+            if [[ -n "${image}" && "${base_image}" != "alpine" ]]; then
                 cur_alpine_ver=$(_get_alpine_ver "${image}:${version}")
                 latest_alpine_ver=$(_get_alpine_ver "${base_image}:${tag}")
 
@@ -479,7 +481,7 @@ update_from_base_image()
     base_image=$(_get_base_image)
 
     _update_versions "${versions}" "${base_image}" "${image#*/}"
-    _update_timestamps "${versions}" "${image}" "${base_image}"
+    _update_timestamps "${versions}" "${base_image}" "${image}"
 }
 
 rebuild_and_rebase()
