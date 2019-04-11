@@ -7,9 +7,10 @@ env:
 
   - dir=alpine script=base-php
   - dir=alpine script=elasticsearch
-  - dir=alpine script=varnish
-  - dir=alpine script=nginx
   - dir=alpine script=mariadb
+  - dir=alpine script=nginx
+  - dir=alpine script=opensmtpd
+  - dir=alpine script=varnish
 
   - dir=images script=alpine
   - dir=images script=apache
