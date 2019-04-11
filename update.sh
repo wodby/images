@@ -38,20 +38,12 @@ _get_timestamp()
 {
     local repo="${1}"
     local tag="${2}"
-    local timestamp
 
     if [[ ! "${repo}" =~ / ]]; then
         repo="library/${repo}"
     fi
 
-    timestamp=$(curl -L -s "https://registry.hub.docker.com/v2/repositories/${repo}/tags/${tag}" | jq -r '.last_updated')
-
-    if [[ -z "${timestamp}" ]]; then
-        >&2 echo "Couldn't fetch latest timestamp"
-        exit 1
-    fi
-
-    echo "${timestamp}"
+    curl -L -s "https://registry.hub.docker.com/v2/repositories/${repo}/tags/${tag}" | jq -r '.last_updated'
 }
 
 _join_ws()
@@ -61,11 +53,11 @@ _join_ws()
     echo "${s#"$1$1$1"}"
 }
 
-
 _release_tag()
 {
     local message="${1}"
     local minor_update="${2}"
+    local tag
 
     IFS="." read -r -a sem_ver <<< $(git describe --abbrev=0 --tags)
 
@@ -78,7 +70,7 @@ _release_tag()
         (( ++sem_ver[2] ))
     fi
 
-    local tag=$(_join_ws "." "${sem_ver[@]}")
+    tag=$(_join_ws "." "${sem_ver[@]}")
 
     git tag -m "${message}" "${tag}"
     git push origin "${tag}"
@@ -87,7 +79,6 @@ _release_tag()
 _get_dir()
 {
     local version="${1}"
-    
     local dir
 
     if [[ -f Dockerfile ]]; then
@@ -96,6 +87,9 @@ _get_dir()
         dir="${version}"
     elif [[ -f "${version%%.*}/Dockerfile" ]]; then
         dir="${version%%.*}"
+    else
+        >&2 echo "Couldn't detect directory with Dockerfile"
+        exit 1
     fi
 
     echo "${dir}"
@@ -103,8 +97,10 @@ _get_dir()
 
 _get_suffix()
 {
-    local path=$(find . -name Makefile -maxdepth 2 | head -n 1)
+    local path
     local suffix="(?=$)"
+
+    path=$(find . -name Makefile -maxdepth 2 | head -n 1)
 
     if grep -qP "BASE_IMAGE_TAG.+?-alpine" "${path}"; then
         suffix="(?=\-alpine$)"
@@ -123,10 +119,17 @@ _github_get_latest_ver()
     local user="${GITHUB_MACHINE_USER_API_TOKEN}:x-oauth-basic"
     local expr=".[] | select ( .ref | ltrimstr(\"refs/tags/\") | ltrimstr(\"${name}-\") | ltrimstr(\"v\") | startswith(\"${version}\")).ref"
 
-    # Only stable versions.
-    local versions=($(curl -s -u "${user}" "${url}" | jq -r "${expr}" | sed -E "s/refs\/tags\/(v|${name}-)?//" | grep -oP "^[0-9\.]+$" | sort -rV))
+    local -a versions
 
-    echo "${versions[0]}"
+    # Only stable versions.
+    versions=($(curl -s -u "${user}" "${url}" | jq -r "${expr}" | sed -E "s/refs\/tags\/(v|${name}-)?//" | grep -oP "^[0-9\.]+$" | sort -rV))
+
+    if [[ "${#versions}" == 0 ]]; then
+        >&2 echo "Couldn't find latest version in line ${version} of ${slug}."
+        exit 1
+    else
+        echo "${versions[0]}"
+    fi
 }
 
 _get_latest_version()
@@ -134,15 +137,17 @@ _get_latest_version()
     local upstream="${1}"
     local version="${2}"
     local name="${3}"
-    local latest_ver
-    local suffix=$(_get_suffix)
+    local suffix
+
+    suffix=$(_get_suffix)
 
     # Get latest stable version from github.
     if [[ "${upstream}" == "github.com"* ]]; then
         latest_ver=$(_github_get_latest_ver "${version}" "${upstream/github.com\//}" "${name}")
     # From docker hub, only patch updates.
     else
-        local base_image_tags=($(_get_image_tags "${upstream}" | grep -oP "^(${version//\./\\.}\.[0-9\.]+)${suffix}" | sort -rV))
+        local -a base_image_tags
+        base_image_tags=($(_get_image_tags "${upstream}" | grep -oP "^(${version//\./\\.}\.[0-9\.]+)${suffix}" | sort -rV))
         latest_ver="${base_image_tags[0]}"
     fi
 
@@ -164,13 +169,14 @@ _git_clone()
 
 _get_base_image()
 {
-    local path=$(find . -name Dockerfile -maxdepth 2 | head -n 1)
+    local path
     local base_image
 
+    path=$(find . -name Dockerfile -maxdepth 2 | head -n 1)
     base_image=$(grep -oP "(?<=FROM ).+(?=:)" "${path}")
 
     if [[ -z "${base_image}" ]]; then
-        >&2 echo "Failed to identify base image"
+        >&2 echo "Failed to identify failed image"
         exit 1
     fi
 
@@ -202,11 +208,6 @@ _update_versions()
     for version in "${arr_versions[@]}"; do
         dir=$(_get_dir "${version}")
 
-        if [[ -z "${dir}" ]]; then
-            >&2 echo "Couldn't detect build directory"
-            exit 1
-        fi
-
         if [[ -f .circleci/config.yml ]]; then
             cur_ver=$(grep -oP -m1 "(?<=${name^^}_VER: )${version//\./\\.}\.[0-9\.]+" .circleci/config.yml || true)
         else
@@ -225,7 +226,7 @@ _update_versions()
             exit 1
         fi
 
-        latest_ver=$(_get_latest_version "${upstream}" "${version}" "${name}") || exit $?
+        latest_ver=$(_get_latest_version "${upstream}" "${version}" "${name}")
 
         if [[ $(compare_semver "${latest_ver}" "${cur_ver}") == 0 ]]; then
             echo "${name^} ${cur_ver} is outdated, updating to ${latest_ver}"
@@ -249,7 +250,7 @@ _update_versions()
 
             # Update base image timestamps.
             if [[ -f ".${upstream#*/}" ]]; then
-                latest_timestamp=$(_get_timestamp "${upstream}" "${latest_ver}") || exit $?
+                latest_timestamp=$(_get_timestamp "${upstream}" "${latest_ver}")
                 sed -i "s/${cur_ver}#.*/${latest_ver}#${latest_timestamp}/" ".${upstream#*/}"
             fi
 
@@ -269,7 +270,8 @@ _update_versions()
             git push origin
         fi
 
-        local ver=$(_join_ws ", " "${updated[@]}")
+        local ver
+        ver=$(_join_ws ", " "${updated[@]}")
 
         _release_tag "${name} updates: ${ver}" "${minor_update}"
     fi
@@ -291,13 +293,8 @@ _update_timestamps()
     echo "=============================="
 
     for version in "${arr_versions[@]}"; do
-        latest_timestamp=$(_get_timestamp "${base_image}" "${version}") || exit $?
+        latest_timestamp=$(_get_timestamp "${base_image}" "${version}")
         cur_timestamp=$(cat ".${base_image#*/}" | grep "^${version}" | grep -oP "(?<=#)(.+)$")
-
-        if [[ -z "${cur_timestamp}" ]]; then
-            >&2 echo "Couldn't find current timestamp for ${version}"
-            exit 1
-        fi
 
         if [[ "${cur_timestamp}" != "${latest_timestamp}" ]]; then
             echo "Base image has been updated. Triggering rebuild."
@@ -334,15 +331,15 @@ _update_alpine()
     local image="${1}"
     local base_image="${2}"
     local minor_update
+    local cur_ver
+    local latest_ver
 
     echo "================================="
     echo "Checking for Alpine Linux updates"
     echo "================================="
 
-    local cur_ver=$(_get_alpine_ver "${image}") || exit $?
-    local latest_ver=$(_get_alpine_ver "${base_image}") || exit $?
-
-    _get_alpine_ver "${base_image}"
+    cur_ver=$(_get_alpine_ver "${image}")
+    latest_ver=$(_get_alpine_ver "${base_image}")
 
     if [[ $(compare_semver "${latest_ver}" "${cur_ver}") == 0 ]]; then
         if [[ "${latest_ver%.*}" != "${cur_ver%.*}" ]]; then
@@ -359,12 +356,13 @@ _update_base_alpine_image()
     local base_image="${2}"
     local release_tag="${3}"
     local current
+    local latest
 
     echo "=========================================="
     echo "Checking for alpine base image tag updates"
     echo "=========================================="
 
-    local latest=$(_get_image_tags "${base_image}" | grep -oP "(?<=${version//\./\\.}-)[0-9\.]+$" | sort -rV | head -n1)
+    latest=$(_get_image_tags "${base_image}" | grep -oP "(?<=${version//\./\\.}-)[0-9\.]+$" | sort -rV | head -n1)
 
     if [[ -z "${latest}" ]]; then
         >&2 echo "Failed to acquire latest image tag"
@@ -408,6 +406,8 @@ _update_stability_tag()
     local branch="${3}"
     local tag=""
     local minor_update=""
+    local latest
+    local current
 
     echo "=================================="
     echo "Checking for stability tag updates"
@@ -416,14 +416,14 @@ _update_stability_tag()
     git checkout "${branch}"
     git merge --no-edit master
 
-    local latest=$(_get_image_tags "${base_image}" | grep -oP "(?<=${version//\./\\.}-)[0-9\.]+$" | sort -rV | head -n1)
+    latest=$(_get_image_tags "${base_image}" | grep -oP "(?<=${version//\./\\.}-)[0-9\.]+$" | sort -rV | head -n1)
 
     if [[ -z "${latest}" ]]; then
         >&2 echo "Failed to acquire latest image tag"
         exit 1
     fi
 
-    local current=$(grep -oP "(?<=BASE_IMAGE_STABILITY_TAG=)[0-9\.]+$" .travis.yml)
+    current=$(grep -oP "(?<=BASE_IMAGE_STABILITY_TAG=)[0-9\.]+$" .travis.yml)
 
     if [[ $(compare_semver "${latest}" "${current}") == 0 ]]; then
         sed -i -E "s/(BASE_IMAGE_STABILITY_TAG=)${current}/\1${latest}/" .travis.yml
@@ -465,17 +465,15 @@ update_from_base_image()
 {
     local image="${1}"
     local versions="${2}"
+    local base_image
 
     _git_clone "${image}"
 
-    local base_image=$(_get_base_image) || exit $?
+    base_image=$(_get_base_image)
 
     _update_versions "${versions}" "${base_image}" "${image#*/}"
     _update_timestamps "${versions}" "${base_image}"
-
-    if [[ "${base_image}" != "alpine" ]]; then
-        _update_alpine "${image}" "${base_image}"
-    fi
+    _update_alpine "${image}" "${base_image}"
 }
 
 rebuild_and_rebase()
@@ -483,10 +481,11 @@ rebuild_and_rebase()
     local image="${1}"
     local versions="${2}"
     local branch="${3}"
+    local base_image=
 
     _git_clone "${image}"
 
-    local base_image=$(_get_base_image) || exit $?
+    base_image=$(_get_base_image)
 
     IFS=' ' read -r -a array <<< "${versions}"
 
@@ -499,7 +498,6 @@ update_base_alpine()
     local image="${1}"
     local version="${2}"
     local release_tag="${3}"
-
     local base_image="wodby/alpine"
 
     _git_clone "${image}"
