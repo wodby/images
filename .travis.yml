@@ -62,6 +62,6 @@ script:
 notifications:
   email:
     recipients:
-      - $NOTIFICATIONS_EMAIL
+    - travisci@wodby.com
     on_success: never
     on_failure: always
