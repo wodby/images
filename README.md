@@ -71,8 +71,8 @@ Syncing with upstream.
 | [wodby/adminer]       | [vrana/adminer]              | `4`                            | `2.x`            |
 | [wodby/cachet]        | [CachetHQ/Cachet]            | `2`                            | `1.x`            |
 | [wodby/drupal]        | [drupal]                     | `8`, `7`                       | `4.x`            |
-| [wodby/elasticsearch] | [elastic/elasticsearch]      | `6.7`, `5.6`                   |                  |
-| [wodby/kibana]        | [elastic/kibana]             | `6.7`, `5.6`                   |                  |
+| [wodby/elasticsearch] | [elastic/elasticsearch]      | `7`, `6`                       |                  |
+| [wodby/kibana]        | [elastic/kibana]             | `7`, `6`                       |                  |
 | [wodby/mariadb]       | [mariadb]                    | `10.3`, `10.2`, `10.1`         |                  |
 | [wodby/matomo]        | [matomo-org/matomo]          | `3`                            | `1.x`            |
 | [wodby/nginx]         | [nginx]                      | `1.16`, `1.15`, `1.14`, `1.13` |                  |
