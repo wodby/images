@@ -4,4 +4,4 @@ set -e
 
 . ../update.sh
 
-rebuild_and_rebase "wodby/cachet" "7.1" "1.x"
+rebuild_and_rebase "wodby/cachet" "7.1" "3.x"
