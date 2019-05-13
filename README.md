@@ -52,7 +52,7 @@ Syncing with upstream.
 | Image                 | Upstream (base image) | Versions                   | Stability branch |
 | --------------------- | --------------------- | -------------------        | --------------   |
 | [wodby/adminer]       | [wodby/php]           | `7.1`                      | `2.x`            |
-| [wodby/cachet]        | [wodby/php]           | `7.1`                      | `1.x`            |
+| [wodby/cachet]        | [wodby/php]           | `7.1`                      | `3.x`            |
 | [wodby/drupal-php]    | [wodby/php]           | `7.3`, `7.2`, `7.1`, `5.6` | `4.x`            |
 | [wodby/drupal]        | [wodby/drupal-php]    | `7.3`, `7.2`, `7.1`, `5.6` | `4.x`            |
 | [wodby/matomo]        | [wodby/php]           | `7.1`                      | `1.x`            |
