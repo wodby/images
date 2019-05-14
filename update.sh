@@ -497,7 +497,10 @@ rebuild_and_rebase()
 
     IFS=' ' read -r -a array <<< "${versions}"
 
-    _update_timestamps "${versions}" "${base_image}"
+    if [[ -n "${branch}" ]]; then
+        _update_timestamps "${versions}" "${base_image}"
+    fi
+
     _update_stability_tag "${array[0]}" "${base_image}" "${branch}"
 }
 
