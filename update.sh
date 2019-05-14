@@ -420,8 +420,10 @@ _update_stability_tag()
     echo "Checking for stability tag updates"
     echo "=================================="
 
-    git checkout "${branch}"
-    git merge --no-edit master
+    if [[ -n "${branch}" ]]; then
+        git checkout "${branch}"
+        git merge --no-edit master
+    fi
 
     latest=$(_get_image_tags "${base_image}" | grep -oP "(?<=${version//\./\\.}-)[0-9\.]+$" | sort -rV | head -n1)
 
