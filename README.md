@@ -51,15 +51,15 @@ Syncing with upstream.
 
 | Image                 | Upstream (base image) | Versions                   | Stability branch |
 | --------------------- | --------------------- | -------------------        | --------------   |
-| [wodby/adminer]       | [wodby/php]           | `7.1`                      | `2.x`            |
-| [wodby/cachet]        | [wodby/php]           | `7.1`                      | `3.x`            |
+| [wodby/adminer]       | [wodby/php]           | `7.1`                      |                  |
+| [wodby/cachet]        | [wodby/php]           | `7.1`                      |                  |
 | [wodby/drupal-php]    | [wodby/php]           | `7.3`, `7.2`, `7.1`, `5.6` | `4.x`            |
 | [wodby/drupal]        | [wodby/drupal-php]    | `7.3`, `7.2`, `7.1`, `5.6` | `4.x`            |
-| [wodby/matomo]        | [wodby/php]           | `7.1`                      | `1.x`            |
-| [wodby/webgrind]      | [wodby/php]           | `7.1`                      | `1.x`            |
+| [wodby/matomo]        | [wodby/php]           | `7.1`                      |                  |
+| [wodby/webgrind]      | [wodby/php]           | `7.1`                      |                  |
 | [wodby/wordpress-php] | [wodby/php]           | `7.3`, `7.2`, `7.1`, `5.6` | `4.x`            |
 | [wodby/wordpress]     | [wodby/wordpress-php] | `7.3`, `7.2`, `7.1`, `5.6` | `4.x`            |
-| [wodby/xhprof]        | [wodby/php]           | `7.1`                      | `1.x`            |
+| [wodby/xhprof]        | [wodby/php]           | `7.1`                      |                  |
 
 ### Version updates from upstream other than base image
 
@@ -68,16 +68,16 @@ Syncing with upstream.
 
 | Image                 | Upstream                     | Versions                       | Stability branch |
 | --------------------- | -----------------------      | ---------------------          | --------------   |
-| [wodby/adminer]       | [vrana/adminer]              | `4`                            | `2.x`            |
-| [wodby/cachet]        | [CachetHQ/Cachet]            | `2`                            | `1.x`            |
+| [wodby/adminer]       | [vrana/adminer]              | `4`                            |                  |
+| [wodby/cachet]        | [CachetHQ/Cachet]            | `2`                            |                  |
 | [wodby/drupal]        | [drupal]                     | `8`, `7`                       | `4.x`            |
 | [wodby/elasticsearch] | [elastic/elasticsearch]      | `7`, `6`                       |                  |
 | [wodby/kibana]        | [elastic/kibana]             | `7`, `6`                       |                  |
 | [wodby/mariadb]       | [mariadb]                    | `10.3`, `10.2`, `10.1`         |                  |
-| [wodby/matomo]        | [matomo-org/matomo]          | `3`                            | `1.x`            |
+| [wodby/matomo]        | [matomo-org/matomo]          | `3`                            |                  |
 | [wodby/nginx]         | [nginx]                      | `1.16`, `1.15`, `1.14`, `1.13` |                  |
 | [wodby/varnish]       | [varnishcache/varnish-cache] | `6.0`, `4.1`                   |                  |
-| [wodby/webgrind]      | [jokkedk/webgrind]           | `1`                            | `1.x`            |
+| [wodby/webgrind]      | [jokkedk/webgrind]           | `1`                            |                  |
 | [wodby/wordpress]     | [wordpress]                  | `5`                            | `4.x`            |
 
 ### Docker4X projects
