@@ -35,7 +35,7 @@ Syncing with upstream.
 | [wodby/alpine]        | [alpine]              | `3.9`, `3.8`                      |
 | [wodby/apache]        | [httpd]               | `2.4`                             |
 | [wodby/memcached]     | [memcached]           | `1`                               |
-| [wodby/node]          | [node]                | `10`, `8`, `6`                    |
+| [wodby/node]          | [node]                | `12`, `10`, `8`                   |
 | [wodby/php]           | [wodby/base-php]      | `7.3`, `7.2`, `7.1`, `5.6`        |
 | [wodby/postgres]      | [postgres]            | `11`, `10`, `9.6`, `9.5`, `9.4`   |
 | [wodby/python]        | [python]              | `3.7`, `3.6`, `3.5`, `2.7`        |
