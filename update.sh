@@ -103,12 +103,12 @@ _github_get_latest_ver()
 
     local url="https://api.github.com/repos/${slug}/git/refs/tags"
     local user="${GITHUB_MACHINE_USER_API_TOKEN}:x-oauth-basic"
-    local expr=".[] | select ( .ref | ltrimstr(\"refs/tags/\") | ltrimstr(\"${name}-\") | ltrimstr(\"v\") | startswith(\"${version}\")).ref"
+    local expr=".[] | select ( .ref | ltrimstr(\"refs/tags/\") | ltrimstr(\"${name}-\") | ltrimstr(\"v\") | ltrimstr(\"release-\") | startswith(\"${version}\")).ref"
 
     local -a versions
 
     # Only stable versions.
-    versions=($(curl -s -u "${user}" "${url}" | jq -r "${expr}" | sed -E "s/refs\/tags\/(v|${name}-)?//" | grep -oP "^[0-9\.]+$" | sort -rV))
+    versions=($(curl -s -u "${user}" "${url}" | jq -r "${expr}" | sed -E "s/refs\/tags\/(v|release-|${name}-)?//" | grep -oP "^[0-9\.]+$" | sort -rV))
 
     if [[ "${#versions}" == 0 ]]; then
         >&2 echo "Couldn't find latest version in line ${version} of ${slug}."
