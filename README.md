@@ -18,7 +18,7 @@ Syncing with upstream.
 | --------------------- | -------------- |
 | [wodby/base-php]      | `3.9`          |
 | [wodby/elasticsearch] | `3.9`          |
-| [wodby/mariadb]       | `3.8`          |
+| [wodby/mariadb]       | `3.9`          |
 | [wodby/nginx]         | `3.8`          |
 | [wodby/opensmtpd]     | `3.9`          |
 | [wodby/varnish]       | `3.9`          |
@@ -73,7 +73,7 @@ Syncing with upstream.
 | [wodby/drupal]        | [drupal]                     | `8`, `7`                               | `4.x`            |
 | [wodby/elasticsearch] | [elastic/elasticsearch]      | `7`, `6`                               |                  |
 | [wodby/kibana]        | [elastic/kibana]             | `7`, `6`                               |                  |
-| [wodby/mariadb]       | [mariadb]                    | `10.3`, `10.2`, `10.1`                 |                  |
+| [wodby/mariadb]       | [mariadb]                    | `10.4`, `10.3`, `10.2`, `10.1`         |                  |
 | [wodby/matomo]        | [matomo-org/matomo]          | `3`                                    |                  |
 | [wodby/nginx]         | [nginx]                      | `1.17`, `1.16`, `1.15`, `1.14`, `1.13` |                  |
 | [wodby/varnish]       | [varnishcache/varnish-cache] | `6.0`, `4.1`                           |                  |

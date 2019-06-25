@@ -4,4 +4,4 @@ set -e
 
 . ../update.sh
 
-update_base_alpine "wodby/mariadb" "3.8" "true"
+update_base_alpine "wodby/mariadb" "3.9" "true"
