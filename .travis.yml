@@ -4,6 +4,7 @@ services: docker
 env:
   matrix:
   - dir=forks script=base-php
+  - dir=forks script=base-solr
 
   - dir=alpine script=base-php
   - dir=alpine script=elasticsearch
