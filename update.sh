@@ -455,12 +455,9 @@ _update_stability_tag()
 
 sync_php_fork()
 {
-    local repo="${1}"
-    local upstream="${2}"
-
-    git clone "https://${GITHUB_MACHINE_USER}:${GITHUB_MACHINE_USER_API_TOKEN}@github.com/${repo}" "/tmp/${repo#*/}"
-    cd "/tmp/${repo#*/}"
-    git remote add upstream "https://github.com/docker-library/${upstream}"
+    git clone "https://${GITHUB_MACHINE_USER}:${GITHUB_MACHINE_USER_API_TOKEN}@github.com/wodby/base-php" /tmp/base-php
+    cd /tmp/base-php
+    git remote add upstream "https://github.com/docker-library/php"
     git fetch upstream
     git merge --strategy-option ours --no-edit upstream/master
 
@@ -472,12 +469,9 @@ sync_php_fork()
 
 sync_solr_fork()
 {
-    local repo="${1}"
-    local upstream="${2}"
-
-    git clone "https://${GITHUB_MACHINE_USER}:${GITHUB_MACHINE_USER_API_TOKEN}@github.com/${repo}" "/tmp/${repo#*/}"
-    cd "/tmp/${repo#*/}"
-    git remote add upstream "https://github.com/docker-library/${upstream}"
+    git clone "https://${GITHUB_MACHINE_USER}:${GITHUB_MACHINE_USER_API_TOKEN}@github.com/wodby/base-solr" /tmp/base-solr
+    cd /tmp/base-solr
+    git remote add upstream "https://github.com/docker-solr/docker-solr"
     git fetch upstream
     git merge --strategy-option ours --no-edit upstream/master
 
