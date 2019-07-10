@@ -4,4 +4,4 @@ set -e
 
 . ../update.sh
 
-sync_fork "wodby/base-solr" "php"
+sync_solr_fork
