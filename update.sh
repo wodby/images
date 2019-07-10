@@ -453,7 +453,7 @@ _update_stability_tag()
     fi
 }
 
-sync_fork()
+sync_php_fork()
 {
     local repo="${1}"
     local upstream="${2}"
@@ -465,6 +465,23 @@ sync_fork()
     git merge --strategy-option ours --no-edit upstream/master
 
     ./wodby-meta-update.sh
+
+    _git_commit ./ "Update from upstream"
+    git push origin
+}
+
+sync_solr_fork()
+{
+    local repo="${1}"
+    local upstream="${2}"
+
+    git clone "https://${GITHUB_MACHINE_USER}:${GITHUB_MACHINE_USER_API_TOKEN}@github.com/${repo}" "/tmp/${repo#*/}"
+    cd "/tmp/${repo#*/}"
+    git remote add upstream "https://github.com/docker-library/${upstream}"
+    git fetch upstream
+    git merge --strategy-option ours --no-edit upstream/master
+
+    ./tools/update.sh
 
     _git_commit ./ "Update from upstream"
     git push origin

@@ -4,4 +4,4 @@ set -e
 
 . ../update.sh
 
-update_base_alpine "wodby/base-php" "3.10"
+sync_fork "wodby/base-solr" "php"
