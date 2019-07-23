@@ -18,7 +18,6 @@ Syncing with upstream.
 | Image                 | Alpine version |
 | --------------------- | -------------- |
 | [wodby/base-php]      | `3.10`          
-| [wodby/elasticsearch] | `3.9`          |
 | [wodby/mariadb]       | `3.9`          |
 | [wodby/nginx]         | `3.8`          |
 | [wodby/opensmtpd]     | `3.9`          |
