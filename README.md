@@ -17,11 +17,11 @@ Syncing with upstream.
 
 | Image                 | Alpine version |
 | --------------------- | -------------- |
-| [wodby/base-php]      | `3.10`          
-| [wodby/mariadb]       | `3.9`          |
+| [wodby/base-php]      | `3.10`         | 
+| [wodby/mariadb]       | `3.10`         |
 | [wodby/nginx]         | `3.8`          |
-| [wodby/opensmtpd]     | `3.9`          |
-| [wodby/varnish]       | `3.9`          |
+| [wodby/opensmtpd]     | `3.10`         |
+| [wodby/varnish]       | `3.10`         |
 
 ### Images based on official images (or forks)
 
@@ -41,7 +41,7 @@ Syncing with upstream.
 | [wodby/python]        | [python]              | `3.7`, `3.6`, `3.5`, `2.7`               |
 | [wodby/redis]         | [redis]               | `5`, `4`                                 |
 | [wodby/ruby]          | [ruby]                | `2.6`, `2.5`, `2.4`                      |
-| [wodby/solr]          | [wodby/base-solr]     | `8.1`, `7.7`, `7.6`, `7.5`, `6.6`, `5.5` |
+| [wodby/solr]          | [wodby/base-solr]     | `8`, `7.7`, `7.6`, `7.5`, `6.6`, `5.5`   |
 
 ### Descendant images
 
