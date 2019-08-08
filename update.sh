@@ -53,24 +53,26 @@ _join_ws()
     echo "${s#"$1$1$1"}"
 }
 
-_release_tag()
+_release_tag()  
 {
     local message="${1}"
     local minor_update="${2}"
     local tag
+    local -a new_ver
 
-    IFS="." read -r -a sem_ver <<< $(git describe --abbrev=0 --tags)
+    IFS="." read -r -a last_ver <<< $(git describe --abbrev=0 --tags)
+    new_ver=last_ver
 
     # Minor version changed.
     if [[ -n "${minor_update}" ]]; then
-        (( ++sem_ver[1] ))
-        sem_ver[2]=0
+        new_ver[1]=last_ver[1]+1
+        new_ver[2]=0
     # Patch version changed.
     else
-        (( ++sem_ver[2] ))
+        new_ver[2]=last_ver[2]+1
     fi
 
-    tag=$(_join_ws "." "${sem_ver[@]}")
+    tag=$(_join_ws "." "${new_ver[@]}")
 
     git tag -m "${message}" "${tag}"
     git push origin "${tag}"
