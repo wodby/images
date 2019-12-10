@@ -79,6 +79,7 @@ Syncing with upstream.
 | [wodby/varnish]       | [varnishcache/varnish-cache] | `6.0`, `4.1`                           |                  |
 | [wodby/webgrind]      | [jokkedk/webgrind]           | `1`                                    |                  |
 | [wodby/wordpress]     | [wordpress]                  | `5`                                    | `4.x`            |
+| [wodby/xhprof]        | [longxinH/xhprof]            | `2`                                    |                  |
 
 ### Docker4X projects
 
@@ -154,3 +155,4 @@ Not automated:
 [wodby/wordpress]: https://github.com/wodby/wordpress
 [wodby/xhprof]: https://github.com/wodby/xhprof
 [wordpress]: https://github.com/WordPress/WordPress
+[longxinH/xhprof]: https://github.com/longxinH/xhprof
