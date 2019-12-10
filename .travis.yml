@@ -45,6 +45,7 @@ env:
   - dir=upstream script=varnish
   - dir=upstream script=webgrind
   - dir=upstream script=wordpress
+  - dir=upstream script=xhprof
 
   - dir=docker4x script=drupal
   - dir=docker4x script=php
