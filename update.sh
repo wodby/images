@@ -205,7 +205,6 @@ _update_versions()
     local latest_timestamp
     local cur_ver
     local dir
-    local dots
 
     local minor_update
 
@@ -222,7 +221,7 @@ _update_versions()
             cur_ver=$(grep -oP -m1 "(?<=${name^^}_VER: )${version//\./\\.}\.[0-9\.]+" .circleci/config.yml || true)
         else
             # There two ways how we specify versions in .travis.yml (same used for updates below):
-            # 1. PHP72=7.2.8
+            # 1. PHP72=7.2.8 (or PHP7=7.2.8 depending on the provided version)
             # 2. PHP_VER=7.2.8
             cur_ver=$(grep -oP "(?<=${name^^}${version//.}=)[0-9\.]+" .travis.yml || true)
 
