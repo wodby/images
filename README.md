@@ -17,7 +17,7 @@ Syncing with upstream.
 
 | Image                 | Alpine version |
 | --------------------- | -------------- |
-| [wodby/base-php]      | `3.10`         |
+| [wodby/base-php]      | `3.11`         |
 | [wodby/mariadb]       | `3.10`         |
 | [wodby/nginx]         | `3.8`          |
 | [wodby/opensmtpd]     | `3.10`         |
@@ -36,7 +36,7 @@ Syncing with upstream.
 | [wodby/apache]        | [httpd]               | `2.4`                                  |
 | [wodby/memcached]     | [memcached]           | `1`                                    |
 | [wodby/node]          | [node]                | `12`, `10`, `8`                        |
-| [wodby/php]           | [wodby/base-php]      | `7.4`, `7.3`, `7.2`, `7.1`, `5.6`      |
+| [wodby/php]           | [wodby/base-php]      | `7.4`, `7.3`, `7.2`                    |
 | [wodby/postgres]      | [postgres]            | `12`, `11`, `10`, `9.6`, `9.5`, `9.4`  |
 | [wodby/python]        | [python]              | `3.7`, `3.6`, `3.5`, `2.7`             |
 | [wodby/redis]         | [redis]               | `5`, `4`                               |
@@ -49,17 +49,17 @@ Syncing with upstream.
 - Rebase to newer stability tag
 - New stability tag release
 
-| Image                 | Upstream (base image) | Versions                          | Stability branch |
-| --------------------- | --------------------- | -------------------               | --------------   |
-| [wodby/adminer]       | [wodby/php]           | `7.2`                             |                  |
-| [wodby/cachet]        | [wodby/php]           | `7.2`                             |                  |
-| [wodby/drupal-php]    | [wodby/php]           | `7.3`, `7.2`, `7.1`, `5.6`        | `4.x`            |
-| [wodby/drupal]        | [wodby/drupal-php]    | `7.3`, `7.2`, `7.1`, `5.6`        | `4.x`            |
-| [wodby/matomo]        | [wodby/php]           | `7.2`                             |                  |
-| [wodby/webgrind]      | [wodby/php]           | `7.2`                             |                  |
-| [wodby/wordpress-php] | [wodby/php]           | `7.4`, `7.3`, `7.2`, `7.1`, `5.6` | `4.x`            |
-| [wodby/wordpress]     | [wodby/wordpress-php] | `7.4`, `7.3`, `7.2`, `7.1`, `5.6` | `4.x`            |
-| [wodby/xhprof]        | [wodby/php]           | `7.2`                             |                  |
+| Image                 | Upstream (base image) | Versions            | Stability branch |
+| --------------------- | --------------------- | ------------------- | --------------   |
+| [wodby/adminer]       | [wodby/php]           | `7.2`               |                  |
+| [wodby/cachet]        | [wodby/php]           | `7.2`               |                  |
+| [wodby/drupal-php]    | [wodby/php]           | `7.4`,`7.3`, `7.2`  | `4.x`            |
+| [wodby/drupal]        | [wodby/drupal-php]    | `7.4`,`7.3`, `7.2`  | `4.x`            |
+| [wodby/matomo]        | [wodby/php]           | `7.2`               |                  |
+| [wodby/webgrind]      | [wodby/php]           | `7.2`               |                  |
+| [wodby/wordpress-php] | [wodby/php]           | `7.4`, `7.3`, `7.2` | `4.x`            |
+| [wodby/wordpress]     | [wodby/wordpress-php] | `7.4`, `7.3`, `7.2` | `4.x`            |
+| [wodby/xhprof]        | [wodby/php]           | `7.2`               |                  |
 
 ### Version updates from upstream other than base image
 
