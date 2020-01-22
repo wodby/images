@@ -4,4 +4,4 @@ set -e
 
 . ../update.sh
 
-update_base_alpine "wodby/base-php" "3.10"
+update_base_alpine "wodby/base-php" "3.11"
