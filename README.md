@@ -18,10 +18,10 @@ Syncing with upstream.
 | Image                 | Alpine version |
 | --------------------- | -------------- |
 | [wodby/base-php]      | `3.11`         |
-| [wodby/mariadb]       | `3.10`         |
+| [wodby/mariadb]       | `3.12`         |
 | [wodby/nginx]         | `3.8`          |
 | [wodby/opensmtpd]     | `3.10`         |
-| [wodby/varnish]       | `3.10`         |
+| [wodby/varnish]       | `3.12`         |
 
 ### Images based on official images (or forks)
 
@@ -32,13 +32,13 @@ Syncing with upstream.
 
 | Image                 | Upstream (base image) | Versions                               |
 | --------------------- | --------------------- | ---------------------------------      |
-| [wodby/alpine]        | [alpine]              | `3.11`, `3.10`, `3.9`, `3.8`           |
+| [wodby/alpine]        | [alpine]              | `3.12`, `3.11`, `3.10`, `3.9`, `3.8`   |
 | [wodby/apache]        | [httpd]               | `2.4`                                  |
 | [wodby/memcached]     | [memcached]           | `1`                                    |
 | [wodby/node]          | [node]                | `12`, `10`, `8`                        |
 | [wodby/php]           | [wodby/base-php]      | `7.4`, `7.3`, `7.2`                    |
 | [wodby/postgres]      | [postgres]            | `12`, `11`, `10`, `9.6`, `9.5`, `9.4`  |
-| [wodby/python]        | [python]              | `3.7`, `3.6`, `3.5`, `2.7`             |
+| [wodby/python]        | [python]              | `3.7`, `3.6`, `3.5`                    |
 | [wodby/redis]         | [redis]               | `6`, `5`                               |
 | [wodby/ruby]          | [ruby]                | `2.6`, `2.5`, `2.4`                    |
 | [wodby/solr]          | [wodby/base-solr]     | `8`, `7.7`, `7.6`, `7.5`, `6.6`, `5.5` |
