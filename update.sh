@@ -617,3 +617,27 @@ update_docker4x()
         fi
     done
 }
+
+update_drupal_vanilla()
+{
+    _git_clone "wodby/drupal-vanilla"
+    _git_clone "drupal/recommended-project"
+    latest_ver=$(git show-ref --tags | grep -P -o '(?<=refs/tags/)9\.[0-9]+\.[0-9]+$' | sort -rV | head -n1)
+    git checkout "${latest_ver}"
+    cp composer.json composer.lock /tmp/drupal-vanilla
+    _git_commit /tmp/drupal-vanilla "Update Drupal 9"
+
+    cd /tmp/drupal-vanilla
+    git checkout 8.x
+    cd /tmp/recommended-project
+    latest_ver=$(git show-ref --tags | grep -P -o '(?<=refs/tags/)8\.[0-9]+\.[0-9]+$' | sort -rV | head -n1)
+    cp composer.json composer.lock /tmp/drupal-vanilla
+    _git_commit /tmp/drupal-vanilla "Update Drupal 8"
+
+    cd /tmp/drupal-vanilla
+    git checkout 7.x
+    _git_clone "drupal-composer/drupal-project"
+    git checkout 7.x
+    cp -R composer.json drush scripts phpunit.xml.dist /tmp/drupal-vanilla
+    _git_commit /tmp/drupal-vanilla "Update Drupal 7"
+}

@@ -3,6 +3,7 @@ services: docker
 
 env:
   matrix:
+  - dir=repos script=drupal-vanilla
   - dir=forks script=base-php
   - dir=forks script=base-solr
 
