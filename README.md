@@ -17,7 +17,7 @@ Syncing with upstream.
 
 | Image                 | Alpine version |
 | --------------------- | -------------- |
-| [wodby/base-php]      | `3.11`         |
+| [wodby/base-php]      | `3.12`         |
 | [wodby/mariadb]       | `3.12`         |
 | [wodby/nginx]         | `3.8`          |
 | [wodby/opensmtpd]     | `3.10`         |
