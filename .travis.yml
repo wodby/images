@@ -4,10 +4,8 @@ services: docker
 env:
   matrix:
   - dir=repos script=drupal-vanilla
-  - dir=forks script=base-php
   - dir=forks script=base-solr
 
-  - dir=alpine script=base-php
   - dir=alpine script=mariadb
   - dir=alpine script=nginx
   - dir=alpine script=opensmtpd
