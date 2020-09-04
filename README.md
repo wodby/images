@@ -10,14 +10,12 @@ Syncing with upstream.
 
 | Image                 | Upstream  |
 | --------------------- | --------- |
-| [wodby/base-php]      | [php]     |
 | [wodby/base-solr]     | [solr]    |
 
 ### Alpine base image
 
 | Image                 | Alpine version |
 | --------------------- | -------------- |
-| [wodby/base-php]      | `3.12`         |
 | [wodby/mariadb]       | `3.12`         |
 | [wodby/nginx]         | `3.8`          |
 | [wodby/opensmtpd]     | `3.10`         |
@@ -36,7 +34,7 @@ Syncing with upstream.
 | [wodby/apache]        | [httpd]               | `2.4`                                  |
 | [wodby/memcached]     | [memcached]           | `1`                                    |
 | [wodby/node]          | [node]                | `14`, `12`, `10`, `8`                  |
-| [wodby/php]           | [wodby/base-php]      | `7.4`, `7.3`, `7.2`                    |
+| [wodby/php]           | [php]                 | `7.4`, `7.3`, `7.2`                    |
 | [wodby/postgres]      | [postgres]            | `12`, `11`, `10`, `9.6`, `9.5`, `9.4`  |
 | [wodby/python]        | [python]              | `3.7`, `3.6`, `3.5`                    |
 | [wodby/redis]         | [redis]               | `6`, `5`                               |
@@ -97,7 +95,7 @@ Not automated:
 
 - Adding new minor/major version
 - Rebase to a new major Alpine version
-- Switching latest version
+- Switching the latest version
 - New stability branches for major stability tags updates
 - Config set updates from Search API Solr module for [wodby/solr]
 - [wodby/opensmtpd] (installed from Alpine repository package)
@@ -125,7 +123,6 @@ Not automated:
 [wodby/adminer]: https://github.com/wodby/adminer
 [wodby/alpine]: https://github.com/wodby/alpine
 [wodby/apache]: https://github.com/wodby/apache
-[wodby/base-php]: https://github.com/wodby/base-php
 [wodby/base-solr]: https://github.com/wodby/base-solr
 [wodby/cachet]: https://github.com/wodby/cachet
 [wodby/docker4drupal]: https://github.com/wodby/docker4drupal
