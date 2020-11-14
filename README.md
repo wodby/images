@@ -1,6 +1,6 @@
 # Docker images auto updater
 
-[![Build Status](https://travis-ci.com/wodby/images.svg?branch=master)](https://travis-ci.com/wodby/images)
+[![Build Status](https://github.com/wodby/images/workflows/Update/badge.svg)](https://github.com/wodby/images/actions)
 
 ## Auto-updated images
 

@@ -1,0 +1,86 @@
+name: Update
+
+on:
+  push:
+    branches:
+    - master
+
+    tags:
+    - '*'
+
+  pull_request:
+
+jobs:
+  repos:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: ./.github/actions
+      with:
+        dir: repos
+        script: drupal-vanilla
+  forks:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: ./.github/actions
+      with:
+        dir: forks
+        script: base-solr
+  alpine:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        script: [mariadb,nginx,opensmtpd,varnish]
+    steps:
+    - uses: actions/checkout@v2
+    - uses: ./.github/actions
+      with:
+        dir: alpine
+        script: ${{ matrix.script }}
+  images:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        script: [alpine,apache,memcached,node,php,postgres,python,redis,ruby,solr]
+    steps:
+    - uses: actions/checkout@v2
+    - uses: ./.github/actions
+      with:
+        dir: images
+        script: ${{ matrix.script }}
+  stability-tags:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        script: [drupal-php,wordpress-php,adminer-php,cachet-php,matomo-php,webgrind-php,drupal,wordpress,xhprof]
+    steps:
+    - uses: actions/checkout@v2
+    - uses: ./.github/actions
+      with:
+        dir: stability-tags
+        script: ${{ matrix.script }}
+  upstream:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        script: [adminer,cachet,drupal,elasticsearch,kibana,mariadb,matomo,nginx,varnish,webgrind,wordpress,xhprof,]
+    steps:
+    - uses: actions/checkout@v2
+    - uses: ./.github/actions
+      with:
+        dir: upstream
+        script: ${{ matrix.script }}
+  docker4x:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        script: [drupal,php,python,ruby,wordpress]
+    steps:
+    - uses: actions/checkout@v2
+    - uses: ./.github/actions
+      with:
+        dir: docker4x
+        script: ${{ matrix.script }}
+
+
