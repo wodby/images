@@ -222,11 +222,11 @@ _update_versions()
         else
             # There two ways how we specify versions in workflow.yml (same used for updates below):
             # 1. PHP72: 7.2.8 (or PHP7=7.2.8 depending on the provided version)
-            # 2. PHP_VER: 7.2.8
+            # 2. version: 7.2.8
             cur_ver=$(grep -oP "(?<=${name^^}${version//.}: )[0-9\.]+" .github/workflows/workflow.yml || true)
 
             if [[ -z "${cur_ver}" ]]; then
-                cur_ver=$(grep -oP -m1 "(?<=${name^^}_VER: )${version//\./\\.}[0-9\.]+" .github/workflows/workflow.yml || true)
+                cur_ver=$(grep -oP -m1 "(?<=version: )${version//\./\\.}[0-9\.]+" .github/workflows/workflow.yml || true)
             fi
         fi
 
@@ -243,14 +243,14 @@ _update_versions()
             if [[ -f .circleci/config.yml ]]; then
                 sed -i -E "s/(${name^^}_VER): ${version//\./\\.}.*/\1: ${latest_ver}/" .circleci/config.yml
             else
-                sed -i -E "s/(${name^^}${version//.}): .+/\1=${latest_ver}/" .github/workflows/workflow.yml
-                sed -i -E "s/(${name^^}_VER): ${version//\./\\.}\.[0-9\.]+/\1=${latest_ver}/" .github/workflows/workflow.yml
+                sed -i -E "s/(${name^^}${version//.}): .+/\1: ${latest_ver}/" .github/workflows/workflow.yml
+                sed -i -E "s/(version): ${version//\./\\.}\.[0-9\.]+/\1: ${latest_ver}/" .github/workflows/workflow.yml
             fi
 
             # For semver minor updates we should also update tags info.
             if [[ "${latest_ver%.*}" != "${cur_ver%.*}" ]]; then
                 minor_update=1
-                sed -i -E "s/(TAGS): .+?${version//\./\\.}\.[0-9\.]+,/\1=${latest_ver%.*},/" .github/workflows/workflow.yml
+                sed -i -E "s/(TAGS): .+?${version//\./\\.}\.[0-9\.]+,/\1: ${latest_ver%.*},/" .github/workflows/workflow.yml
                 sed -i -E "s/\`${version//\./\\.}\.[0-9\.]+\`/\`${latest_ver%.*}\`/" README.md
                 sed -i -E "s/\:${version//\./\\.}\.[0-9\.]+(-X\.X\.X)/:${latest_ver%.*}\1/" README.md
             fi
