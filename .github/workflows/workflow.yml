@@ -5,8 +5,8 @@ on:
     branches:
     - master
 
-    tags:
-    - '*'
+  schedule:
+  - cron: '0 2 * * *'
 
   pull_request:
 
@@ -19,6 +19,10 @@ jobs:
       with:
         dir: repos
         script: drupal-vanilla
+        api_token: ${{ secrets.GIT_GITHUB_MACHINE_USER_API_TOKEN }}
+        user: ${{ secrets.GIT_GITHUB_MACHINE_USER }}
+        email: ${{ secrets.GIT_USER_EMAIL }}
+        name: ${{ secrets.GIT_USER_NAME }}
   forks:
     runs-on: ubuntu-latest
     steps:
@@ -27,6 +31,10 @@ jobs:
       with:
         dir: forks
         script: base-solr
+        api_token: ${{ secrets.GIT_GITHUB_MACHINE_USER_API_TOKEN }}
+        user: ${{ secrets.GIT_GITHUB_MACHINE_USER }}
+        email: ${{ secrets.GIT_USER_EMAIL }}
+        name: ${{ secrets.GIT_USER_NAME }}
   alpine:
     runs-on: ubuntu-latest
     strategy:
@@ -38,6 +46,10 @@ jobs:
       with:
         dir: alpine
         script: ${{ matrix.script }}
+        api_token: ${{ secrets.GIT_GITHUB_MACHINE_USER_API_TOKEN }}
+        user: ${{ secrets.GIT_GITHUB_MACHINE_USER }}
+        email: ${{ secrets.GIT_USER_EMAIL }}
+        name: ${{ secrets.GIT_USER_NAME }}
   images:
     runs-on: ubuntu-latest
     strategy:
@@ -49,6 +61,10 @@ jobs:
       with:
         dir: images
         script: ${{ matrix.script }}
+        api_token: ${{ secrets.GIT_GITHUB_MACHINE_USER_API_TOKEN }}
+        user: ${{ secrets.GIT_GITHUB_MACHINE_USER }}
+        email: ${{ secrets.GIT_USER_EMAIL }}
+        name: ${{ secrets.GIT_USER_NAME }}
   stability-tags:
     runs-on: ubuntu-latest
     strategy:
@@ -60,6 +76,10 @@ jobs:
       with:
         dir: stability-tags
         script: ${{ matrix.script }}
+        api_token: ${{ secrets.GIT_GITHUB_MACHINE_USER_API_TOKEN }}
+        user: ${{ secrets.GIT_GITHUB_MACHINE_USER }}
+        email: ${{ secrets.GIT_USER_EMAIL }}
+        name: ${{ secrets.GIT_USER_NAME }}
   upstream:
     runs-on: ubuntu-latest
     strategy:
@@ -71,6 +91,10 @@ jobs:
       with:
         dir: upstream
         script: ${{ matrix.script }}
+        api_token: ${{ secrets.GIT_GITHUB_MACHINE_USER_API_TOKEN }}
+        user: ${{ secrets.GIT_GITHUB_MACHINE_USER }}
+        email: ${{ secrets.GIT_USER_EMAIL }}
+        name: ${{ secrets.GIT_USER_NAME }}
   docker4x:
     runs-on: ubuntu-latest
     strategy:
@@ -82,5 +106,7 @@ jobs:
       with:
         dir: docker4x
         script: ${{ matrix.script }}
-
-
+        api_token: ${{ secrets.GIT_GITHUB_MACHINE_USER_API_TOKEN }}
+        user: ${{ secrets.GIT_GITHUB_MACHINE_USER }}
+        email: ${{ secrets.GIT_USER_EMAIL }}
+        name: ${{ secrets.GIT_USER_NAME }}
