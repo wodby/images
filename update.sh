@@ -220,13 +220,13 @@ _update_versions()
         if [[ -f .circleci/config.yml ]]; then
             cur_ver=$(grep -oP -m1 "(?<=${name^^}_VER: )${version//\./\\.}\.[0-9\.]+" .circleci/config.yml || true)
         else
-            # There two ways how we specify versions in .travis.yml (same used for updates below):
-            # 1. PHP72=7.2.8 (or PHP7=7.2.8 depending on the provided version)
-            # 2. PHP_VER=7.2.8
-            cur_ver=$(grep -oP "(?<=${name^^}${version//.}=)[0-9\.]+" .travis.yml || true)
+            # There two ways how we specify versions in workflow.yml (same used for updates below):
+            # 1. PHP72: 7.2.8 (or PHP7=7.2.8 depending on the provided version)
+            # 2. PHP_VER: 7.2.8
+            cur_ver=$(grep -oP "(?<=${name^^}${version//.}:)[0-9\.]+" .github/workflows/workflow.yml || true)
 
             if [[ -z "${cur_ver}" ]]; then
-                cur_ver=$(grep -oP -m1 "(?<=${name^^}_VER=)${version//\./\\.}[0-9\.]+" .travis.yml || true)
+                cur_ver=$(grep -oP -m1 "(?<=${name^^}_VER:)${version//\./\\.}[0-9\.]+" .github/workflows/workflow.yml || true)
             fi
         fi
 
@@ -243,14 +243,14 @@ _update_versions()
             if [[ -f .circleci/config.yml ]]; then
                 sed -i -E "s/(${name^^}_VER): ${version//\./\\.}.*/\1: ${latest_ver}/" .circleci/config.yml
             else
-                sed -i -E "s/(${name^^}${version//.})=.+/\1=${latest_ver}/" .travis.yml
-                sed -i -E "s/(${name^^}_VER)=${version//\./\\.}\.[0-9\.]+/\1=${latest_ver}/" .travis.yml
+                sed -i -E "s/(${name^^}${version//.}): .+/\1=${latest_ver}/" .github/workflows/workflow.yml
+                sed -i -E "s/(${name^^}_VER): ${version//\./\\.}\.[0-9\.]+/\1=${latest_ver}/" .github/workflows/workflow.yml
             fi
 
             # For semver minor updates we should also update tags info.
             if [[ "${latest_ver%.*}" != "${cur_ver%.*}" ]]; then
                 minor_update=1
-                sed -i -E "s/(TAGS)=.+?${version//\./\\.}\.[0-9\.]+,/\1=${latest_ver%.*},/" .travis.yml
+                sed -i -E "s/(TAGS): .+?${version//\./\\.}\.[0-9\.]+,/\1=${latest_ver%.*},/" .github/workflows/workflow.yml
                 sed -i -E "s/\`${version//\./\\.}\.[0-9\.]+\`/\`${latest_ver%.*}\`/" README.md
                 sed -i -E "s/\:${version//\./\\.}\.[0-9\.]+(-X\.X\.X)/:${latest_ver%.*}\1/" README.md
             fi
@@ -378,14 +378,14 @@ _update_base_alpine_image()
     if [[ -f .circleci/config.yml ]]; then
         current=$(grep -oP "(?<=BASE_IMAGE_STABILITY_TAG: )[0-9\.]+$" .circleci/config.yml | head -n1)
     else
-        current=$(grep -oP "(?<=BASE_IMAGE_STABILITY_TAG=)[0-9\.]+$" .travis.yml)
+        current=$(grep -oP "(?<=BASE_IMAGE_STABILITY_TAG: )[0-9\.]+$" .github/workflows/workflow.yml)
     fi
 
     if [[ $(compare_semver "${latest}" "${current}") == 0 ]]; then
         if [[ -f .circleci/config.yml ]]; then
             sed -i -E "s/(BASE_IMAGE_STABILITY_TAG: )${current}/\1${latest}/" .circleci/config.yml
         else
-            sed -i -E "s/(BASE_IMAGE_STABILITY_TAG=)${current}/\1${latest}/" .travis.yml
+            sed -i -E "s/(BASE_IMAGE_STABILITY_TAG: )${current}/\1${latest}/" .github/workflows/workflow.yml
         fi
 
         _git_commit ./ "Update base image stability tag to ${latest}"
@@ -431,10 +431,10 @@ _update_stability_tag()
         exit 1
     fi
 
-    current=$(grep -oP "(?<=BASE_IMAGE_STABILITY_TAG=)[0-9\.]+$" .travis.yml)
+    current=$(grep -oP "(?<=BASE_IMAGE_STABILITY_TAG: )[0-9\.]+$" .github/workflows/workflow.yml)
 
     if [[ $(compare_semver "${latest}" "${current}") == 0 ]]; then
-        sed -i -E "s/(BASE_IMAGE_STABILITY_TAG=)${current}/\1${latest}/" .travis.yml
+        sed -i -E "s/(BASE_IMAGE_STABILITY_TAG: )${current}/\1${latest}/" .github/workflows/workflow.yml
         _git_commit ./ "Update base image stability tag to ${latest}"
         tag=1
     else

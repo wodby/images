@@ -1,0 +1,22 @@
+name: Build
+description: Run image updates
+inputs:
+  dir:
+    description: directory name
+    required: true
+  script:
+    description: script name
+    required: true
+runs:
+  using: "composite"
+  steps:
+  - name: Run update
+    env:
+      dir: ${{ inputs.dir }}
+      script: ${{ inputs.script }}
+    run: |
+      set -e
+      docker run -e GIT_GITHUB_MACHINE_USER_API_TOKEN -e GIT_GITHUB_MACHINE_USER -e GIT_USER_EMAIL -e GIT_USER_NAME -e DEBUG \
+        --rm -v $PWD:/images -v /var/run/docker.sock:/var/run/docker.sock wodby/docker:dev \
+        bash -c "cd /images/${dir} && ./${script}.sh"
+    shell: bash
