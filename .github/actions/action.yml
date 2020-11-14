@@ -7,16 +7,33 @@ inputs:
   script:
     description: script name
     required: true
+  api_token:
+    description: api token
+    required: true
+  user:
+    description: user
+    required: true
+  email:
+    description: email
+    required: true
+  name:
+    description: name
+    required: true
 runs:
   using: "composite"
   steps:
   - name: Run update
     env:
+      DEBUG: 1
       dir: ${{ inputs.dir }}
       script: ${{ inputs.script }}
+      GITHUB_MACHINE_USER_API_TOKEN: ${{ inputs.api_token }}
+      GITHUB_MACHINE_USER: ${{ inputs.user }}
+      GIT_USER_EMAIL: ${{ inputs.email }}
+      GIT_USER_NAME: ${{ inputs.name }}
     run: |
       set -e
-      docker run -e GIT_GITHUB_MACHINE_USER_API_TOKEN -e GIT_GITHUB_MACHINE_USER -e GIT_USER_EMAIL -e GIT_USER_NAME -e DEBUG \
+      docker run -e GITHUB_MACHINE_USER_API_TOKEN -e GIT_GITHUB_MACHINE_USER -e GIT_USER_EMAIL -e GIT_USER_NAME -e DEBUG \
         --rm -v $PWD:/images -v /var/run/docker.sock:/var/run/docker.sock wodby/docker:dev \
         bash -c "cd /images/${dir} && ./${script}.sh"
     shell: bash
