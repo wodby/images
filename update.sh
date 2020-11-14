@@ -223,10 +223,10 @@ _update_versions()
             # There two ways how we specify versions in workflow.yml (same used for updates below):
             # 1. PHP72: 7.2.8 (or PHP7=7.2.8 depending on the provided version)
             # 2. PHP_VER: 7.2.8
-            cur_ver=$(grep -oP "(?<=${name^^}${version//.}:)[0-9\.]+" .github/workflows/workflow.yml || true)
+            cur_ver=$(grep -oP "(?<=${name^^}${version//.}: )[0-9\.]+" .github/workflows/workflow.yml || true)
 
             if [[ -z "${cur_ver}" ]]; then
-                cur_ver=$(grep -oP -m1 "(?<=${name^^}_VER:)${version//\./\\.}[0-9\.]+" .github/workflows/workflow.yml || true)
+                cur_ver=$(grep -oP -m1 "(?<=${name^^}_VER: )${version//\./\\.}[0-9\.]+" .github/workflows/workflow.yml || true)
             fi
         fi
 
