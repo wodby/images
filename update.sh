@@ -166,7 +166,7 @@ _get_base_image()
     local path
     local base_image
 
-    path=$(find . -name Dockerfile -maxdepth 2 | head -n 1)
+    path=$(find . -name Dockerfile -maxdepth 2 | sort -n | head -n 1)
     base_image=$(grep -oP "(?<=FROM ).+(?=:)" "${path}")
 
     if [[ -z "${base_image}" ]]; then
