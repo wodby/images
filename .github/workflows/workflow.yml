@@ -23,6 +23,8 @@ jobs:
         user: ${{ secrets.GIT_GITHUB_MACHINE_USER }}
         email: ${{ secrets.GIT_USER_EMAIL }}
         name: ${{ secrets.GIT_USER_NAME }}
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
   forks:
     runs-on: ubuntu-latest
     steps:
@@ -35,6 +37,8 @@ jobs:
         user: ${{ secrets.GIT_GITHUB_MACHINE_USER }}
         email: ${{ secrets.GIT_USER_EMAIL }}
         name: ${{ secrets.GIT_USER_NAME }}
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
   alpine:
     runs-on: ubuntu-latest
     strategy:
@@ -50,6 +54,8 @@ jobs:
         user: ${{ secrets.GIT_GITHUB_MACHINE_USER }}
         email: ${{ secrets.GIT_USER_EMAIL }}
         name: ${{ secrets.GIT_USER_NAME }}
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
   images:
     runs-on: ubuntu-latest
     strategy:
@@ -65,6 +71,8 @@ jobs:
         user: ${{ secrets.GIT_GITHUB_MACHINE_USER }}
         email: ${{ secrets.GIT_USER_EMAIL }}
         name: ${{ secrets.GIT_USER_NAME }}
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
   stability-tags:
     runs-on: ubuntu-latest
     strategy:
@@ -80,6 +88,8 @@ jobs:
         user: ${{ secrets.GIT_GITHUB_MACHINE_USER }}
         email: ${{ secrets.GIT_USER_EMAIL }}
         name: ${{ secrets.GIT_USER_NAME }}
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
   upstream:
     runs-on: ubuntu-latest
     strategy:
@@ -95,6 +105,8 @@ jobs:
         user: ${{ secrets.GIT_GITHUB_MACHINE_USER }}
         email: ${{ secrets.GIT_USER_EMAIL }}
         name: ${{ secrets.GIT_USER_NAME }}
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
   docker4x:
     runs-on: ubuntu-latest
     strategy:
@@ -110,3 +122,5 @@ jobs:
         user: ${{ secrets.GIT_GITHUB_MACHINE_USER }}
         email: ${{ secrets.GIT_USER_EMAIL }}
         name: ${{ secrets.GIT_USER_NAME }}
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}

@@ -19,6 +19,12 @@ inputs:
   name:
     description: name
     required: true
+  username:
+    description: docker username
+    required: true
+  password:
+    description: docker password
+    required: true
 runs:
   using: "composite"
   steps:
@@ -31,6 +37,8 @@ runs:
       GITHUB_MACHINE_USER: ${{ inputs.user }}
       GIT_USER_EMAIL: ${{ inputs.email }}
       GIT_USER_NAME: ${{ inputs.name }}
+      DOCKER_USERNAME: ${{ inputs.username }}
+      DOCKER_PASSWORD: ${{ inputs.password }}
     run: |
       set -e
       docker login -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}"
