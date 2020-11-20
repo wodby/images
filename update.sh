@@ -591,7 +591,7 @@ update_docker4x()
 
             # Update env var like like $DRUPAL_STABILITY_TAG in tests.
             if [[ "${name}" == "${project#*docker4}" ]]; then
-                find tests/ -name .env -exec sed -i -E "s/^(${name^^}_STABILITY_TAG)=${current}$/\1=${latest}/" .env {} +
+                find tests/ -name .env -exec sed -i -E "s/^(${name^^}_STABILITY_TAG)=.+$/\1=${latest}/" .env {} +
             fi
 
             _git_commit ./ "Update ${name} stability tag to ${latest}"
