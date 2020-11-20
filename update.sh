@@ -217,17 +217,13 @@ _update_versions()
     for version in "${arr_versions[@]}"; do
         dir=$(_get_dir "${version}")
 
-        if [[ -f .circleci/config.yml ]]; then
-            cur_ver=$(grep -oP -m1 "(?<=${name^^}_VER: )${version//\./\\.}\.[0-9\.]+" .circleci/config.yml || true)
-        else
-            # There two ways how we specify versions in workflow.yml (same used for updates below):
-            # 1. PHP72: 7.2.8 (or PHP7=7.2.8 depending on the provided version)
-            # 2. version: 7.2.8
-            cur_ver=$(grep -oP "(?<=${name^^}${version//.}: )[0-9\.]+" .github/workflows/workflow.yml || true)
+        # There two ways how we specify versions in workflow.yml (same used for updates below):
+        # 1. PHP72: 7.2.8 (or PHP7=7.2.8 depending on the provided version)
+        # 2. version: 7.2.8
+        cur_ver=$(grep -oP "(?<=${name^^}${version//.}: )[0-9\.]+" .github/workflows/workflow.yml || true)
 
-            if [[ -z "${cur_ver}" ]]; then
-                cur_ver=$(grep -oP -m1 "(?<=version: )${version//\./\\.}[0-9\.]+" .github/workflows/workflow.yml || true)
-            fi
+        if [[ -z "${cur_ver}" ]]; then
+            cur_ver=$(grep -oP -m1 "(?<=version: )${version//\./\\.}[0-9\.]+" .github/workflows/workflow.yml || true)
         fi
 
         if [[ -z "${cur_ver}" ]]; then
@@ -240,12 +236,8 @@ _update_versions()
         if [[ $(compare_semver "${latest_ver}" "${cur_ver}") == 0 ]]; then
             echo "${name^} ${cur_ver} is outdated, updating to ${latest_ver}"
 
-            if [[ -f .circleci/config.yml ]]; then
-                sed -i -E "s/(${name^^}_VER): ${version//\./\\.}.*/\1: ${latest_ver}/" .circleci/config.yml
-            else
-                sed -i -E "s/(${name^^}${version//.}): .+/\1: ${latest_ver}/" .github/workflows/workflow.yml
-                sed -i -E "s/(version): ${version//\./\\.}\.[0-9\.]+/\1: ${latest_ver}/" .github/workflows/workflow.yml
-            fi
+            sed -i -E "s/(${name^^}${version//.}): .+/\1: ${latest_ver}/" .github/workflows/workflow.yml
+            sed -i -E "s/(version): ${version//\./\\.}\.[0-9\.]+/\1: ${latest_ver}/" .github/workflows/workflow.yml
 
             # For semver minor updates we should also update tags info.
             if [[ "${latest_ver%.*}" != "${cur_ver%.*}" ]]; then
@@ -375,18 +367,10 @@ _update_base_alpine_image()
         exit 1
     fi
 
-    if [[ -f .circleci/config.yml ]]; then
-        current=$(grep -oP "(?<=BASE_IMAGE_STABILITY_TAG: )[0-9\.]+$" .circleci/config.yml | head -n1)
-    else
-        current=$(grep -oP "(?<=BASE_IMAGE_STABILITY_TAG: )[0-9\.]+$" .github/workflows/workflow.yml)
-    fi
+    current=$(grep -oP "(?<=BASE_IMAGE_STABILITY_TAG: )[0-9\.]+$" .github/workflows/workflow.yml)
 
     if [[ $(compare_semver "${latest}" "${current}") == 0 ]]; then
-        if [[ -f .circleci/config.yml ]]; then
-            sed -i -E "s/(BASE_IMAGE_STABILITY_TAG: )${current}/\1${latest}/" .circleci/config.yml
-        else
-            sed -i -E "s/(BASE_IMAGE_STABILITY_TAG: )${current}/\1${latest}/" .github/workflows/workflow.yml
-        fi
+        sed -i -E "s/(BASE_IMAGE_STABILITY_TAG: )${current}/\1${latest}/" .github/workflows/workflow.yml
 
         _git_commit ./ "Update base image stability tag to ${latest}"
     else
