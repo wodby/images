@@ -55,8 +55,8 @@ Syncing with upstream.
 | [wodby/drupal]        | [wodby/drupal-php]    | `7.4`,`7.3`, `7.2`  | `4.x`            |
 | [wodby/matomo]        | [wodby/php]           | `7.2`               |                  |
 | [wodby/webgrind]      | [wodby/php]           | `7.2`               |                  |
-| [wodby/wordpress-php] | [wodby/php]           | `7.4`, `7.3`, `7.2` | `4.x`            |
-| [wodby/wordpress]     | [wodby/wordpress-php] | `7.4`, `7.3`, `7.2` | `4.x`            |
+| [wodby/wordpress-php] | [wodby/php]           | `8.0`, `7.4`, `7.3`, `7.2` | `4.x`            |
+| [wodby/wordpress]     | [wodby/wordpress-php] | `8.0`, `7.4`, `7.3`, `7.2` | `4.x`            |
 | [wodby/xhprof]        | [wodby/php]           | `7.2`               |                  |
 
 ### Version updates from upstream other than base image
