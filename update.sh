@@ -234,8 +234,8 @@ _update_versions()
             # Version in YAML may contain optional single quote to avoid types issues (e.g. 8.0 parsed as 8)
             if [[ -n "${cur_ver//[^\']}" ]]; then
               has_quotes=1
+              cur_ver="${cur_ver#\'}"
             fi
-            cur_ver="${cur_ver#\'}"
         fi
 
         latest_ver=$(_get_latest_version "${upstream}" "${version}" "${name}")
