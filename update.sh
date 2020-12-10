@@ -205,6 +205,7 @@ _update_versions()
     local latest_timestamp
     local cur_ver
     local dir
+    local has_quotes
 
     local minor_update
 
@@ -220,15 +221,21 @@ _update_versions()
         # There two ways how we specify versions in workflow.yml (same used for updates below):
         # 1. PHP72: 7.2.8 (or PHP7=7.2.8 depending on the provided version)
         # 2. version: 7.2.8
-        cur_ver=$(grep -oP "(?<=${name^^}${version//.}: )[0-9\.]+" .github/workflows/workflow.yml || true)
+        cur_ver=$(grep -oP "(?<=${name^^}${version//.}: )'?[0-9\.]+" .github/workflows/workflow.yml || true)
 
         if [[ -z "${cur_ver}" ]]; then
-            cur_ver=$(grep -oP -m1 "(?<=version: )${version//\./\\.}[0-9\.]+" .github/workflows/workflow.yml || true)
+            cur_ver=$(grep -oP -m1 "(?<=version: )'?${version//\./\\.}[0-9\.]+" .github/workflows/workflow.yml || true)
         fi
 
         if [[ -z "${cur_ver}" ]]; then
             >&2 echo "Couldn't get the current version of ${version}! Probably need to update the list of supported versions!"
             exit 1
+        else
+            # Version in YAML may contain optional single quote to avoid types issues (e.g. 8.0 parsed as 8)
+            if [[ "${#cur_ver//[^\']}" -gt 0 ]]; then
+              has_quotes=1
+            fi
+            cur_ver="${cur_ver#\'}"
         fi
 
         latest_ver=$(_get_latest_version "${upstream}" "${version}" "${name}")
@@ -236,8 +243,13 @@ _update_versions()
         if [[ $(compare_semver "${latest_ver}" "${cur_ver}") == 0 ]]; then
             echo "${name^} ${cur_ver} is outdated, updating to ${latest_ver}"
 
-            sed -i -E "s/(${name^^}${version//.}): .+/\1: ${latest_ver}/" .github/workflows/workflow.yml
-            sed -i -E "s/(version): ${version//\./\\.}\.[0-9\.]+/\1: ${latest_ver}/" .github/workflows/workflow.yml
+            if [[ -z "${has_quotes}" ]]; then
+              sed -i -E "s/(${name^^}${version//.}): .+/\1: ${latest_ver}/" .github/workflows/workflow.yml
+              sed -i -E "s/(version): ${version//\./\\.}\.[0-9\.]+/\1: ${latest_ver}/" .github/workflows/workflow.yml
+            else
+              sed -i -E "s/(${name^^}${version//.}): .+/\1: '${latest_ver}/" .github/workflows/workflow.yml
+              sed -i -E "s/(version): ${version//\./\\.}\.[0-9\.]+/\1: '${latest_ver}/" .github/workflows/workflow.yml
+            fi
 
             # For semver minor updates we should also update tags info.
             if [[ "${latest_ver%.*}" != "${cur_ver%.*}" ]]; then
