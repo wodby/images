@@ -51,8 +51,8 @@ Syncing with upstream.
 | --------------------- | --------------------- | ------------------- | --------------   |
 | [wodby/adminer]       | [wodby/php]           | `7.2`               |                  |
 | [wodby/cachet]        | [wodby/php]           | `7.2`               |                  |
-| [wodby/drupal-php]    | [wodby/php]           | `7.4`,`7.3`, `7.2`  | `4.x`            |
-| [wodby/drupal]        | [wodby/drupal-php]    | `7.4`,`7.3`, `7.2`  | `4.x`            |
+| [wodby/drupal-php]    | [wodby/php]           | `8.0`, `7.4`,`7.3`, `7.2`  | `4.x`            |
+| [wodby/drupal]        | [wodby/drupal-php]    | `8.0`, `7.4`,`7.3`, `7.2`  | `4.x`            |
 | [wodby/matomo]        | [wodby/php]           | `7.2`               |                  |
 | [wodby/webgrind]      | [wodby/php]           | `7.2`               |                  |
 | [wodby/wordpress-php] | [wodby/php]           | `8.0`, `7.4`, `7.3`, `7.2` | `4.x`            |
