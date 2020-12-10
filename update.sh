@@ -232,7 +232,7 @@ _update_versions()
             exit 1
         else
             # Version in YAML may contain optional single quote to avoid types issues (e.g. 8.0 parsed as 8)
-            if [[ -z "${cur_ver//[^\']}" ]]; then
+            if [[ -n "${cur_ver//[^\']}" ]]; then
               has_quotes=1
             fi
             cur_ver="${cur_ver#\'}"
