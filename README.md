@@ -34,7 +34,7 @@ Syncing with upstream.
 | [wodby/apache]        | [httpd]               | `2.4`                                  |
 | [wodby/memcached]     | [memcached]           | `1`                                    |
 | [wodby/node]          | [node]                | `14`, `12`, `10`, `8`                  |
-| [wodby/php]           | [php]                 | `8.0`, `7.4`, `7.3`, `7.2`             |
+| [wodby/php]           | [php]                 | `8.0`, `7.4`, `7.3`             |
 | [wodby/postgres]      | [postgres]            | `13`, `12`, `11`, `10`, `9.6`, `9.5`, `9.4`  |
 | [wodby/python]        | [python]              | `3.9`, `3.8`, `3.7`, `3.6`                    |
 | [wodby/redis]         | [redis]               | `6`, `5`                               |
@@ -51,12 +51,12 @@ Syncing with upstream.
 | --------------------- | --------------------- | ------------------- | --------------   |
 | [wodby/adminer]       | [wodby/php]           | `7.2`               |                  |
 | [wodby/cachet]        | [wodby/php]           | `7.2`               |                  |
-| [wodby/drupal-php]    | [wodby/php]           | `8.0`, `7.4`,`7.3`, `7.2`  | `4.x`            |
-| [wodby/drupal]        | [wodby/drupal-php]    | `8.0`, `7.4`,`7.3`, `7.2`  | `4.x`            |
+| [wodby/drupal-php]    | [wodby/php]           | `8.0`, `7.4`,`7.3`  | `4.x`            |
+| [wodby/drupal]        | [wodby/drupal-php]    | `8.0`, `7.4`,`7.3`  | `4.x`            |
 | [wodby/matomo]        | [wodby/php]           | `7.2`               |                  |
 | [wodby/webgrind]      | [wodby/php]           | `7.2`               |                  |
-| [wodby/wordpress-php] | [wodby/php]           | `8.0`, `7.4`, `7.3`, `7.2` | `4.x`            |
-| [wodby/wordpress]     | [wodby/wordpress-php] | `8.0`, `7.4`, `7.3`, `7.2` | `4.x`            |
+| [wodby/wordpress-php] | [wodby/php]           | `8.0`, `7.4`, `7.3` | `4.x`            |
+| [wodby/wordpress]     | [wodby/wordpress-php] | `8.0`, `7.4`, `7.3` | `4.x`            |
 | [wodby/xhprof]        | [wodby/php]           | `7.2`               |                  |
 
 ### Version updates from upstream other than base image
