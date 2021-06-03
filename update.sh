@@ -247,8 +247,8 @@ _update_versions()
               sed -i -E "s/(${name^^}${version//.}): .+/\1: ${latest_ver}/" .github/workflows/workflow.yml
               sed -i -E "s/(version): ${version//\./\\.}\.[0-9\.]+/\1: ${latest_ver}/" .github/workflows/workflow.yml
             else
-              sed -i -E "s/(${name^^}${version//.}): .+/\1: '${latest_ver}/" .github/workflows/workflow.yml
-              sed -i -E "s/(version): ${version//\./\\.}\.[0-9\.]+/\1: '${latest_ver}/" .github/workflows/workflow.yml
+              sed -i -E "s/(${name^^}${version//.}): .+/\1: '${latest_ver}'/" .github/workflows/workflow.yml
+              sed -i -E "s/(version): ${version//\./\\.}\.[0-9\.]+/\1: '${latest_ver}'/" .github/workflows/workflow.yml
             fi
 
             # For semver minor updates we should also update tags info.
