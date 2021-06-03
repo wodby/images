@@ -244,8 +244,14 @@ _update_versions()
             echo "${name^} ${cur_ver} is outdated, updating to ${latest_ver}"
 
             if [[ -z "${has_quotes}" ]]; then
-              sed -i -E "s/(${name^^}${version//.}): .+/\1: ${latest_ver}/" .github/workflows/workflow.yml
-              sed -i -E "s/(version): ${version//\./\\.}\.[0-9\.]+/\1: ${latest_ver}/" .github/workflows/workflow.yml
+              # Add quotes if version ends with 0 to avoid incorrect situations like 7.80 in yaml but passed as 7.8
+              if [[ "${latest_ver}" == *0 ]]; then
+                sed -i -E "s/(${name^^}${version//.}): .+/\1: '${latest_ver}'/" .github/workflows/workflow.yml
+                sed -i -E "s/(version): ${version//\./\\.}\.[0-9\.]+/\1: '${latest_ver}'/" .github/workflows/workflow.yml
+              else
+                sed -i -E "s/(${name^^}${version//.}): .+/\1: ${latest_ver}/" .github/workflows/workflow.yml
+                sed -i -E "s/(version): ${version//\./\\.}\.[0-9\.]+/\1: ${latest_ver}/" .github/workflows/workflow.yml
+              fi
             else
               sed -i -E "s/(${name^^}${version//.}): .+/\1: '${latest_ver}'/" .github/workflows/workflow.yml
               sed -i -E "s/(version): ${version//\./\\.}\.[0-9\.]+/\1: '${latest_ver}'/" .github/workflows/workflow.yml
