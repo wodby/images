@@ -120,7 +120,7 @@ _github_get_latest_ver()
 
 _get_latest_version()
 {
-    local upstream="${1%:*}"
+    local upstream="${1}"
     local version="${2}"
     local name="${3}"
     local latest_ver
@@ -167,7 +167,7 @@ _get_base_image()
     local base_image
 
     path=$(find . -name Dockerfile -maxdepth 2 | sort -n | head -n 1)
-    base_image=$(cat "${path}" | sed -E 's/\$\{.+\}-?//' | grep -oP "(?<=FROM )(.+)" | sed 's/:$//')
+    base_image=$(grep -oP "(?<=FROM ).+(?=:)" "${path}")
 
     if [[ -z "${base_image}" ]]; then
         >&2 echo "Failed to identify failed image"
@@ -196,7 +196,7 @@ _get_alpine_ver()
 _update_versions()
 {
     local versions="${1}"
-    local upstream="${2%:*}"
+    local upstream="${2}"
     local name="${3}"
     local branch="${4}"
 
@@ -538,7 +538,7 @@ update_from_upstream()
 {
     local image="${1}"
     local versions="${2}"
-    local upstream="${3%:*}"
+    local upstream="${3}"
     local branch="${4}"
 
     _git_clone "${image}"
