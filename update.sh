@@ -26,7 +26,7 @@ _git_commit()
 
 _get_image_tags()
 {
-    local repo="${1}"
+    local repo="${1%:*}"
 
     wget -q "https://registry.hub.docker.com/v1/repositories/${repo}/tags" -O - \
         | sed -e 's/[][]//g' -e 's/"//g' -e 's/ //g' \
@@ -36,7 +36,7 @@ _get_image_tags()
 
 _get_timestamp()
 {
-    local repo="${1}"
+    local repo="${1%:*}"
     local tag="${2}"
 
     if [[ ! "${repo}" =~ / ]]; then
