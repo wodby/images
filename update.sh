@@ -331,16 +331,7 @@ _update_timestamps() {
       # Check for Alpine updates.
       if [[ -n "${image}" && "${base_image}" != alpine* ]]; then
         cur_alpine_ver=$(_get_alpine_ver "${image}:${version}")
-        if [[ -z "${cur_alpine_ver}" ]]; then
-          echo >&2 "Failed to acquire current alpine version"
-          exit 1
-        fi
-
         latest_alpine_ver=$(_get_alpine_ver "${base_image}")
-        if [[ -z "${latest_alpine_ver}" ]]; then
-          echo >&2 "Failed to acquire latest alpine version"
-          exit 1
-        fi
 
         if [[ $(compare_semver "${latest_alpine_ver}" "${cur_alpine_ver}") == 0 ]]; then
           if [[ "${latest_alpine_ver%.*}" != "${cur_alpine_ver%.*}" ]]; then
