@@ -167,7 +167,7 @@ _get_base_image()
     local base_image
 
     path=$(find . -name Dockerfile -maxdepth 2 | sort -n | head -n 1)
-    base_image=$(cat "${path}" | sed -E 's/\$\{.+\}-?//' | grep -oP "(?<=FROM )(.+)")
+    base_image=$(cat "${path}" | sed -E 's/\$\{.+\}-?//' | grep -oP "(?<=FROM )(.+)" | sed 's/:$//')
 
     if [[ -z "${base_image}" ]]; then
         >&2 echo "Failed to identify failed image"
