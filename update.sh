@@ -331,7 +331,16 @@ _update_timestamps() {
       # Check for Alpine updates.
       if [[ -n "${image}" && "${base_image}" != alpine* ]]; then
         cur_alpine_ver=$(_get_alpine_ver "${image}:${version}")
-        latest_alpine_ver=$(_get_alpine_ver "${base_image}")
+        if [[ "${base_image}" != wodby* ]]; then
+          local suffix="${base_image#*:}"
+          if [[ -z "${suffix}" ]]; then
+            echo >&2 "Failed to identify base image"
+            exit 1
+          fi
+          latest_alpine_ver=$(_get_alpine_ver "${base_image%:*}:${version}-${suffix}")
+        else
+          latest_alpine_ver=$(_get_alpine_ver "${base_image%:*}:${version}")
+        fi
 
         if [[ $(compare_semver "${latest_alpine_ver}" "${cur_alpine_ver}") == 0 ]]; then
           if [[ "${latest_alpine_ver%.*}" != "${cur_alpine_ver%.*}" ]]; then
