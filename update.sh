@@ -309,7 +309,7 @@ _update_timestamps() {
   echo "=============================="
 
   for version in "${arr_versions[@]}"; do
-    latest_timestamp=$(_get_timestamp "${base_image%:*}" "${base_image#*:}")
+    latest_timestamp=$(_get_timestamp "${base_image%:*}" "${version}")
     if [[ -z "${latest_timestamp}" ]]; then
       echo >&2 "Failed to acquire latest timestamp"
       exit 1
