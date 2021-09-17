@@ -248,7 +248,7 @@ _update_versions() {
       # For semver minor updates we should also update tags info.
       if [[ "${latest_ver%.*}" != "${cur_ver%.*}" ]]; then
         minor_update=1
-        sed -i -E "s/(tags): .+?${version//\./\\.}\.[0-9\.]+,/\1: ${latest_ver%.*},/" .github/workflows/workflow.yml
+        sed -i -E "s/(tags): .+?${version//\./\\.}\.[0-9\.]+/\1: ${latest_ver%.*}/" .github/workflows/workflow.yml
         sed -i -E "s/\`${version//\./\\.}\.[0-9\.]+\`/\`${latest_ver%.*}\`/" README.md
         sed -i -E "s/\:${version//\./\\.}\.[0-9\.]+(-X\.X\.X)/:${latest_ver%.*}\1/" README.md
       fi
