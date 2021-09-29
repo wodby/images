@@ -193,7 +193,6 @@ _update_versions() {
   local latest_timestamp
   local cur_ver
   local dir
-  local has_quotes
 
   local minor_update
 
@@ -219,6 +218,7 @@ _update_versions() {
       echo >&2 "Couldn't get the current version of ${version}! Probably need to update the list of supported versions!"
       exit 1
     else
+      has_quotes=""
       # Version in YAML may contain optional single quote to avoid types issues (e.g. 8.0 parsed as 8)
       if [[ -n "${cur_ver//[^\']/}" ]]; then
         has_quotes=1
