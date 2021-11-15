@@ -349,10 +349,17 @@ _update_timestamps() {
 
   if [[ -n "${updated}" ]]; then
     _git_commit ./ "Rebuild against updated base image"
+
+    local unpushed
+    unpushed=$(git diff origin/master..HEAD);
     git push origin
 
     # Release tags on alpine updates.
     if [[ "${#ver_with_updated_alpine[@]}" != 0 ]]; then
+      # In case there were no new commits but the base image alpine we want to force rebuild latest images against new Alpine.
+      if [[ -z "${unpushed }" ]]; then
+        git push origin --force
+      fi
       ver_list=$(_join_ws ", " "${ver_with_updated_alpine[@]}")
       _release_tag "Alpine Linux updated to ${latest_alpine_ver} for versions: ${ver_list}" "${minor_update}"
     fi
