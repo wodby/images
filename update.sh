@@ -397,9 +397,15 @@ _update_base_alpine_image() {
     echo "Base image stability tag ${current} is already the latest"
   fi
 
+  local unpushed
+  unpushed=$(git diff origin/master..HEAD);
   git push origin
 
   if [[ -n "${release_tag}" ]]; then
+    # In case there were no new commits but the base image was updated we want to force rebuild latest images.
+    if [[ -z "${unpushed }" ]]; then
+      git push origin --force
+    fi
     if [[ "${current%.*}" != "${latest%.*}" ]]; then
       minor_update=1
     fi
