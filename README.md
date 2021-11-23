@@ -49,7 +49,7 @@ Syncing with upstream.
 
 | Image                 | Upstream (base image) | Versions            | Stability branch |
 | --------------------- | --------------------- | ------------------- | --------------   |
-| [wodby/adminer]       | [wodby/php]           | `7.2`               |                  |
+| [wodby/adminer]       | [wodby/php]           | `7.4`               |                  |
 | [wodby/cachet]        | [wodby/php]           | `7.2`               |                  |
 | [wodby/drupal-php]    | [wodby/php]           | `8.0`, `7.4`,`7.3`  | `4.x`            |
 | [wodby/drupal]        | [wodby/drupal-php]    | `8.0`, `7.4`,`7.3`  | `4.x`            |
