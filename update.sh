@@ -486,6 +486,58 @@ sync_solr_fork() {
   git push origin
 }
 
+sync_httpd_fork() {
+  git clone "https://${GITHUB_MACHINE_USER}:${GITHUB_MACHINE_USER_API_TOKEN}@github.com/wodby/httpd" /tmp/httpd
+  cd /tmp/httpd
+  git remote add upstream "https://github.com/docker-solr/httpd"
+  git fetch upstream
+  git merge --strategy-option ours --no-edit upstream/master
+
+  ./wodby-meta-update.sh
+
+  _git_commit ./ "Update from upstream"
+  git push origin
+}
+
+sync_redis_fork() {
+  git clone "https://${GITHUB_MACHINE_USER}:${GITHUB_MACHINE_USER_API_TOKEN}@github.com/wodby/base-redis" /tmp/base-redis
+  cd /tmp/base-redis
+  git remote add upstream "https://github.com/docker-solr/redis"
+  git fetch upstream
+  git merge --strategy-option ours --no-edit upstream/master
+
+  ./wodby-meta-update.sh
+
+  _git_commit ./ "Update from upstream"
+  git push origin
+}
+
+sync_memcached_fork() {
+  git clone "https://${GITHUB_MACHINE_USER}:${GITHUB_MACHINE_USER_API_TOKEN}@github.com/wodby/base-memcached" /tmp/base-memcached
+  cd /tmp/base-memcached
+  git remote add upstream "https://github.com/docker-solr/memcached"
+  git fetch upstream
+  git merge --strategy-option ours --no-edit upstream/master
+
+  ./wodby-meta-update.sh
+
+  _git_commit ./ "Update from upstream"
+  git push origin
+}
+
+sync_postgres_fork() {
+  git clone "https://${GITHUB_MACHINE_USER}:${GITHUB_MACHINE_USER_API_TOKEN}@github.com/wodby/base-postgres" /tmp/base-postgres
+  cd /tmp/base-postgres
+  git remote add upstream "https://github.com/docker-solr/postgres"
+  git fetch upstream
+  git merge --strategy-option ours --no-edit upstream/master
+
+  ./wodby-meta-update.sh
+
+  _git_commit ./ "Update from upstream"
+  git push origin
+}
+
 update_from_base_image() {
   local image="${1}"
   local versions="${2}"
