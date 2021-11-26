@@ -10,7 +10,11 @@ Syncing with upstream.
 
 | Image                 | Upstream  |
 | --------------------- | --------- |
-| [wodby/base-solr]     | [solr]    |
+| [wodby/base-memcached] | [memcached] |
+| [wodby/base-postgres]  | [postgres]  |
+| [wodby/base-redis]     | [redis]     |
+| [wodby/base-solr]      | [solr]      |
+| [wodby/httpd]          | [httpd]     |
 
 ### Alpine base image
 
@@ -28,18 +32,18 @@ Syncing with upstream.
 - New stability tag release on version update
 - New stability tag release on Alpine Linux update
 
-| Image             | Upstream (base image) | Versions                                     |
-| ----------------- | --------------------- | -------------------------------------------- |
-| [wodby/alpine]    | [alpine]              | `3.15`, `3.14`, `3.13`, `3.12`  |
-| [wodby/apache]    | [httpd]               | `2.4`                                        |
-| [wodby/memcached] | [memcached]           | `1`                                          |
-| [wodby/node]      | [node]                | `16`, `14`, `12`                             |
-| [wodby/php]       | [php]                 | `8.0`, `7.4`, `7.3`                          |
-| [wodby/postgres]  | [postgres]            | `13`, `12`, `11`, `10`, `9.6`                |
-| [wodby/python]    | [python]              | `3.9`, `3.8`, `3.7`, `3.6`                   |
-| [wodby/redis]     | [redis]               | `6`, `5`                                     |
-| [wodby/ruby]      | [ruby]                | `3.0`, `2.7`, `2.6`                          |
-| [wodby/solr]      | [wodby/base-solr]     | `8`, `7.7`, `7.6`, `7.5`, `6.6`, `5.5`       |
+| Image             | Upstream (base image)  | Versions                                     |
+| ----------------- | ---------------------- | -------------------------------------------- |
+| [wodby/alpine]    | [alpine]               | `3.15`, `3.14`, `3.13`, `3.12`  |
+| [wodby/apache]    | [wodby/httpd]          | `2.4`                                        |
+| [wodby/memcached] | [wodby/base-memcached] | `1`                                          |
+| [wodby/node]      | [node]                 | `16`, `14`, `12`                             |
+| [wodby/php]       | [php]                  | `8.0`, `7.4`, `7.3`                          |
+| [wodby/postgres]  | [wodby/base-postgres]  | `14`, `13`, `12`, `11`, `10`, `9.6`                |
+| [wodby/python]    | [python]               | `3.9`, `3.8`, `3.7`, `3.6`                   |
+| [wodby/redis]     | [wodby/base-redis]     | `6`, `5`                                     |
+| [wodby/ruby]      | [ruby]                 | `3.0`, `2.7`, `2.6`                          |
+| [wodby/solr]      | [wodby/base-solr]      | `8`, `7.7`, `7.6`, `7.5`, `6.6`, `5.5`       |
 
 ### Descendant images
 
@@ -101,55 +105,115 @@ Not automated:
 - [wodby/opensmtpd] (installed from Alpine repository package)
 
 [alpine]: https://github.com/gliderlabs/docker-alpine
+
 [CachetHQ/Cachet]: https://github.com/CachetHQ/Cachet
+
 [drupal]: https://github.com/drupal/drupal
+
 [elastic/elasticsearch]: https://github.com/elastic/elasticsearch
+
 [elastic/kibana]: https://github.com/elastic/kibana
+
 [httpd]: https://github.com/docker-library/httpd
+
 [jokkedk/webgrind]: https://github.com/jokkedk/webgrind
+
 [mariadb]: https://github.com/docker-library/mariadb
+
 [matomo-org/matomo]: https://github.com/matomo-org/matomo
+
 [memcached]: https://github.com/docker-library/memcached
+
 [nginx]: https://github.com/docker-library/nginx
+
 [node]: https://github.com/docker-library/node
+
 [php]: https://github.com/docker-library/php
+
 [postgres]: https://github.com/docker-library/postgres
+
 [python]: https://github.com/docker-library/python
+
 [redis]: https://github.com/docker-library/redis
+
 [ruby]: https://github.com/docker-library/ruby
+
 [solr]: https://github.com/docker-library/solr
+
 [varnishcache/varnish-cache]: https://github.com/varnishcache/varnish-cache
+
 [vrana/adminer]: https://github.com/vrana/adminer
-[wodby/adminer]: https://github.com/wodby/adminer
-[wodby/alpine]: https://github.com/wodby/alpine
-[wodby/apache]: https://github.com/wodby/apache
-[wodby/base-solr]: https://github.com/wodby/base-solr
-[wodby/cachet]: https://github.com/wodby/cachet
-[wodby/docker4drupal]: https://github.com/wodby/docker4drupal
-[wodby/docker4php]: https://github.com/wodby/docker4php
-[wodby/docker4python]: https://github.com/wodby/docker4python
-[wodby/docker4ruby]: https://github.com/wodby/docker4ruby
-[wodby/docker4wordpress]: https://github.com/wodby/docker4wordpress
-[wodby/drupal-php]: https://github.com/wodby/drupal-php
-[wodby/drupal]: https://github.com/wodby/drupal
-[wodby/elasticsearch]: https://github.com/wodby/elasticsearch
-[wodby/kibana]: https://github.com/wodby/kibana
-[wodby/mariadb]: https://github.com/wodby/mariadb
-[wodby/matomo]: https://github.com/wodby/matomo
-[wodby/memcached]: https://github.com/wodby/memcached
-[wodby/nginx]: https://github.com/wodby/nginx
-[wodby/node]: https://github.com/wodby/node
-[wodby/opensmtpd]: https://github.com/wodby/opensmtpd
-[wodby/php]: https://github.com/wodby/php
-[wodby/postgres]: https://github.com/wodby/postgres
-[wodby/python]: https://github.com/wodby/python
-[wodby/redis]: https://github.com/wodby/redis
-[wodby/ruby]: https://github.com/wodby/ruby
-[wodby/solr]: https://github.com/wodby/solr
-[wodby/varnish]: https://github.com/wodby/varnish
-[wodby/webgrind]: https://github.com/wodby/webgrind
-[wodby/wordpress-php]: https://github.com/wodby/wordpress-php
-[wodby/wordpress]: https://github.com/wodby/wordpress
-[wodby/xhprof]: https://github.com/wodby/xhprof
-[wordpress]: https://github.com/WordPress/WordPress
+
 [longxinH/xhprof]: https://github.com/longxinH/xhprof
+
+[wodby/adminer]: https://github.com/wodby/adminer
+
+[wodby/alpine]: https://github.com/wodby/alpine
+
+[wodby/apache]: https://github.com/wodby/apache
+
+[wodby/base-memcached]: https://github.com/wodby/base-memcached
+
+[wodby/base-postgres]: https://github.com/wodby/base-postgres
+
+[wodby/base-redis]: https://github.com/wodby/base-redis
+
+[wodby/base-solr]: https://github.com/wodby/base-solr
+
+[wodby/cachet]: https://github.com/wodby/cachet
+
+[wodby/docker4drupal]: https://github.com/wodby/docker4drupal
+
+[wodby/docker4php]: https://github.com/wodby/docker4php
+
+[wodby/docker4python]: https://github.com/wodby/docker4python
+
+[wodby/docker4ruby]: https://github.com/wodby/docker4ruby
+
+[wodby/docker4wordpress]: https://github.com/wodby/docker4wordpress
+
+[wodby/drupal-php]: https://github.com/wodby/drupal-php
+
+[wodby/drupal]: https://github.com/wodby/drupal
+
+[wodby/elasticsearch]: https://github.com/wodby/elasticsearch
+
+[wodby/httpd]: https://github.com/wodby/httpd
+
+[wodby/kibana]: https://github.com/wodby/kibana
+
+[wodby/mariadb]: https://github.com/wodby/mariadb
+
+[wodby/matomo]: https://github.com/wodby/matomo
+
+[wodby/memcached]: https://github.com/wodby/memcached
+
+[wodby/nginx]: https://github.com/wodby/nginx
+
+[wodby/node]: https://github.com/wodby/node
+
+[wodby/opensmtpd]: https://github.com/wodby/opensmtpd
+
+[wodby/php]: https://github.com/wodby/php
+
+[wodby/postgres]: https://github.com/wodby/postgres
+
+[wodby/python]: https://github.com/wodby/python
+
+[wodby/redis]: https://github.com/wodby/redis
+
+[wodby/ruby]: https://github.com/wodby/ruby
+
+[wodby/solr]: https://github.com/wodby/solr
+
+[wodby/varnish]: https://github.com/wodby/varnish
+
+[wodby/webgrind]: https://github.com/wodby/webgrind
+
+[wodby/wordpress-php]: https://github.com/wodby/wordpress-php
+
+[wodby/wordpress]: https://github.com/wodby/wordpress
+
+[wodby/xhprof]: https://github.com/wodby/xhprof
+
+[wordpress]: https://github.com/WordPress/WordPress
