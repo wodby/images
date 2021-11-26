@@ -403,7 +403,7 @@ _update_base_alpine_image() {
 
   if [[ -n "${release_tag}" ]]; then
     # In case there were no new commits but the base image was updated we want to force rebuild latest images.
-    if [[ -z "${unpushed }" ]]; then
+    if [[ -z "${unpushed}" ]]; then
       git push origin --force
     fi
     if [[ "${current%.*}" != "${latest%.*}" ]]; then
