@@ -39,7 +39,7 @@ Syncing with upstream.
 | [wodby/apache]    | [wodby/httpd]          | `2.4`                                        |
 | [wodby/memcached] | [wodby/base-memcached] | `1`                                          |
 | [wodby/node]      | [node]                 | `16`, `14`, `12`                             |
-| [wodby/php]       | [php]                  | `8.0`, `7.4`, `7.3`                          |
+| [wodby/php]       | [wodby/base-php]       | `8.1`, `8.0`, `7.4`, `7.3`                          |
 | [wodby/postgres]  | [wodby/base-postgres]  | `14`, `13`, `12`, `11`, `10`, `9.6`                |
 | [wodby/python]    | [python]               | `3.9`, `3.8`, `3.7`, `3.6`                   |
 | [wodby/redis]     | [wodby/base-redis]     | `6`, `5`                                     |
