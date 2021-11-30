@@ -489,7 +489,7 @@ sync_solr_fork() {
 sync_httpd_fork() {
   git clone "https://${GITHUB_MACHINE_USER}:${GITHUB_MACHINE_USER_API_TOKEN}@github.com/wodby/httpd.git" /tmp/httpd
   cd /tmp/httpd
-  git remote add upstream "https://github.com/docker-solr/httpd"
+  git remote add upstream "https://github.com/docker-library/httpd"
   git fetch upstream
   git merge --strategy-option ours --no-edit upstream/master
 
@@ -502,7 +502,7 @@ sync_httpd_fork() {
 sync_redis_fork() {
   git clone "https://${GITHUB_MACHINE_USER}:${GITHUB_MACHINE_USER_API_TOKEN}@github.com/wodby/base-redis.git" /tmp/base-redis
   cd /tmp/base-redis
-  git remote add upstream "https://github.com/docker-solr/redis"
+  git remote add upstream "https://github.com/docker-library/redis"
   git fetch upstream
   git merge --strategy-option ours --no-edit upstream/master
 
@@ -515,7 +515,7 @@ sync_redis_fork() {
 sync_memcached_fork() {
   git clone "https://${GITHUB_MACHINE_USER}:${GITHUB_MACHINE_USER_API_TOKEN}@github.com/wodby/base-memcached.git" /tmp/base-memcached
   cd /tmp/base-memcached
-  git remote add upstream "https://${GITHUB_MACHINE_USER}:${GITHUB_MACHINE_USER_API_TOKEN}@github.com/docker-solr/memcached"
+  git remote add upstream "https://github.com/docker-library/memcached"
   git fetch upstream
   git merge --strategy-option ours --no-edit upstream/master
 
@@ -529,7 +529,7 @@ sync_memcached_fork() {
 sync_postgres_fork() {
   git clone "https://${GITHUB_MACHINE_USER}:${GITHUB_MACHINE_USER_API_TOKEN}@github.com/wodby/base-postgres.git" /tmp/base-postgres
   cd /tmp/base-postgres
-  git remote add upstream "https://${GITHUB_MACHINE_USER}:${GITHUB_MACHINE_USER_API_TOKEN}@github.com/docker-solr/postgres"
+  git remote add upstream "https://github.com/docker-library/postgres"
   git fetch upstream
   git merge --strategy-option ours --no-edit upstream/master
 
