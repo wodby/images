@@ -525,6 +525,7 @@ sync_memcached_fork() {
   git push origin
 }
 
+
 sync_postgres_fork() {
   git clone "https://${GITHUB_MACHINE_USER}:${GITHUB_MACHINE_USER_API_TOKEN}@github.com/wodby/base-postgres" /tmp/base-postgres
   cd /tmp/base-postgres
