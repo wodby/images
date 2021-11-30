@@ -14,6 +14,7 @@ Syncing with upstream.
 | [wodby/base-postgres]  | [postgres]  |
 | [wodby/base-redis]     | [redis]     |
 | [wodby/base-solr]      | [solr]      |
+| [wodby/base-php]       | [php]      |
 | [wodby/httpd]          | [httpd]     |
 
 ### Alpine base image
@@ -155,6 +156,8 @@ Not automated:
 [wodby/base-memcached]: https://github.com/wodby/base-memcached
 
 [wodby/base-postgres]: https://github.com/wodby/base-postgres
+
+[wodby/base-php]: https://github.com/wodby/base-php
 
 [wodby/base-redis]: https://github.com/wodby/base-redis
 

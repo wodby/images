@@ -11,6 +11,14 @@ on:
   pull_request:
   workflow_dispatch:
 
+env:
+  DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+  DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+  GITHUB_MACHINE_USER_API_TOKEN: ${{ secrets.GIT_GITHUB_MACHINE_USER_API_TOKEN }}
+  GITHUB_MACHINE_USER: ${{ secrets.GIT_GITHUB_MACHINE_USER }}
+  GIT_USER_EMAIL: ${{ secrets.GIT_USER_EMAIL }}
+  GIT_USER_NAME: ${{ secrets.GIT_USER_NAME }}
+
 jobs:
   repos:
     runs-on: ubuntu-latest
@@ -24,22 +32,17 @@ jobs:
         user: ${{ secrets.GIT_GITHUB_MACHINE_USER }}
         email: ${{ secrets.GIT_USER_EMAIL }}
         name: ${{ secrets.GIT_USER_NAME }}
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
   forks:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        script: [base-memcached,base-php,base-postgres,base-redis,base-solr,httpd]
     steps:
     - uses: actions/checkout@v2
     - uses: ./.github/actions
       with:
         dir: forks
-        script: base-solr
-        api_token: ${{ secrets.GIT_GITHUB_MACHINE_USER_API_TOKEN }}
-        user: ${{ secrets.GIT_GITHUB_MACHINE_USER }}
-        email: ${{ secrets.GIT_USER_EMAIL }}
-        name: ${{ secrets.GIT_USER_NAME }}
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
+        script: ${{ matrix.script }}
   alpine:
     runs-on: ubuntu-latest
     strategy:
@@ -51,12 +54,6 @@ jobs:
       with:
         dir: alpine
         script: ${{ matrix.script }}
-        api_token: ${{ secrets.GIT_GITHUB_MACHINE_USER_API_TOKEN }}
-        user: ${{ secrets.GIT_GITHUB_MACHINE_USER }}
-        email: ${{ secrets.GIT_USER_EMAIL }}
-        name: ${{ secrets.GIT_USER_NAME }}
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
   images:
     runs-on: ubuntu-latest
     strategy:
@@ -68,12 +65,6 @@ jobs:
       with:
         dir: images
         script: ${{ matrix.script }}
-        api_token: ${{ secrets.GIT_GITHUB_MACHINE_USER_API_TOKEN }}
-        user: ${{ secrets.GIT_GITHUB_MACHINE_USER }}
-        email: ${{ secrets.GIT_USER_EMAIL }}
-        name: ${{ secrets.GIT_USER_NAME }}
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
   stability-tags:
     runs-on: ubuntu-latest
     strategy:
@@ -85,12 +76,6 @@ jobs:
       with:
         dir: stability-tags
         script: ${{ matrix.script }}
-        api_token: ${{ secrets.GIT_GITHUB_MACHINE_USER_API_TOKEN }}
-        user: ${{ secrets.GIT_GITHUB_MACHINE_USER }}
-        email: ${{ secrets.GIT_USER_EMAIL }}
-        name: ${{ secrets.GIT_USER_NAME }}
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
   upstream:
     runs-on: ubuntu-latest
     strategy:
@@ -102,12 +87,6 @@ jobs:
       with:
         dir: upstream
         script: ${{ matrix.script }}
-        api_token: ${{ secrets.GIT_GITHUB_MACHINE_USER_API_TOKEN }}
-        user: ${{ secrets.GIT_GITHUB_MACHINE_USER }}
-        email: ${{ secrets.GIT_USER_EMAIL }}
-        name: ${{ secrets.GIT_USER_NAME }}
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
   docker4x:
     runs-on: ubuntu-latest
     strategy:
@@ -119,9 +98,3 @@ jobs:
       with:
         dir: docker4x
         script: ${{ matrix.script }}
-        api_token: ${{ secrets.GIT_GITHUB_MACHINE_USER_API_TOKEN }}
-        user: ${{ secrets.GIT_GITHUB_MACHINE_USER }}
-        email: ${{ secrets.GIT_USER_EMAIL }}
-        name: ${{ secrets.GIT_USER_NAME }}
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
