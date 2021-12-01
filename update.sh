@@ -358,7 +358,8 @@ _update_timestamps() {
     if [[ "${#ver_with_updated_alpine[@]}" != 0 ]]; then
       # In case there were no new commits but the base image alpine we want to force rebuild latest images against new Alpine.
       if [[ -z "${unpushed}" ]]; then
-        git push origin --force
+        git commit --allow-empty -m "Rebuild against updated Alpine"
+        git push origin
       fi
       ver_list=$(_join_ws ", " "${ver_with_updated_alpine[@]}")
       _release_tag "Alpine Linux updated to ${latest_alpine_ver} for versions: ${ver_list}" "${minor_update}"
@@ -404,7 +405,8 @@ _update_base_alpine_image() {
   if [[ -n "${release_tag}" ]]; then
     # In case there were no new commits but the base image was updated we want to force rebuild latest images.
     if [[ -z "${unpushed}" ]]; then
-      git push origin --force
+      git commit --allow-empty -m "Rebuild against updated Alpine"
+      git push origin
     fi
     if [[ "${current%.*}" != "${latest%.*}" ]]; then
       minor_update=1
