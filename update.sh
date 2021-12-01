@@ -357,7 +357,7 @@ _update_timestamps() {
     # Release tags on alpine updates.
     if [[ "${#ver_with_updated_alpine[@]}" != 0 ]]; then
       # In case there were no new commits but the base image alpine we want to force rebuild latest images against new Alpine.
-      if [[ -z "${unpushed }" ]]; then
+      if [[ -z "${unpushed}" ]]; then
         git push origin --force
       fi
       ver_list=$(_join_ws ", " "${ver_with_updated_alpine[@]}")
