@@ -501,6 +501,19 @@ sync_httpd_fork() {
   git push origin
 }
 
+sync_openjdk_fork() {
+  git clone "https://${GITHUB_MACHINE_USER}:${GITHUB_MACHINE_USER_API_TOKEN}@github.com/wodby/openjdk.git" /tmp/openjdk
+  cd /tmp/openjdk
+  git remote add upstream "https://github.com/adoptium/containers"
+  git fetch upstream
+  git merge --no-edit upstream/main
+
+  ./update_all.sh
+
+  _git_commit ./ "Update from upstream"
+  git push origin
+}
+
 sync_redis_fork() {
   git clone "https://${GITHUB_MACHINE_USER}:${GITHUB_MACHINE_USER_API_TOKEN}@github.com/wodby/base-redis.git" /tmp/base-redis
   cd /tmp/base-redis
