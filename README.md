@@ -16,6 +16,7 @@ Syncing with upstream.
 | [wodby/base-solr]      | [solr]      |
 | [wodby/base-php]       | [php]      |
 | [wodby/httpd]          | [httpd]     |
+| [wodby/openjdk]        | [adoptium/containers]     |
 
 ### Alpine base image
 
@@ -104,6 +105,8 @@ Not automated:
 - New stability branches for major stability tags updates
 - Config set updates from Search API Solr module for [wodby/solr]
 - [wodby/opensmtpd] (installed from Alpine repository package)
+
+[adoptium/containers]: https://github.com/adoptium/containers
 
 [alpine]: https://github.com/gliderlabs/docker-alpine
 
@@ -194,6 +197,8 @@ Not automated:
 [wodby/nginx]: https://github.com/wodby/nginx
 
 [wodby/node]: https://github.com/wodby/node
+
+[wodby/openjdk]: https://github.com/wodby/openjdk
 
 [wodby/opensmtpd]: https://github.com/wodby/opensmtpd
 
