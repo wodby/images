@@ -8,24 +8,24 @@
 
 Syncing with upstream.
 
-| Image                 | Upstream  |
-| --------------------- | --------- |
-| [wodby/base-memcached] | [memcached] |
-| [wodby/base-postgres]  | [postgres]  |
-| [wodby/base-redis]     | [redis]     |
-| [wodby/base-solr]      | [solr]      |
-| [wodby/base-php]       | [php]      |
-| [wodby/httpd]          | [httpd]     |
-| [wodby/openjdk]        | [adoptium/containers]     |
+| Image                  | Upstream              |
+|------------------------|-----------------------|
+| [wodby/base-memcached] | [memcached]           |
+| [wodby/base-postgres]  | [postgres]            |
+| [wodby/base-redis]     | [redis]               |
+| [wodby/base-solr]      | [solr]                |
+| [wodby/base-php]       | [php]                 |
+| [wodby/httpd]          | [httpd]               |
+| [wodby/openjdk]        | [adoptium/containers] |
 
 ### Alpine base image
 
-| Image                 | Alpine version |
-| --------------------- | -------------- |
-| [wodby/mariadb]       | `3.13`         |
-| [wodby/nginx]         | `3.13`         |
-| [wodby/opensmtpd]     | `3.10`         |
-| [wodby/varnish]       | `3.12`         |
+| Image             | Alpine version |
+|-------------------|----------------|
+| [wodby/mariadb]   | `3.13`         |
+| [wodby/nginx]     | `3.13`         |
+| [wodby/opensmtpd] | `3.10`         |
+| [wodby/varnish]   | `3.12`         |
 
 ### Images based on official images (or forks)
 
@@ -34,18 +34,18 @@ Syncing with upstream.
 - New stability tag release on version update
 - New stability tag release on Alpine Linux update
 
-| Image             | Upstream (base image)  | Versions                                     |
-| ----------------- | ---------------------- | -------------------------------------------- |
-| [wodby/alpine]    | [alpine]               | `3.15`, `3.14`, `3.13`, `3.12`  |
-| [wodby/apache]    | [wodby/httpd]          | `2.4`                                        |
-| [wodby/memcached] | [wodby/base-memcached] | `1`                                          |
-| [wodby/node]      | [node]                 | `16`, `14`, `12`                             |
-| [wodby/php]       | [wodby/base-php]       | `8.1`, `8.0`, `7.4`, `7.3`                          |
-| [wodby/postgres]  | [wodby/base-postgres]  | `14`, `13`, `12`, `11`, `10`, `9.6`                |
-| [wodby/python]    | [python]               | `3.9`, `3.8`, `3.7`, `3.6`                   |
-| [wodby/redis]     | [wodby/base-redis]     | `6`, `5`                                     |
-| [wodby/ruby]      | [ruby]                 | `3.0`, `2.7`, `2.6`                          |
-| [wodby/solr]      | [wodby/base-solr]      | `8`, `7.7`, `7.6`, `7.5`, `6.6`, `5.5`       |
+| Image             | Upstream (base image)  | Versions                               |
+|-------------------|------------------------|----------------------------------------|
+| [wodby/alpine]    | [alpine]               | `3.15`, `3.14`, `3.13`, `3.12`         |
+| [wodby/apache]    | [wodby/httpd]          | `2.4`                                  |
+| [wodby/memcached] | [wodby/base-memcached] | `1`                                    |
+| [wodby/node]      | [node]                 | `16`, `14`, `12`                       |
+| [wodby/php]       | [wodby/base-php]       | `8.1`, `8.0`, `7.4`, `7.3`             |
+| [wodby/postgres]  | [wodby/base-postgres]  | `14`, `13`, `12`, `11`, `10`, `9.6`    |
+| [wodby/python]    | [python]               | `3.10`, `3.9`, `3.8`, `3.7`, `3.6`     |
+| [wodby/redis]     | [wodby/base-redis]     | `6`, `5`                               |
+| [wodby/ruby]      | [ruby]                 | `3.0`, `2.7`, `2.6`                    |
+| [wodby/solr]      | [wodby/base-solr]      | `8`, `7.7`, `7.6`, `7.5`, `6.6`, `5.5` |
 
 ### Descendant images
 
@@ -53,17 +53,17 @@ Syncing with upstream.
 - Rebase to newer stability tag
 - New stability tag release
 
-| Image                 | Upstream (base image) | Versions            | Stability branch |
-| --------------------- | --------------------- | ------------------- | --------------   |
-| [wodby/adminer]       | [wodby/php]           | `7.4`               |                  |
-| [wodby/cachet]        | [wodby/php]           | `7.2`               |                  |
-| [wodby/drupal-php]    | [wodby/php]           | `8.0`, `7.4`,`7.3`  | `4.x`            |
-| [wodby/drupal]        | [wodby/drupal-php]    | `8.0`, `7.4`,`7.3`  | `4.x`            |
-| [wodby/matomo]        | [wodby/php]           | `7.2`               |                  |
-| [wodby/webgrind]      | [wodby/php]           | `7.2`               |                  |
-| [wodby/wordpress-php] | [wodby/php]           | `8.0`, `7.4`, `7.3` | `4.x`            |
-| [wodby/wordpress]     | [wodby/wordpress-php] | `8.0`, `7.4`, `7.3` | `4.x`            |
-| [wodby/xhprof]        | [wodby/php]           | `7.2`               |                  |
+| Image                 | Upstream (base image) | Versions                  | Stability branch |
+|-----------------------|-----------------------|---------------------------|------------------|
+| [wodby/adminer]       | [wodby/php]           | `7.4`                     |                  |
+| [wodby/cachet]        | [wodby/php]           | `7.2`                     |                  |
+| [wodby/drupal-php]    | [wodby/php]           | `8.1`, `8.0`, `7.4`,`7.3` | `4.x`            |
+| [wodby/drupal]        | [wodby/drupal-php]    | `8.1`, `8.0`, `7.4`,`7.3` | `4.x`            |
+| [wodby/matomo]        | [wodby/php]           | `7.2`                     |                  |
+| [wodby/webgrind]      | [wodby/php]           | `7.2`                     |                  |
+| [wodby/wordpress-php] | [wodby/php]           | `8.0`, `7.4`, `7.3`       | `4.x`            |
+| [wodby/wordpress]     | [wodby/wordpress-php] | `8.0`, `7.4`, `7.3`       | `4.x`            |
+| [wodby/xhprof]        | [wodby/php]           | `7.2`                     |                  |
 
 ### Version updates from upstream other than base image
 
@@ -71,13 +71,13 @@ Syncing with upstream.
 - New stability tag release
 
 | Image                 | Upstream                     | Versions                               | Stability branch |
-| --------------------- | -----------------------      | ---------------------                  | --------------   |
+|-----------------------|------------------------------|----------------------------------------|------------------|
 | [wodby/adminer]       | [vrana/adminer]              | `4`                                    |                  |
 | [wodby/cachet]        | [CachetHQ/Cachet]            | `2`                                    |                  |
 | [wodby/drupal]        | [drupal]                     | `9`, `8`, `7`                          | `4.x`            |
 | [wodby/elasticsearch] | [elastic/elasticsearch]      | `7`, `6`                               |                  |
 | [wodby/kibana]        | [elastic/kibana]             | `7`, `6`                               |                  |
-| [wodby/mariadb]       | [mariadb]                    | `10.6`, `10.5`, `10.4`, `10.3`, `10.2`         |                  |
+| [wodby/mariadb]       | [mariadb]                    | `10.6`, `10.5`, `10.4`, `10.3`, `10.2` |                  |
 | [wodby/matomo]        | [matomo-org/matomo]          | `4`, `3`                               |                  |
 | [wodby/nginx]         | [nginx]                      | `1.21`, `1.20`, `1.19`                 |                  |
 | [wodby/varnish]       | [varnishcache/varnish-cache] | `6.0`, `4.1`                           |                  |
@@ -90,7 +90,7 @@ Syncing with upstream.
 Update images stability tags
 
 | Project                  |
-| ------------------------ |
+|--------------------------|
 | [wodby/docker4drupal]    |
 | [wodby/docker4php]       |
 | [wodby/docker4python]    |
