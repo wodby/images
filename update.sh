@@ -506,7 +506,7 @@ sync_openjdk_fork() {
   cd /tmp/openjdk
   git remote add upstream "https://github.com/adoptium/containers"
   git fetch upstream
-  git merge --no-edit upstream/main
+  git merge --strategy-option ours --no-edit upstream/main
 
   apk add --update python3
   ./update_all.sh
