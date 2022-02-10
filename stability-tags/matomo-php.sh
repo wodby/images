@@ -4,4 +4,4 @@ set -e
 
 . ../update.sh
 
-rebuild_and_rebase "wodby/matomo" "7.2"
+rebuild_and_rebase "wodby/matomo" "8.1"

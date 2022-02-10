@@ -59,7 +59,7 @@ Syncing with upstream.
 | [wodby/cachet]        | [wodby/php]           | `7.2`                     |                  |
 | [wodby/drupal-php]    | [wodby/php]           | `8.1`, `8.0`, `7.4`,`7.3` | `4.x`            |
 | [wodby/drupal]        | [wodby/drupal-php]    | `8.1`, `8.0`, `7.4`,`7.3` | `4.x`            |
-| [wodby/matomo]        | [wodby/php]           | `7.2`                     |                  |
+| [wodby/matomo]        | [wodby/php]           | `8.1`                     |                  |
 | [wodby/webgrind]      | [wodby/php]           | `7.2`                     |                  |
 | [wodby/wordpress-php] | [wodby/php]           | `8.0`, `7.4`, `7.3`       | `4.x`            |
 | [wodby/wordpress]     | [wodby/wordpress-php] | `8.0`, `7.4`, `7.3`       | `4.x`            |
