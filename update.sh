@@ -508,7 +508,6 @@ sync_openjdk_fork() {
   git fetch upstream
   git merge --strategy-option ours --no-edit upstream/main
 
-  apk add --update python3
   ./update_all.sh
 
   _git_commit ./ "Update from upstream"
