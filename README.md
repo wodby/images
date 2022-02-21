@@ -42,9 +42,9 @@ Syncing with upstream.
 | [wodby/node]      | [node]                 | `16`, `14`, `12`                       |
 | [wodby/php]       | [wodby/base-php]       | `8.1`, `8.0`, `7.4`                    |
 | [wodby/postgres]  | [wodby/base-postgres]  | `14`, `13`, `12`, `11`, `10`           |
-| [wodby/python]    | [python]               | `3.10`, `3.9`, `3.8`, `3.7`, `3.6`     |
+| [wodby/python]    | [python]               | `3.10`, `3.9`, `3.8`, `3.7`            |
 | [wodby/redis]     | [wodby/base-redis]     | `6`, `5`                               |
-| [wodby/ruby]      | [ruby]                 | `3.0`, `2.7`, `2.6`                    |
+| [wodby/ruby]      | [ruby]                 | `3.1`, `3.0`, `2.7`, `2.6`             |
 | [wodby/solr]      | [wodby/base-solr]      | `8`, `7.7`, `7.6`, `7.5`, `6.6`, `5.5` |
 
 ### Descendant images
