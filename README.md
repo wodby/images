@@ -24,8 +24,8 @@ Syncing with upstream.
 |-------------------|----------------|
 | [wodby/mariadb]   | `3.13`         |
 | [wodby/nginx]     | `3.13`         |
-| [wodby/opensmtpd] | `3.10`         |
-| [wodby/varnish]   | `3.12`         |
+| [wodby/opensmtpd] | `3.13`         |
+| [wodby/varnish]   | `3.13`         |
 
 ### Images based on official images (or forks)
 
