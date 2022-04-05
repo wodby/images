@@ -20,13 +20,18 @@ Syncing with upstream.
 
 ### Alpine base image
 
-| Image             | Alpine version |
-|-------------------|----------------|
-| [wodby/mariadb]   | `3.13`         |
-| [wodby/nginx]     | `3.13`         |
-| [wodby/opensmtpd] | `3.13`         |
-| [wodby/varnish]   | `3.13`         |
-| [wodby/base-php]  | `3.13`         |
+| Image                  | Alpine version |
+|------------------------|----------------|
+| [wodby/mariadb]        | `3.13`         |
+| [wodby/nginx]          | `3.13`         |
+| [wodby/opensmtpd]      | `3.13`         |
+| [wodby/varnish]        | `3.13`         |
+| [wodby/base-php]       | `3.13`         |
+| [wodby/base-memcached] | `3.13`         |
+| [wodby/base-postgres]  | `3.13`         |
+| [wodby/base-redis]     | `3.13`         |
+| [wodby/httpd]          | `3.13`         |
+| [wodby/openjdk]        | `3.13`         |
 
 ### Images based on official images (or forks)
 

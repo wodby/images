@@ -43,7 +43,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        script: [mariadb,nginx,opensmtpd,varnish,base-php]
+        script: [mariadb,nginx,opensmtpd,varnish,base-php,base-memcached,base-redis,base-postgres,httpd,openjdk]
     steps:
     - uses: actions/checkout@v2
     - uses: ./.github/actions
