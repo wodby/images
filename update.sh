@@ -351,7 +351,9 @@ _update_timestamps() {
     _git_commit ./ "Rebuild against updated base image"
 
     local unpushed
-    unpushed=$(git diff origin/master..HEAD);
+    local branch_name
+    branch_name=$(git rev-parse --abbrev-ref HEAD)
+    unpushed=$(git diff "origin/${branch_name}..HEAD");
     git push origin
 
     # Release tags on alpine updates.
@@ -399,7 +401,9 @@ _update_base_alpine_image() {
   fi
 
   local unpushed
-  unpushed=$(git diff origin/master..HEAD);
+  local branch_name
+  branch_name=$(git rev-parse --abbrev-ref HEAD)
+  unpushed=$(git diff "origin/${branch_name}..HEAD");
   git push origin
 
   if [[ -n "${release_tag}" ]]; then
