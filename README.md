@@ -26,6 +26,7 @@ Syncing with upstream.
 | [wodby/nginx]     | `3.13`         |
 | [wodby/opensmtpd] | `3.13`         |
 | [wodby/varnish]   | `3.13`         |
+| [wodby/base-php]  | `3.13`         |
 
 ### Images based on official images (or forks)
 
