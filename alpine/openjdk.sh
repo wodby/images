@@ -4,4 +4,4 @@ set -e
 
 . ../update.sh
 
-update_base_alpine "wodby/openjdk" "3.13"
+update_base_alpine "wodby/openjdk" "3.15"

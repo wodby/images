@@ -231,20 +231,20 @@ _update_versions() {
     if [[ $(compare_semver "${latest_ver}" "${cur_ver}") == 0 ]]; then
       echo "${name^} ${cur_ver} is outdated, updating to ${latest_ver}"
 
-      sed -i -E "s/(${name^^}${version//./}): .+/\1: '${latest_ver}'/" .github/workflows/workflow.yml
+      sed -i -E "s/(${name^^}${version//./}): .+/\1: '${latest_ver}'/g" .github/workflows/workflow.yml
 
       if [[ -z "${has_quotes}" ]]; then
-        sed -i -E "s/(version): ${version//\./\\.}\.[0-9\.]+/\1: '${latest_ver}'/" .github/workflows/workflow.yml
+        sed -i -E "s/(version): ${version//\./\\.}\.[0-9\.]+/\1: '${latest_ver}'/g" .github/workflows/workflow.yml
       else
-        sed -i -E "s/(version): '${version//\./\\.}\.[0-9\.]+'/\1: '${latest_ver}'/" .github/workflows/workflow.yml
+        sed -i -E "s/(version): '${version//\./\\.}\.[0-9\.]+'/\1: '${latest_ver}'/g" .github/workflows/workflow.yml
       fi
 
       # For semver minor updates we should also update tags info.
       if [[ "${latest_ver%.*}" != "${cur_ver%.*}" ]]; then
         minor_update=1
-        sed -i -E "s/(tags): .+?${version//\./\\.}\.[0-9\.]+/\1: ${latest_ver%.*}/" .github/workflows/workflow.yml
-        sed -i -E "s/\`${version//\./\\.}\.[0-9\.]+\`/\`${latest_ver%.*}\`/" README.md
-        sed -i -E "s/\:${version//\./\\.}\.[0-9\.]+(-X\.X\.X)/:${latest_ver%.*}\1/" README.md
+        sed -i -E "s/(tags): .+?${version//\./\\.}\.[0-9\.]+/\1: ${latest_ver%.*}/g" .github/workflows/workflow.yml
+        sed -i -E "s/\`${version//\./\\.}\.[0-9\.]+\`/\`${latest_ver%.*}\`/g" README.md
+        sed -i -E "s/\:${version//\./\\.}\.[0-9\.]+(-X\.X\.X)/:${latest_ver%.*}\1/g" README.md
       fi
 
       sed -i -E "s/(${name^^}_VER \?= )${cur_ver}/\1${latest_ver}/" "${dir}/Makefile"

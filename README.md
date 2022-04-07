@@ -18,20 +18,20 @@ Syncing with upstream.
 | [wodby/httpd]          | [httpd]               |
 | [wodby/openjdk]        | [adoptium/containers] |
 
-### Alpine base image
+### Alpine-based images
 
 | Image                  | Alpine version |
 |------------------------|----------------|
-| [wodby/mariadb]        | `3.13`         |
-| [wodby/nginx]          | `3.13`         |
-| [wodby/opensmtpd]      | `3.13`         |
-| [wodby/varnish]        | `3.13`         |
-| [wodby/base-php]       | `3.13`         |
-| [wodby/base-memcached] | `3.13`         |
-| [wodby/base-postgres]  | `3.13`         |
-| [wodby/base-redis]     | `3.13`         |
-| [wodby/httpd]          | `3.13`         |
-| [wodby/openjdk]        | `3.13`         |
+| [wodby/mariadb]        | `3.15`         |
+| [wodby/nginx]          | `3.15`         |
+| [wodby/opensmtpd]      | `3.15`         |
+| [wodby/varnish]        | `3.15`         |
+| [wodby/base-php]       | `3.15`         |
+| [wodby/base-memcached] | `3.15`         |
+| [wodby/base-postgres]  | `3.15`         |
+| [wodby/base-redis]     | `3.15`         |
+| [wodby/httpd]          | `3.15`         |
+| [wodby/openjdk]        | `3.15`         |
 
 ### Images based on official images (or forks)
 
