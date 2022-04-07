@@ -4,4 +4,4 @@ set -e
 
 . ../update.sh
 
-update_base_alpine "wodby/varnish" "3.13" "true"
+update_base_alpine "wodby/varnish" "3.15" "true"
