@@ -262,9 +262,9 @@ _update_versions() {
     fi
   done
 
-  git push origin
-
   if [[ "${#updated[@]}" != 0 ]]; then
+    git push origin
+
     if [[ -n "${branch}" ]]; then
       git checkout "${branch}"
       git merge --no-edit master
@@ -450,12 +450,11 @@ _update_stability_tag() {
   if [[ $(compare_semver "${latest}" "${current}") == 0 ]]; then
     sed -i -E "s/(BASE_IMAGE_STABILITY_TAG: )${current}/\1${latest}/" .github/workflows/workflow.yml
     _git_commit ./ "Update base image stability tag to ${latest}"
+    git push origin
     tag=1
   else
     echo "Base image stability tag ${current} is already the latest"
   fi
-
-  git push origin
 
   if [[ -n "${tag}" ]]; then
     if [[ "${current%.*}" != "${latest%.*}" ]]; then
