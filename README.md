@@ -10,13 +10,7 @@ Syncing with upstream.
 
 | Image                  | Upstream              |
 |------------------------|-----------------------|
-| [wodby/base-memcached] | [memcached]           |
-| [wodby/base-postgres]  | [postgres]            |
-| [wodby/base-redis]     | [redis]               |
 | [wodby/base-solr]      | [solr]                |
-| [wodby/base-php]       | [php]                 |
-| [wodby/httpd]          | [httpd]               |
-| [wodby/openjdk]        | [adoptium/containers] |
 
 ### Alpine-based images
 
@@ -26,12 +20,6 @@ Syncing with upstream.
 | [wodby/nginx]          | `3.15`         |
 | [wodby/opensmtpd]      | `3.15`         |
 | [wodby/varnish]        | `3.15`         |
-| [wodby/base-php]       | `3.15`         |
-| [wodby/base-memcached] | `3.15`         |
-| [wodby/base-postgres]  | `3.15`         |
-| [wodby/base-redis]     | `3.15`         |
-| [wodby/httpd]          | `3.15`         |
-| [wodby/openjdk]        | `3.15`         |
 
 ### Images based on official images (or forks)
 
@@ -40,18 +28,18 @@ Syncing with upstream.
 - New stability tag release on version update
 - New stability tag release on Alpine Linux update
 
-| Image             | Upstream (base image)  | Versions                       |
-|-------------------|------------------------|--------------------------------|
-| [wodby/alpine]    | [alpine]               | `3.15`, `3.14`, `3.13`, `3.12` |
-| [wodby/apache]    | [wodby/httpd]          | `2.4`                          |
-| [wodby/memcached] | [wodby/base-memcached] | `1`                            |
-| [wodby/node]      | [node]                 | `16`, `14`, `12`               |
-| [wodby/php]       | [wodby/base-php]       | `8.1`, `8.0`, `7.4`            |
-| [wodby/postgres]  | [wodby/base-postgres]  | `14`, `13`, `12`, `11`, `10`   |
-| [wodby/python]    | [python]               | `3.10`, `3.9`, `3.8`, `3.7`    |
-| [wodby/redis]     | [wodby/base-redis]     | `6`, `5`                       |
-| [wodby/ruby]      | [ruby]                 | `3.1`, `3.0`, `2.7`, `2.6`     |
-| [wodby/solr]      | [wodby/base-solr]      | `8`, `7.7`, `6.6`, `5.5`       |
+| Image             | Upstream (base image) | Versions                       |
+|-------------------|-----------------------|--------------------------------|
+| [wodby/alpine]    | [alpine]              | `3.15`, `3.14`, `3.13`, `3.12` |
+| [wodby/apache]    | [_/httpd]             | `2.4`                          |
+| [wodby/memcached] | [_/memcached]         | `1`                            |
+| [wodby/node]      | [node]                | `16`, `14`, `12`               |
+| [wodby/php]       | [_/php]               | `8.1`, `8.0`, `7.4`            |
+| [wodby/postgres]  | [_/postgres]          | `14`, `13`, `12`, `11`, `10`   |
+| [wodby/python]    | [python]              | `3.10`, `3.9`, `3.8`, `3.7`    |
+| [wodby/redis]     | [_/redis]             | `6`, `5`                       |
+| [wodby/ruby]      | [ruby]                | `3.1`, `3.0`, `2.7`, `2.6`     |
+| [wodby/solr]      | [wodby/base-solr]     | `8`, `7.7`, `6.6`, `5.5`       |
 
 ### Descendant images
 
@@ -161,13 +149,13 @@ Not automated:
 
 [wodby/apache]: https://github.com/wodby/apache
 
-[wodby/base-memcached]: https://github.com/wodby/base-memcached
+[_/memcached]: https://hub.docker.com/_/memcached
 
-[wodby/base-postgres]: https://github.com/wodby/base-postgres
+[_/postgres]: https://hub.docker.com/_/postgres
 
-[wodby/base-php]: https://github.com/wodby/base-php
+[_/php]: https://hub.docker.com/_/php
 
-[wodby/base-redis]: https://github.com/wodby/base-redis
+[_/redis]: https://hub.docker.com/_/redis
 
 [wodby/base-solr]: https://github.com/wodby/base-solr
 
@@ -189,7 +177,7 @@ Not automated:
 
 [wodby/elasticsearch]: https://github.com/wodby/elasticsearch
 
-[wodby/httpd]: https://github.com/wodby/httpd
+[_/httpd]: https://hub.docker.com/_/httpd
 
 [wodby/kibana]: https://github.com/wodby/kibana
 
