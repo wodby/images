@@ -465,19 +465,6 @@ _update_stability_tag() {
   fi
 }
 
-sync_php_fork() {
-  git clone "https://${GITHUB_MACHINE_USER}:${GITHUB_MACHINE_USER_API_TOKEN}@github.com/wodby/base-php" /tmp/base-php
-  cd /tmp/base-php
-  git remote add upstream "https://github.com/docker-library/php"
-  git fetch upstream
-  git merge --strategy-option ours --no-edit upstream/master
-
-  ./wodby-meta-update.sh
-
-  _git_commit ./ "Update from upstream"
-  git push origin
-}
-
 sync_solr_fork() {
   git clone "https://${GITHUB_MACHINE_USER}:${GITHUB_MACHINE_USER_API_TOKEN}@github.com/wodby/base-solr" /tmp/base-solr
   cd /tmp/base-solr
@@ -486,72 +473,6 @@ sync_solr_fork() {
   git merge --strategy-option ours --no-edit upstream/master
 
   ./tools/update.sh
-
-  _git_commit ./ "Update from upstream"
-  git push origin
-}
-
-sync_httpd_fork() {
-  git clone "https://${GITHUB_MACHINE_USER}:${GITHUB_MACHINE_USER_API_TOKEN}@github.com/wodby/httpd.git" /tmp/httpd
-  cd /tmp/httpd
-  git remote add upstream "https://github.com/docker-library/httpd"
-  git fetch upstream
-  git merge --strategy-option ours --no-edit upstream/master
-
-  ./wodby-meta-update.sh
-
-  _git_commit ./ "Update from upstream"
-  git push origin
-}
-
-sync_openjdk_fork() {
-  git clone "https://${GITHUB_MACHINE_USER}:${GITHUB_MACHINE_USER_API_TOKEN}@github.com/wodby/openjdk.git" /tmp/openjdk
-  cd /tmp/openjdk
-  git remote add upstream "https://github.com/adoptium/containers"
-  git fetch upstream
-  git merge --strategy-option ours --no-edit upstream/main
-
-  ./update_all.sh
-
-  _git_commit ./ "Update from upstream"
-  git push origin
-}
-
-sync_redis_fork() {
-  git clone "https://${GITHUB_MACHINE_USER}:${GITHUB_MACHINE_USER_API_TOKEN}@github.com/wodby/base-redis.git" /tmp/base-redis
-  cd /tmp/base-redis
-  git remote add upstream "https://github.com/docker-library/redis"
-  git fetch upstream
-  git merge --strategy-option ours --no-edit upstream/master
-
-  ./wodby-meta-update.sh
-
-  _git_commit ./ "Update from upstream"
-  git push origin
-}
-
-sync_memcached_fork() {
-  git clone "https://${GITHUB_MACHINE_USER}:${GITHUB_MACHINE_USER_API_TOKEN}@github.com/wodby/base-memcached.git" /tmp/base-memcached
-  cd /tmp/base-memcached
-  git remote add upstream "https://github.com/docker-library/memcached"
-  git fetch upstream
-  git merge --strategy-option ours --no-edit upstream/master
-
-  ./wodby-meta-update.sh
-
-  _git_commit ./ "Update from upstream"
-  git push origin
-}
-
-
-sync_postgres_fork() {
-  git clone "https://${GITHUB_MACHINE_USER}:${GITHUB_MACHINE_USER_API_TOKEN}@github.com/wodby/base-postgres.git" /tmp/base-postgres
-  cd /tmp/base-postgres
-  git remote add upstream "https://github.com/docker-library/postgres"
-  git fetch upstream
-  git merge --strategy-option ours --no-edit upstream/master
-
-  ./wodby-meta-update.sh
 
   _git_commit ./ "Update from upstream"
   git push origin

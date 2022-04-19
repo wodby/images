@@ -32,7 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        script: [base-memcached,base-php,base-postgres,base-redis,base-solr,httpd,openjdk]
+        script: [base-solr]
     steps:
     - uses: actions/checkout@v2
     - uses: ./.github/actions
