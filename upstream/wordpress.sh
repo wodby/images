@@ -4,4 +4,4 @@ set -e
 
 . ../update.sh
 
-update_from_upstream "wodby/wordpress" "5" "github.com/WordPress/WordPress" "4.x"
+update_from_upstream "wodby/wordpress" "6" "github.com/WordPress/WordPress" "4.x"
