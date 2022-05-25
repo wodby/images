@@ -70,7 +70,7 @@ Syncing with upstream.
 | [wodby/drupal]        | [drupal]                     | `9`, `7`                                       | `4.x`            |
 | [wodby/elasticsearch] | [elastic/elasticsearch]      | `7`, `6`                                       |                  |
 | [wodby/kibana]        | [elastic/kibana]             | `7`, `6`                                       |                  |
-| [wodby/mariadb]       | [mariadb]                    | `10.7`, `10.6`, `10.5`, `10.4`, `10.3`, `10.2` |                  |
+| [wodby/mariadb]       | [mariadb]                    | `10.7`, `10.6`, `10.5`, `10.4`, `10.3` |                  |
 | [wodby/matomo]        | [matomo-org/matomo]          | `4`                                            |                  |
 | [wodby/nginx]         | [nginx]                      | `1.21`, `1.20`, `1.19`                         |                  |
 | [wodby/varnish]       | [varnishcache/varnish-cache] | `6.0`, `4.1`                                   |                  |
