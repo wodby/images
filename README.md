@@ -30,7 +30,7 @@ Syncing with upstream.
 
 | Image             | Upstream (base image) | Versions                       |
 |-------------------|-----------------------|--------------------------------|
-| [wodby/alpine]    | [alpine]              | `3.15`, `3.14`, `3.13`, `3.12` |
+| [wodby/alpine]    | [alpine]              | `3.16`, `3.15`, `3.14`, `3.13` |
 | [wodby/apache]    | [_/httpd]             | `2.4`                          |
 | [wodby/memcached] | [_/memcached]         | `1`                            |
 | [wodby/node]      | [node]                | `16`, `14`, `12`               |
