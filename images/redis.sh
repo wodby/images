@@ -4,4 +4,4 @@ set -e
 
 . ../update.sh
 
-update_from_base_image "wodby/redis" "6 5"
+update_from_base_image "wodby/redis" "7 6 5"
