@@ -27,7 +27,7 @@ _get_image_tags() {
   local slug="${1%:*}"
   local namespace=${slug%/*}
   local repo=${slug#*/}
-  if [[ ! "${slug}" =~ / ]]; then
+  if [[ "${namespace}" == "${slug}" ]]; then
     namespace="library"
   fi
   wget -q "https://hub.docker.com/v2/namespaces/${namespace}/repositories/${repo}/tags" -O - | jq -r '.results[].name'
