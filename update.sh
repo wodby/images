@@ -101,7 +101,7 @@ _github_get_latest_ver() {
   local -a versions
 
   # Only stable versions.
-  versions=($(curl -s -u "${user}" "${url}" | jq -r "${expr}" | sed -E "s/refs\/tags\/(v|release-|${name}-)?//" | grep -oP "^[0-9\.]+$" | sort -rV))
+  versions=($(curl -s -u "${user}" "${url}" | jq -r "${expr}" | sed -E "s/refs\/tags\/(v|release-|${name}-)?//" | grep -oP "^[0-9\.]+" | sort -rV))
 
   if [[ "${#versions}" == 0 ]]; then
     echo >&2 "Couldn't find latest version in line ${version} of ${slug}."
@@ -382,7 +382,7 @@ _update_base_alpine_image() {
   echo "Checking for alpine base image tag updates"
   echo "=========================================="
 
-  latest=$(_get_image_tags "${base_image}" | grep -oP "(?<=${version//\./\\.}-)[0-9\.]+$" | sort -rV | head -n1)
+  latest=$(_get_image_tags "${base_image}" | grep -oP "(?<=${version//\./\\.}-)[0-9\.]+" | sort -rV | head -n1)
 
   if [[ -z "${latest}" ]]; then
     echo >&2 "Failed to acquire latest image tag"
@@ -438,7 +438,7 @@ _update_stability_tag() {
     git merge --no-edit master
   fi
 
-  latest=$(_get_image_tags "${base_image}" | grep -oP "(?<=${version//\./\\.}-)[0-9\.]+$" | sort -rV | head -n1)
+  latest=$(_get_image_tags "${base_image}" | grep -oP "(?<=${version//\./\\.}-)[0-9\.]+" | sort -rV | head -n1)
 
   if [[ -z "${latest}" ]]; then
     echo >&2 "Failed to acquire latest image tag"
@@ -580,11 +580,11 @@ update_docker4x() {
     current="${tags[0]##*-}"
     name="${image#*/}"
 
-    latest=$(_get_image_tags "${image}" | grep -oP "(?<=-)([0-9]+\.){2}[0-9]+$" | sort -rV | head -n1)
+    latest=$(_get_image_tags "${image}" | grep -oP "(?<=-)([0-9]+\.){2}[0-9]+" | sort -rV | head -n1)
 
     # If no stability tags have been found, try searching one without a version (e.g. xhprof image).
     if [[ -z "${latest}" ]]; then
-      latest=$(_get_image_tags "${image}" | grep -oP "^([0-9]+\.){2}[0-9]+$" | sort -rV | head -n1)
+      latest=$(_get_image_tags "${image}" | grep -oP "^([0-9]+\.){2}[0-9]+" | sort -rV | head -n1)
     fi
 
     if [[ -z "${latest}" ]]; then
