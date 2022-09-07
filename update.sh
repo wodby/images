@@ -124,7 +124,7 @@ _get_latest_version() {
   # From docker hub, only patch updates.
   else
     local path
-    local suffix="(?=$)"
+    local suffix
 
     path=$(find . -name Makefile -maxdepth 2 | head -n 1)
 
