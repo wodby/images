@@ -24,8 +24,13 @@ _git_commit() {
 }
 
 _get_image_tags() {
-  local repo="${1%:*}"
-  wget -q "https://registry.hub.docker.com/v2/repositories/${repo}/tags" -O - | jq -r '.results[].name'
+  local slug="${1%:*}"
+  local namespace=${slug%/*}
+  local repo=${slug#*/}
+  if [[ namespace == "${slug}" ]]; then
+    namespace="library"
+  fi
+  wget -q "https://hub.docker.com/v2/namespaces/${namespace}/repositories/${repo}/tags" -O - | jq -r '.results[].name'
 }
 
 _get_timestamp() {
@@ -36,7 +41,7 @@ _get_timestamp() {
     repo="library/${repo}"
   fi
 
-  curl -L -s "https://registry.hub.docker.com/v2/repositories/${repo}/tags/${tag}" | jq -r '.last_updated'
+  curl -L -s "https://hub.docker.com/v2/repositories/${repo}/tags/${tag}" | jq -r '.last_updated'
 }
 
 _join_ws() {
