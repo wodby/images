@@ -26,7 +26,7 @@ _git_commit() {
 _get_image_tags() {
   local repo="${1%:*}"
 
-  wget -q "https://registry.hub.docker.com/v1/repositories/${repo}/tags" -O - |
+  wget -q "https://registry.hub.docker.com/v2/repositories/${repo}/tags" -O - |
     sed -e 's/[][]//g' -e 's/"//g' -e 's/ //g' |
     tr '}' '\n' |
     awk -F: '{print $3}'
