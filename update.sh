@@ -30,7 +30,7 @@ _get_image_tags() {
   if [[ "${namespace}" == "${slug}" ]]; then
     namespace="library"
   fi
-  wget -q "https://hub.docker.com/v2/namespaces/${namespace}/repositories/${repo}/tags?page_size=100" -O - | jq -r '.results[].name'
+  wget -q "https://hub.docker.com/v2/namespaces/${namespace}/repositories/${repo}/tags?page_size=500" -O - | jq -r '.results[].name'
 }
 
 _get_timestamp() {
