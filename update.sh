@@ -102,7 +102,7 @@ _github_get_latest_ver() {
   local -a versions
 
   # Only stable versions.
-  versions=($(curl -s -u "${user}" "${url}" | jq -r "${expr}" | sed -E "s/refs\/tags\/(v|release-|${name}-)?//" | grep -oP "^[0-9\.]+" | sort -rV))
+  versions=($(curl -s -u "${user}" "${url}" | jq -r "${expr}" | sed -E "s/refs\/tags\/(v|release-|${name}-)?//" | grep -oP "^[0-9\.]+$" | sort -rV))
 
   if [[ "${#versions}" == 0 ]]; then
     echo >&2 "Couldn't find latest version in line ${version} of ${slug}."
