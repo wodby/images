@@ -25,12 +25,28 @@ _git_commit() {
 
 _get_image_tags() {
   local slug="${1%:*}"
+  local filter="${2}"
+
   local namespace=${slug%/*}
   local repo=${slug#*/}
   if [[ "${namespace}" == "${slug}" ]]; then
     namespace="library"
   fi
-  wget -q "https://hub.docker.com/v2/namespaces/${namespace}/repositories/${repo}/tags?page_size=500" -O - | jq -r '.results[].name'
+
+  local url="https://hub.docker.com/v2/namespaces/${namespace}/repositories/${repo}/tags"
+
+  for page in {1..5}
+    do
+      res=$(wget -q "${url}?page=${page}&page_size=100" -O - | jq -r '.results[].name' | grep -oP "${filter}" | sort -rV | head -n1)
+      echo "${res}"
+      if [[ -n "${res}" ]]; then
+        echo "${res}"
+        exit 0
+      fi
+  done
+
+  echo "Failed to find tags in ${slug} with filter ${filter}"
+  exit 1
 }
 
 _get_timestamp() {
@@ -133,9 +149,7 @@ _get_latest_version() {
       suffix="(?=\-alpine$)"
     fi
 
-    local -a base_image_tags
-    base_image_tags=($(_get_image_tags "${upstream}" | grep -oP "^(${version//\./\\.}\.[0-9\.]+)${suffix}" | sort -rV))
-    latest_ver="${base_image_tags[0]}"
+    latest_ver=$(_get_image_tags "${upstream}" "^(${version//\./\\.}\.[0-9\.]+)${suffix}")
   fi
 
   if [[ -z "${latest_ver}" ]]; then
@@ -383,7 +397,7 @@ _update_base_alpine_image() {
   echo "Checking for alpine base image tag updates"
   echo "=========================================="
 
-  latest=$(_get_image_tags "${base_image}" | grep -oP "(?<=${version//\./\\.}-)[0-9\.]+" | sort -rV | head -n1)
+  latest=$(_get_image_tags "${base_image}" "(?<=${version//\./\\.}-)[0-9\.]+")
 
   if [[ -z "${latest}" ]]; then
     echo >&2 "Failed to acquire latest image tag"
@@ -439,7 +453,7 @@ _update_stability_tag() {
     git merge --no-edit master
   fi
 
-  latest=$(_get_image_tags "${base_image}" | grep -oP "(?<=${version//\./\\.}-)[0-9\.]+" | sort -rV | head -n1)
+  latest=$(_get_image_tags "${base_image}" "(?<=${version//\./\\.}-)[0-9\.]+")
 
   if [[ -z "${latest}" ]]; then
     echo >&2 "Failed to acquire latest image tag"
@@ -581,11 +595,11 @@ update_docker4x() {
     current="${tags[0]##*-}"
     name="${image#*/}"
 
-    latest=$(_get_image_tags "${image}" | grep -oP "(?<=-)([0-9]+\.){2}[0-9]+" | sort -rV | head -n1)
+    latest=$(_get_image_tags "${image}" "(?<=-)([0-9]+\.){2}[0-9]+")
 
     # If no stability tags have been found, try searching one without a version (e.g. xhprof image).
     if [[ -z "${latest}" ]]; then
-      latest=$(_get_image_tags "${image}" | grep -oP "^([0-9]+\.){2}[0-9]+" | sort -rV | head -n1)
+      latest=$(_get_image_tags "${image}" "^([0-9]+\.){2}[0-9]+")
     fi
 
     if [[ -z "${latest}" ]]; then
