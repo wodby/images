@@ -38,7 +38,6 @@ _get_image_tags() {
   for page in {1..5}
     do
       res=$(wget -q "${url}?page=${page}&page_size=100" -O - | jq -r '.results[].name' | grep -oP "${filter}" | sort -rV | head -n1)
-      echo "${res}"
       if [[ -n "${res}" ]]; then
         echo "${res}"
         exit 0
