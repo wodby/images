@@ -138,13 +138,15 @@ _get_latest_version() {
     latest_ver=$(_github_get_latest_ver "${version}" "${upstream/github.com\//}" "${name}")
   # From docker hub, only patch updates.
   else
-    local path
+    local makefilePath
+    local dockerfilePath
     local suffix="(?=$)"
 
-    path=$(find . -name Makefile -maxdepth 2 | head -n 1)
+    makefilePath=$(find . -name Makefile -maxdepth 2 | head -n 1)
+    dockerfilePath=$(find . -name Dockerfile -maxdepth 2 | head -n 1)
 
     # Alpine-only tags.
-    if grep -qP "BASE_IMAGE_TAG.+?-alpine" "${path}"; then
+    if grep -qP "BASE_IMAGE_TAG.+?-alpine" "${makefilePath}" || grep -qP "^FROM .+?-alpine" "${dockerfilePath}" ; then
       suffix="(?=\-alpine$)"
     fi
 
