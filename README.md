@@ -28,18 +28,18 @@ Syncing with upstream.
 - New stability tag release on version update
 - New stability tag release on Alpine Linux update
 
-| Image             | Upstream (base image) | Versions                            |
-|-------------------|-----------------------|-------------------------------------|
-| [wodby/alpine]    | [alpine]              | `3.16`, `3.15`, `3.14`, `3.13`      |
-| [wodby/apache]    | [_/httpd]             | `2.4`                               |
-| [wodby/memcached] | [_/memcached]         | `1`                                 |
-| [wodby/node]      | [node]                | `18`, `16`, `14`                    |
-| [wodby/php]       | [_/php]               | `8.1`, `8.0`, `7.4`                 |
-| [wodby/postgres]  | [_/postgres]          | `15`, `14`, `13`, `12`, `11`        |
-| [wodby/python]    | [python]              | `3.11`, `3.10`, `3.9`, `3.8`, `3.7` |
-| [wodby/redis]     | [_/redis]             | `7`, `6`, `5`                       |
-| [wodby/ruby]      | [ruby]                | `3.1`, `3.0`, `2.7`                 |
-| [wodby/solr]      | [wodby/base-solr]     | `8`, `7.7`, `6.6`, `5.5`            |
+| Image             | Upstream (base image) | Versions                               |
+|-------------------|-----------------------|----------------------------------------|
+| [wodby/alpine]    | [alpine]              | `3.17`, `3.16`, `3.15`, `3.14`, `3.13` |
+| [wodby/apache]    | [_/httpd]             | `2.4`                                  |
+| [wodby/memcached] | [_/memcached]         | `1`                                    |
+| [wodby/node]      | [node]                | `18`, `16`, `14`                       |
+| [wodby/php]       | [_/php]               | `8.1`, `8.0`, `7.4`                    |
+| [wodby/postgres]  | [_/postgres]          | `15`, `14`, `13`, `12`, `11`           |
+| [wodby/python]    | [python]              | `3.11`, `3.10`, `3.9`, `3.8`, `3.7`    |
+| [wodby/redis]     | [_/redis]             | `7`, `6`, `5`                          |
+| [wodby/ruby]      | [ruby]                | `3.1`, `3.0`, `2.7`                    |
+| [wodby/solr]      | [wodby/base-solr]     | `8`, `7.7`, `6.6`, `5.5`               |
 
 ### Descendant images
 
