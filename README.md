@@ -14,12 +14,13 @@ Syncing with upstream.
 
 ### Alpine-based images
 
-| Image                  | Alpine version |
-|------------------------|----------------|
-| [wodby/mariadb]        | `3.16`         |
-| [wodby/nginx]          | `3.16`         |
-| [wodby/opensmtpd]      | `3.16`         |
-| [wodby/varnish]        | `3.16`         |
+| Image             | Alpine version |
+|-------------------|----------------|
+| [wodby/mariadb]   | `3.16`         |
+| [wodby/nginx]     | `3.16`         |
+| [wodby/opensmtpd] | `3.16`         |
+| [wodby/varnish]   | `3.16`         |
+| [wodby/squid]     | `3.17`         |
 
 ### Images based on official images (or forks)
 
@@ -216,5 +217,7 @@ Not automated:
 [wodby/wordpress]: https://github.com/wodby/wordpress
 
 [wodby/xhprof]: https://github.com/wodby/xhprof
+
+[wodby/squid]: https://github.com/wodby/squid
 
 [wordpress]: https://github.com/WordPress/WordPress
