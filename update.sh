@@ -638,10 +638,10 @@ update_drupal_vanilla() {
   git push origin
 
   echo "Updating Drupal 9"
+  git checkout 9.x
+  cd /tmp/recommended-project
   latest_ver=$(git show-ref --tags | grep -P -o '(?<=refs/tags/)9\.[0-9]+\.[0-9]+$' | sort -rV | head -n1)
   git checkout "${latest_ver}"
-  cd /tmp/drupal-vanilla
-  git checkout 9.x
   cp composer.json composer.lock /tmp/drupal-vanilla
   _git_commit /tmp/drupal-vanilla "Update Drupal 9"
   git push origin
