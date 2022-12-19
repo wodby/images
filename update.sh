@@ -628,11 +628,20 @@ update_docker4x() {
 }
 
 update_drupal_vanilla() {
-  echo "Updating Drupal 9"
+  echo "Updating Drupal 10"
   _git_clone "wodby/drupal-vanilla"
   _git_clone "drupal/recommended-project"
+  latest_ver=$(git show-ref --tags | grep -P -o '(?<=refs/tags/)10\.[0-9]+\.[0-9]+$' | sort -rV | head -n1)
+  git checkout "${latest_ver}"
+  cp composer.json composer.lock /tmp/drupal-vanilla
+  _git_commit /tmp/drupal-vanilla "Update Drupal 10"
+  git push origin
+
+  echo "Updating Drupal 9"
   latest_ver=$(git show-ref --tags | grep -P -o '(?<=refs/tags/)9\.[0-9]+\.[0-9]+$' | sort -rV | head -n1)
   git checkout "${latest_ver}"
+  cd /tmp/drupal-vanilla
+  git checkout 9.x
   cp composer.json composer.lock /tmp/drupal-vanilla
   _git_commit /tmp/drupal-vanilla "Update Drupal 9"
   git push origin
