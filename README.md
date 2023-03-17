@@ -58,6 +58,7 @@ Syncing with upstream.
 | [wodby/wordpress-php] | [wodby/php]           | `8.2`, `8.1`, `8.0` | `4.x`            |
 | [wodby/wordpress]     | [wodby/wordpress-php] | `8.2`, `8.1`, `8.0` | `4.x`            |
 | [wodby/xhprof]        | [wodby/php]           | `7.4`               |                  |
+| [wodby/laravel-php]   | [wodby/php]           | `8.2`, `8.1`, `8.0` |                  |
 
 ### Version updates from upstream other than base image
 
@@ -173,6 +174,8 @@ Not automated:
 [wodby/docker4wordpress]: https://github.com/wodby/docker4wordpress
 
 [wodby/drupal-php]: https://github.com/wodby/drupal-php
+
+[wodby/laravel-php]: https://github.com/wodby/laravel-php
 
 [wodby/drupal]: https://github.com/wodby/drupal
 
