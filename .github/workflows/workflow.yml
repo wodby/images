@@ -65,7 +65,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        script: [drupal-php,wordpress-php,adminer-php,matomo-php,webgrind-php,drupal,wordpress,xhprof]
+        script: [drupal-php,wordpress-php,adminer-php,matomo-php,webgrind-php,laravel-php,drupal,wordpress,xhprof]
     steps:
     - uses: actions/checkout@v2
     - uses: ./.github/actions
