@@ -91,6 +91,7 @@ Update images stability tags
 | [wodby/docker4python]    |
 | [wodby/docker4ruby]      |
 | [wodby/docker4wordpress] |
+| [wodby/docker4laravel]   |
 
 Not automated:
 
@@ -172,6 +173,8 @@ Not automated:
 [wodby/docker4ruby]: https://github.com/wodby/docker4ruby
 
 [wodby/docker4wordpress]: https://github.com/wodby/docker4wordpress
+
+[wodby/docker4laravel]: https://github.com/wodby/docker4laravel
 
 [wodby/drupal-php]: https://github.com/wodby/drupal-php
 
