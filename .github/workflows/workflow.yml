@@ -87,7 +87,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        script: [drupal,php,python,ruby,wordpress]
+        script: [drupal,php,python,ruby,wordpress,laravel]
     steps:
     - uses: actions/checkout@v2
     - uses: ./.github/actions
