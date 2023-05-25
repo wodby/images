@@ -17,7 +17,7 @@ Syncing with upstream.
 | Image             | Alpine version |
 |-------------------|----------------|
 | [wodby/mariadb]   | `3.17`         |
-| [wodby/nginx]     | `3.17`         |
+| [wodby/nginx]     | `3.18`         |
 | [wodby/opensmtpd] | `3.17`         |
 | [wodby/varnish]   | `3.16`         |
 | [wodby/squid]     | `3.17`         |
