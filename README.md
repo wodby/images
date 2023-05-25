@@ -74,7 +74,7 @@ Syncing with upstream.
 | [wodby/kibana]        | [elastic/kibana]             | `7`, `6`                                              |                  |
 | [wodby/mariadb]       | [mariadb]                    | `10.9`, `10.8`, 10.7`, `10.6`, `10.5`, `10.4`, `10.3` |                  |
 | [wodby/matomo]        | [matomo-org/matomo]          | `4`                                                   |                  |
-| [wodby/nginx]         | [nginx]                      | `1.23`, `1.22`, `1.21`, `1.20`, `1.19`                |                  |
+| [wodby/nginx]         | [nginx]                      | `1.25`, `1.24`, `1.23`                                |                  |
 | [wodby/varnish]       | [varnishcache/varnish-cache] | `6.0`, `4.1`                                          |                  |
 | [wodby/webgrind]      | [jokkedk/webgrind]           | `1`                                                   |                  |
 | [wodby/wordpress]     | [wordpress]                  | `6`                                                   | `4.x`            |
