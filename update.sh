@@ -35,7 +35,7 @@ _get_image_tags() {
 
   local url="https://hub.docker.com/v2/namespaces/${namespace}/repositories/${repo}/tags"
 
-  for page in {1..5}
+  for page in {1..10}
     do
       res=$(wget -q "${url}?page=${page}&page_size=100" -O - | jq -r '.results[].name' | grep -oP "${filter}" | sort -rV | head -n1)
       if [[ -n "${res}" ]]; then
