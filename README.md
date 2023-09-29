@@ -19,7 +19,7 @@ Syncing with upstream.
 | [wodby/mariadb]   | `3.17`         |
 | [wodby/nginx]     | `3.18`         |
 | [wodby/opensmtpd] | `3.17`         |
-| [wodby/varnish]   | `3.16`         |
+| [wodby/varnish]   | `3.18`         |
 | [wodby/squid]     | `3.17`         |
 
 ### Images based on official images (or forks)
@@ -75,7 +75,7 @@ Syncing with upstream.
 | [wodby/mariadb]       | [mariadb]                    | `11.0`, `10.11`, `10.10`, `10.9`, `10.6`, `10.5`, `10.4` |                  |
 | [wodby/matomo]        | [matomo-org/matomo]          | `4`                                                      |                  |
 | [wodby/nginx]         | [nginx]                      | `1.25`, `1.24`, `1.23`                                   |                  |
-| [wodby/varnish]       | [varnishcache/varnish-cache] | `6.0`, `4.1`                                             |                  |
+| [wodby/varnish]       | [varnishcache/varnish-cache] | `6.0`                                                    |                  |
 | [wodby/webgrind]      | [jokkedk/webgrind]           | `1`                                                      |                  |
 | [wodby/wordpress]     | [wordpress]                  | `6`                                                      | `4.x`            |
 | [wodby/xhprof]        | [longxinH/xhprof]            | `2`                                                      |                  |
