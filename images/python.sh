@@ -4,4 +4,4 @@ set -e
 
 . ../update.sh
 
-update_from_base_image "wodby/python" "3.11 3.10 3.9 3.8 3.7"
+update_from_base_image "wodby/python" "3.12 3.11 3.10 3.9 3.8"
