@@ -18,7 +18,7 @@ Syncing with upstream.
 |-------------------|----------------|
 | [wodby/mariadb]   | `3.17`         |
 | [wodby/nginx]     | `3.18`         |
-| [wodby/opensmtpd] | `3.17`         |
+| [wodby/opensmtpd] | `3.18`         |
 | [wodby/varnish]   | `3.18`         |
 | [wodby/squid]     | `3.17`         |
 
