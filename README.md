@@ -70,8 +70,8 @@ Syncing with upstream.
 | [wodby/adminer]       | [vrana/adminer]              | `4`                                                      |                  |
 | [wodby/cachet]        | [CachetHQ/Cachet]            | `2`                                                      |                  |
 | [wodby/drupal]        | [drupal]                     | `10`, `9`, `7`                                           | `4.x`            |
-| [wodby/elasticsearch] | [elastic/elasticsearch]      | `7`, `6`                                                 |                  |
-| [wodby/kibana]        | [elastic/kibana]             | `7`, `6`                                                 |                  |
+| [wodby/elasticsearch] | [elastic/elasticsearch]      | `7`                                                      |                  |
+| [wodby/kibana]        | [elastic/kibana]             | `7`                                                      |                  |
 | [wodby/mariadb]       | [mariadb]                    | `11.0`, `10.11`, `10.10`, `10.9`, `10.6`, `10.5`, `10.4` |                  |
 | [wodby/matomo]        | [matomo-org/matomo]          | `4`                                                      |                  |
 | [wodby/nginx]         | [nginx]                      | `1.25`, `1.24`, `1.23`                                   |                  |
