@@ -4,4 +4,4 @@ set -e
 
 . ../update.sh
 
-update_from_upstream "wodby/elasticsearch" "7 6" "github.com/elastic/elasticsearch"
+update_from_upstream "wodby/elasticsearch" "6" "github.com/elastic/elasticsearch"
