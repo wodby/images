@@ -36,7 +36,7 @@ Syncing with upstream.
 | [wodby/memcached] | [_/memcached]         | `1`                                            |
 | [wodby/node]      | [node]                | `20`, `18`                                     |
 | [wodby/php]       | [_/php]               | `8.2`, `8.1`, `8.0`                            |
-| [wodby/postgres]  | [_/postgres]          | `15`, `14`, `13`, `12`, `11`                   |
+| [wodby/postgres]  | [_/postgres]          | `16`, `15`, `14`, `13`, `12`                   |
 | [wodby/python]    | [python]              | `3.12`, `3.11`, `3.10`, `3.9`, `3.8`           |
 | [wodby/redis]     | [_/redis]             | `7`, `6`, `5`                                  |
 | [wodby/ruby]      | [ruby]                | `3.2`, `3.1`, `3.0`                            |
