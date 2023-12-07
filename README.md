@@ -35,7 +35,7 @@ Syncing with upstream.
 | [wodby/apache]    | [_/httpd]             | `2.4`                                          |
 | [wodby/memcached] | [_/memcached]         | `1`                                            |
 | [wodby/node]      | [node]                | `20`, `18`                                     |
-| [wodby/php]       | [_/php]               | `8.2`, `8.1`, `8.0`                            |
+| [wodby/php]       | [_/php]               | `8.3`, `8.2`, `8.1`                            |
 | [wodby/postgres]  | [_/postgres]          | `16`, `15`, `14`, `13`, `12`                   |
 | [wodby/python]    | [python]              | `3.12`, `3.11`, `3.10`, `3.9`, `3.8`           |
 | [wodby/redis]     | [_/redis]             | `7`, `6`, `5`                                  |
@@ -51,14 +51,14 @@ Syncing with upstream.
 | Image                 | Upstream (base image) | Versions            | Stability branch |
 |-----------------------|-----------------------|---------------------|------------------|
 | [wodby/adminer]       | [wodby/php]           | `7.4`               |                  |
-| [wodby/drupal-php]    | [wodby/php]           | `8.2`, `8.1`, `8.0` | `4.x`            |
-| [wodby/drupal]        | [wodby/drupal-php]    | `8.2`, `8.1`, `8.0` | `4.x`            |
+| [wodby/drupal-php]    | [wodby/php]           | `8.2`, `8.1`        | `4.x`            |
+| [wodby/drupal]        | [wodby/drupal-php]    | `8.2`, `8.1`        | `4.x`            |
 | [wodby/matomo]        | [wodby/php]           | `8.1`               |                  |
 | [wodby/webgrind]      | [wodby/php]           | `7.4`               |                  |
-| [wodby/wordpress-php] | [wodby/php]           | `8.2`, `8.1`, `8.0` | `4.x`            |
-| [wodby/wordpress]     | [wodby/wordpress-php] | `8.2`, `8.1`, `8.0` | `4.x`            |
+| [wodby/wordpress-php] | [wodby/php]           | `8.3`, `8.2`, `8.1` | `4.x`            |
+| [wodby/wordpress]     | [wodby/wordpress-php] | `8.3`, `8.2`, `8.1` | `4.x`            |
 | [wodby/xhprof]        | [wodby/php]           | `7.4`               |                  |
-| [wodby/laravel-php]   | [wodby/php]           | `8.2`, `8.1`, `8.0` |                  |
+| [wodby/laravel-php]   | [wodby/php]           | `8.3`, `8.2`, `8.1` |                  |
 
 ### Version updates from upstream other than base image
 
