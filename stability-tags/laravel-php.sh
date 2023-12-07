@@ -4,4 +4,4 @@ set -e
 
 . ../update.sh
 
-rebuild_and_rebase "wodby/laravel-php" "8.2 8.1 8.0"
+rebuild_and_rebase "wodby/laravel-php" "8.3 8.2 8.1"
