@@ -16,7 +16,7 @@ Syncing with upstream.
 
 | Image             | Alpine version |
 |-------------------|----------------|
-| [wodby/mariadb]   | `3.17`         |
+| [wodby/mariadb]   | `3.18`, `3.16` |
 | [wodby/nginx]     | `3.18`         |
 | [wodby/opensmtpd] | `3.18`         |
 | [wodby/varnish]   | `3.18`         |
@@ -65,20 +65,20 @@ Syncing with upstream.
 - Minor/patch version updates
 - New stability tag release
 
-| Image                 | Upstream                     | Versions                                         | Stability branch |
-|-----------------------|------------------------------|--------------------------------------------------|------------------|
-| [wodby/adminer]       | [vrana/adminer]              | `4`                                              |                  |
-| [wodby/cachet]        | [CachetHQ/Cachet]            | `2`                                              |                  |
-| [wodby/drupal]        | [drupal]                     | `10`, `7`                                        | `4.x`            |
-| [wodby/elasticsearch] | [elastic/elasticsearch]      | `7`                                              |                  |
-| [wodby/kibana]        | [elastic/kibana]             | `7`                                              |                  |
-| [wodby/mariadb]       | [mariadb]                    | `11.1`, `11.0`, `10.11`,  `10.6`, `10.5`, `10.4` |                  |
-| [wodby/matomo]        | [matomo-org/matomo]          | `4`                                              |                  |
-| [wodby/nginx]         | [nginx]                      | `1.25`, `1.24`, `1.23`                           |                  |
-| [wodby/varnish]       | [varnishcache/varnish-cache] | `6.0`                                            |                  |
-| [wodby/webgrind]      | [jokkedk/webgrind]           | `1`                                              |                  |
-| [wodby/wordpress]     | [wordpress]                  | `6`                                              | `4.x`            |
-| [wodby/xhprof]        | [longxinH/xhprof]            | `2`                                              |                  |
+| Image                 | Upstream                     | Versions                                                 | Stability branch |
+|-----------------------|------------------------------|----------------------------------------------------------|------------------|
+| [wodby/adminer]       | [vrana/adminer]              | `4`                                                      |                  |
+| [wodby/cachet]        | [CachetHQ/Cachet]            | `2`                                                      |                  |
+| [wodby/drupal]        | [drupal]                     | `10`, `7`                                                | `4.x`            |
+| [wodby/elasticsearch] | [elastic/elasticsearch]      | `7`                                                      |                  |
+| [wodby/kibana]        | [elastic/kibana]             | `7`                                                      |                  |
+| [wodby/mariadb]       | [mariadb]                    | `11.2`, `11.1`, `11.0`, `10.11`,  `10.6`, `10.5`, `10.4` |                  |
+| [wodby/matomo]        | [matomo-org/matomo]          | `4`                                                      |                  |
+| [wodby/nginx]         | [nginx]                      | `1.25`, `1.24`, `1.23`                                   |                  |
+| [wodby/varnish]       | [varnishcache/varnish-cache] | `6.0`                                                    |                  |
+| [wodby/webgrind]      | [jokkedk/webgrind]           | `1`                                                      |                  |
+| [wodby/wordpress]     | [wordpress]                  | `6`                                                      | `4.x`            |
+| [wodby/xhprof]        | [longxinH/xhprof]            | `2`                                                      |                  |
 
 ### Docker4X projects
 
