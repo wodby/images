@@ -51,8 +51,8 @@ Syncing with upstream.
 | Image                 | Upstream (base image) | Versions            | Stability branch |
 |-----------------------|-----------------------|---------------------|------------------|
 | [wodby/adminer]       | [wodby/php]           | `7.4`               |                  |
-| [wodby/drupal-php]    | [wodby/php]           | `8.2`, `8.1`        | `4.x`            |
-| [wodby/drupal]        | [wodby/drupal-php]    | `8.2`, `8.1`        | `4.x`            |
+| [wodby/drupal-php]    | [wodby/php]           | `8.3`, `8.2`, `8.1` | `4.x`            |
+| [wodby/drupal]        | [wodby/drupal-php]    | `8.3`, `8.2`, `8.1` | `4.x`            |
 | [wodby/matomo]        | [wodby/php]           | `8.1`               |                  |
 | [wodby/webgrind]      | [wodby/php]           | `7.4`               |                  |
 | [wodby/wordpress-php] | [wodby/php]           | `8.3`, `8.2`, `8.1` | `4.x`            |
