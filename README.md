@@ -39,7 +39,7 @@ Syncing with upstream.
 | [wodby/postgres]  | [_/postgres]          | `16`, `15`, `14`, `13`, `12`         |
 | [wodby/python]    | [python]              | `3.12`, `3.11`, `3.10`, `3.9`, `3.8` |
 | [wodby/redis]     | [_/redis]             | `7`, `6`, `5`                        |
-| [wodby/ruby]      | [ruby]                | `3.2`, `3.1`, `3.0`                  |
+| [wodby/ruby]      | [ruby]                | `3.3`, `3.2`, `3.1`, `3.0`           |
 | [wodby/solr]      | [wodby/base-solr]     | `8`, `7.7`, `6.6`, `5.5`             |
 
 ### Descendant images
