@@ -4,14 +4,6 @@
 
 ## Auto-updated images
 
-### Forks
-
-Syncing with upstream.
-
-| Image                  | Upstream              |
-|------------------------|-----------------------|
-| [wodby/base-solr]      | [solr]                |
-
 ### Alpine-based images
 
 | Image             | Alpine version |
@@ -40,7 +32,6 @@ Syncing with upstream.
 | [wodby/python]    | [python]              | `3.12`, `3.11`, `3.10`, `3.9`, `3.8` |
 | [wodby/redis]     | [_/redis]             | `7`, `6`, `5`                        |
 | [wodby/ruby]      | [ruby]                | `3.3`, `3.2`, `3.1`, `3.0`           |
-| [wodby/solr]      | [wodby/base-solr]     | `8`, `7.7`, `6.6`, `5.5`             |
 
 ### Descendant images
 
@@ -73,7 +64,7 @@ Syncing with upstream.
 | [wodby/elasticsearch] | [elastic/elasticsearch]      | `7`                                                      |                  |
 | [wodby/kibana]        | [elastic/kibana]             | `7`                                                      |                  |
 | [wodby/mariadb]       | [mariadb]                    | `11.2`, `11.1`, `11.0`, `10.11`,  `10.6`, `10.5`, `10.4` |                  |
-| [wodby/matomo]        | [matomo-org/matomo]          | `4`                                                      |                  |
+| [wodby/matomo]        | [matomo-org/matomo]          | `5`                                                      |                  |
 | [wodby/nginx]         | [nginx]                      | `1.25`, `1.24`, `1.23`                                   |                  |
 | [wodby/varnish]       | [varnishcache/varnish-cache] | `6.0`                                                    |                  |
 | [wodby/webgrind]      | [jokkedk/webgrind]           | `1`                                                      |                  |
@@ -99,7 +90,6 @@ Not automated:
 - Rebase to a new major Alpine version
 - Switching the latest version
 - New stability branches for major stability tags updates
-- Config set updates from Search API Solr module for [wodby/solr]
 - [wodby/opensmtpd] (installed from Alpine repository package)
 
 [adoptium/containers]: https://github.com/adoptium/containers
@@ -138,8 +128,6 @@ Not automated:
 
 [ruby]: https://github.com/docker-library/ruby
 
-[solr]: https://github.com/docker-library/solr
-
 [varnishcache/varnish-cache]: https://github.com/varnishcache/varnish-cache
 
 [vrana/adminer]: https://github.com/vrana/adminer
@@ -159,8 +147,6 @@ Not automated:
 [_/php]: https://hub.docker.com/_/php
 
 [_/redis]: https://hub.docker.com/_/redis
-
-[wodby/base-solr]: https://github.com/wodby/base-solr
 
 [wodby/cachet]: https://github.com/wodby/cachet
 
@@ -211,8 +197,6 @@ Not automated:
 [wodby/redis]: https://github.com/wodby/redis
 
 [wodby/ruby]: https://github.com/wodby/ruby
-
-[wodby/solr]: https://github.com/wodby/solr
 
 [wodby/varnish]: https://github.com/wodby/varnish
 
