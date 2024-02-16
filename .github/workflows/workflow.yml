@@ -28,17 +28,6 @@ jobs:
       with:
         dir: repos
         script: drupal-vanilla
-  forks:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        script: [base-solr]
-    steps:
-    - uses: actions/checkout@v4
-    - uses: ./.github/actions
-      with:
-        dir: forks
-        script: ${{ matrix.script }}
   alpine:
     runs-on: ubuntu-latest
     strategy:
@@ -54,7 +43,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        script: [alpine,apache,memcached,node,php,postgres,python,redis,ruby,solr]
+        script: [alpine,apache,memcached,node,php,postgres,python,redis,ruby]
     steps:
     - uses: actions/checkout@v4
     - uses: ./.github/actions
