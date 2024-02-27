@@ -569,7 +569,7 @@ update_docker4x() {
 
   _git_clone "${project}"
 
-  lines=($(grep -hoP "(?<=image: )wodby\/.+" docker-compose*.yml))
+  lines=($(grep -hoP "(?<=image: )wodby\/.+" compose*.yml))
 
   if [[ -f Dockerfile ]]; then
     if grep -q "FROM wodby/python" Dockerfile; then
