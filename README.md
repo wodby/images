@@ -9,7 +9,7 @@
 | Image             | Alpine version |
 |-------------------|----------------|
 | [wodby/mariadb]   | `3.18`, `3.16` |
-| [wodby/nginx]     | `3.18`         |
+| [wodby/nginx]     | `3.19`         |
 | [wodby/opensmtpd] | `3.18`         |
 | [wodby/varnish]   | `3.18`         |
 | [wodby/squid]     | `3.17`         |
@@ -30,7 +30,7 @@
 | [wodby/php]       | [_/php]               | `8.3`, `8.2`, `8.1`                  |
 | [wodby/postgres]  | [_/postgres]          | `16`, `15`, `14`, `13`, `12`         |
 | [wodby/python]    | [python]              | `3.12`, `3.11`, `3.10`, `3.9`, `3.8` |
-| [wodby/redis]     | [_/redis]             | `7`, `6`, `5`                        |
+| [wodby/valkey]    | [valkey/valkey]       | `7`                                  |
 | [wodby/ruby]      | [ruby]                | `3.3`, `3.2`, `3.1`, `3.0`           |
 
 ### Descendant images
@@ -65,7 +65,7 @@
 | [wodby/kibana]        | [elastic/kibana]             | `7`                                                      |                  |
 | [wodby/mariadb]       | [mariadb]                    | `11.2`, `11.1`, `11.0`, `10.11`,  `10.6`, `10.5`, `10.4` |                  |
 | [wodby/matomo]        | [matomo-org/matomo]          | `5`                                                      |                  |
-| [wodby/nginx]         | [nginx]                      | `1.25`, `1.24`, `1.23`                                   |                  |
+| [wodby/nginx]         | [nginx]                      | `1.26`, `1.25`                                           |                  |
 | [wodby/varnish]       | [varnishcache/varnish-cache] | `6.0`                                                    |                  |
 | [wodby/webgrind]      | [jokkedk/webgrind]           | `1`                                                      |                  |
 | [wodby/wordpress]     | [wordpress]                  | `6`                                                      | `4.x`            |
@@ -124,7 +124,7 @@ Not automated:
 
 [python]: https://github.com/docker-library/python
 
-[redis]: https://github.com/docker-library/redis
+[valkey]: https://github.com/valkey-io/valkey-container
 
 [ruby]: https://github.com/docker-library/ruby
 
@@ -146,7 +146,7 @@ Not automated:
 
 [_/php]: https://hub.docker.com/_/php
 
-[_/redis]: https://hub.docker.com/_/redis
+[valkey/valkey]: https://hub.docker.com/r/valkey/valkey
 
 [wodby/cachet]: https://github.com/wodby/cachet
 
@@ -194,7 +194,7 @@ Not automated:
 
 [wodby/python]: https://github.com/wodby/python
 
-[wodby/redis]: https://github.com/wodby/redis
+[wodby/valkey]: https://github.com/wodby/valkey
 
 [wodby/ruby]: https://github.com/wodby/ruby
 
