@@ -43,7 +43,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        script: [alpine,apache,memcached,node,php,postgres,python,redis,ruby]
+        script: [alpine,apache,memcached,node,php,postgres,python,valkey,ruby]
     steps:
     - uses: actions/checkout@v4
     - uses: ./.github/actions
