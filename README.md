@@ -30,7 +30,7 @@
 | [wodby/php]       | [_/php]               | `8.3`, `8.2`, `8.1`                  |
 | [wodby/postgres]  | [_/postgres]          | `16`, `15`, `14`, `13`, `12`         |
 | [wodby/python]    | [python]              | `3.12`, `3.11`, `3.10`, `3.9`, `3.8` |
-| [wodby/valkey]    | [valkey/valkey]       | `7`                                  |
+| [wodby/valkey]    | [valkey/valkey]       | `7.2`                                |
 | [wodby/ruby]      | [ruby]                | `3.3`, `3.2`, `3.1`, `3.0`           |
 
 ### Descendant images
