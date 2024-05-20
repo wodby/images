@@ -31,6 +31,7 @@
 | [wodby/postgres]  | [_/postgres]          | `16`, `15`, `14`, `13`, `12`         |
 | [wodby/python]    | [python]              | `3.12`, `3.11`, `3.10`, `3.9`, `3.8` |
 | [wodby/valkey]    | [valkey/valkey]       | `7.2`                                |
+| [wodby/redis]     | [redis]               | `7`                                  |
 | [wodby/ruby]      | [ruby]                | `3.3`, `3.2`, `3.1`, `3.0`           |
 
 ### Descendant images
@@ -126,6 +127,8 @@ Not automated:
 
 [valkey]: https://github.com/valkey-io/valkey-container
 
+[redis]: https://github.com/docker-library/redis
+
 [ruby]: https://github.com/docker-library/ruby
 
 [varnishcache/varnish-cache]: https://github.com/varnishcache/varnish-cache
@@ -195,6 +198,8 @@ Not automated:
 [wodby/python]: https://github.com/wodby/python
 
 [wodby/valkey]: https://github.com/wodby/valkey
+
+[wodby/redis]: https://github.com/wodby/redis
 
 [wodby/ruby]: https://github.com/wodby/ruby
 
