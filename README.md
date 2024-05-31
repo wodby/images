@@ -66,7 +66,7 @@
 | [wodby/kibana]        | [elastic/kibana]             | `7`                                                      |                  |
 | [wodby/mariadb]       | [mariadb]                    | `11.2`, `11.1`, `11.0`, `10.11`,  `10.6`, `10.5`, `10.4` |                  |
 | [wodby/matomo]        | [matomo-org/matomo]          | `5`                                                      |                  |
-| [wodby/nginx]         | [nginx]                      | `1.26`, `1.25`                                           |                  |
+| [wodby/nginx]         | [nginx]                      | `1.27`, `1.26`                                           |                  |
 | [wodby/varnish]       | [varnishcache/varnish-cache] | `6.0`                                                    |                  |
 | [wodby/webgrind]      | [jokkedk/webgrind]           | `1`                                                      |                  |
 | [wodby/wordpress]     | [wordpress]                  | `6`                                                      | `4.x`            |
