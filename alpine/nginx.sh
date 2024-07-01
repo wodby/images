@@ -4,4 +4,4 @@ set -e
 
 . ../update.sh
 
-update_base_alpine "wodby/nginx" "3.19" "true"
+update_base_alpine "wodby/nginx" "3.20" "true"
