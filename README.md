@@ -11,7 +11,7 @@
 | [wodby/mariadb]   | `3.18`, `3.16` |
 | [wodby/nginx]     | `3.20`         |
 | [wodby/opensmtpd] | `3.20`         |
-| [wodby/varnish]   | `3.18`         |
+| [wodby/varnish]   | `3.20`         |
 | [wodby/squid]     | `3.17`         |
 
 ### Images based on official images (or forks)
