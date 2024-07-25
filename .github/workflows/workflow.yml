@@ -20,20 +20,25 @@ env:
   GIT_USER_NAME: ${{ secrets.GIT_USER_NAME }}
 
 jobs:
-  repos:
+  drupal-vanilla:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        script: [drupal-vanilla,wordpress-vanilla]
+    steps:
+    - uses: actions/checkout@v4
+    - uses: ./.github/actions
+      with:
+        dir: repos
+        script: drupal-vanilla
+  wordpress-vanilla:
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
     - uses: php-actions/composer@v6
       with:
-        command: help
+        command: update --lock
     - uses: ./.github/actions
       with:
         dir: repos
-        script: ${{ matrix.script }}
+        script: wordpress-vanilla
   alpine:
     runs-on: ubuntu-latest
     strategy:
