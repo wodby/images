@@ -22,15 +22,12 @@ env:
 jobs:
   repos:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        script: [drupal-vanilla,wordpress-vanilla]
     steps:
     - uses: actions/checkout@v4
     - uses: ./.github/actions
       with:
         dir: repos
-        script: ${{ matrix.script }}
+        script: [drupal-vanilla,wordpress-vanilla]
   alpine:
     runs-on: ubuntu-latest
     strategy:
