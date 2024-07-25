@@ -27,7 +27,7 @@ jobs:
     - uses: ./.github/actions
       with:
         dir: repos
-        script: drupal-vanilla
+        script: [drupal-vanilla,wordpress-vanilla]
   alpine:
     runs-on: ubuntu-latest
     strategy:
