@@ -27,10 +27,8 @@ jobs:
         script: [drupal-vanilla,wordpress-vanilla]
     steps:
     - uses: actions/checkout@v4
-    - name: install composer
-      uses: php-actions/composer@v6
-      with:
-        command: help
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
     - uses: ./.github/actions
       with:
         dir: repos
