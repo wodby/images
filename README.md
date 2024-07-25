@@ -85,7 +85,14 @@ Update images stability tags
 | [wodby/docker4wordpress] |
 | [wodby/docker4laravel]   |
 
-Not automated:
+### Composer projects
+
+| Project                   |
+|---------------------------|
+| [wodby/drupal-vanilla]    |
+| [wodby/wordpress-vanilla] |
+
+### Not automated
 
 - Adding new minor/major version
 - Rebase to a new major Alpine version
@@ -216,4 +223,8 @@ Not automated:
 [wodby/squid]: https://github.com/wodby/squid
 
 [wordpress]: https://github.com/WordPress/WordPress
+
+[drupal-vanilla]: https://github.com/wodby/drupal-vanilla
+
+[wordpress-vanilla]: https://github.com/wodby/wordpress-vanilla
 

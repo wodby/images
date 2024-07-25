@@ -646,3 +646,11 @@ update_drupal_vanilla() {
   _git_commit /tmp/drupal-vanilla "Update Drupal 7"
   git push origin
 }
+
+update_vanilla_wordpress() {
+  echo "Updating WordPress"
+  _git_clone "wodby/wordpress-vanilla"
+  composer update --lock
+  _git_commit /tmp/drupal-vanilla "Update composer packages"
+  git push origin
+}
