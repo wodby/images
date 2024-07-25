@@ -650,6 +650,7 @@ update_drupal_vanilla() {
 update_vanilla_wordpress() {
   echo "Updating WordPress"
   _git_clone "wodby/wordpress-vanilla"
+  wget -qO- https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
   composer update --lock
   _git_commit /tmp/drupal-vanilla "Update composer packages"
   git push origin
