@@ -650,6 +650,7 @@ update_drupal_vanilla() {
 update_vanilla_wordpress() {
   echo "Updating WordPress"
   _git_clone "wodby/wordpress-vanilla"
+  composer update --lock
   _git_commit /tmp/drupal-vanilla "Update composer packages"
   git push origin
 }
