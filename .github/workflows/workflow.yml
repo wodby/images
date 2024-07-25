@@ -27,6 +27,7 @@ jobs:
         script: [drupal-vanilla,wordpress-vanilla]
     steps:
     - uses: actions/checkout@v4
+    - uses: php-actions/composer@v6
     - uses: ./.github/actions
       with:
         dir: repos
