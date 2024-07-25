@@ -27,8 +27,11 @@ jobs:
         script: [drupal-vanilla,wordpress-vanilla]
     steps:
     - uses: actions/checkout@v4
-    - name: Setup PHP
+    - name: Setup PHP with composer v2
       uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.3'
+        tools: composer:v2
     - uses: ./.github/actions
       with:
         dir: repos
