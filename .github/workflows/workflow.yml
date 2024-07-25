@@ -28,6 +28,8 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - uses: php-actions/composer@v6
+      with:
+        command: help
     - uses: ./.github/actions
       with:
         dir: repos
