@@ -8,7 +8,7 @@
 
 | Image             | Alpine version |
 |-------------------|----------------|
-| [wodby/mariadb]   | `3.18`, `3.16` |
+| [wodby/mariadb]   | `3.20`         |
 | [wodby/nginx]     | `3.20`         |
 | [wodby/opensmtpd] | `3.20`         |
 | [wodby/varnish]   | `3.20`         |
@@ -26,7 +26,7 @@
 | [wodby/alpine]    | [alpine]              | `3.20`, `3.19`, `3.18`, `3.17`       |
 | [wodby/apache]    | [_/httpd]             | `2.4`                                |
 | [wodby/memcached] | [_/memcached]         | `1`                                  |
-| [wodby/node]      | [node]                | `20`, `18`                           |
+| [wodby/node]      | [node]                | `22`, `20`, `18`                     |
 | [wodby/php]       | [_/php]               | `8.3`, `8.2`, `8.1`                  |
 | [wodby/postgres]  | [_/postgres]          | `16`, `15`, `14`, `13`, `12`         |
 | [wodby/python]    | [python]              | `3.12`, `3.11`, `3.10`, `3.9`, `3.8` |
@@ -57,20 +57,20 @@
 - Minor/patch version updates
 - New stability tag release
 
-| Image                 | Upstream                     | Versions                                                 | Stability branch |
-|-----------------------|------------------------------|----------------------------------------------------------|------------------|
-| [wodby/adminer]       | [vrana/adminer]              | `4`                                                      |                  |
-| [wodby/cachet]        | [CachetHQ/Cachet]            | `2`                                                      |                  |
-| [wodby/drupal]        | [drupal]                     | `11`, `10`, `7`                                          | `4.x`            |
-| [wodby/elasticsearch] | [elastic/elasticsearch]      | `7`                                                      |                  |
-| [wodby/kibana]        | [elastic/kibana]             | `7`                                                      |                  |
-| [wodby/mariadb]       | [mariadb]                    | `11.2`, `11.1`, `11.0`, `10.11`,  `10.6`, `10.5`, `10.4` |                  |
-| [wodby/matomo]        | [matomo-org/matomo]          | `5`                                                      |                  |
-| [wodby/nginx]         | [nginx]                      | `1.27`, `1.26`                                           |                  |
-| [wodby/varnish]       | [varnishcache/varnish-cache] | `6.0`                                                    |                  |
-| [wodby/webgrind]      | [jokkedk/webgrind]           | `1`                                                      |                  |
-| [wodby/wordpress]     | [wordpress]                  | `6`                                                      | `4.x`            |
-| [wodby/xhprof]        | [longxinH/xhprof]            | `2`                                                      |                  |
+| Image                 | Upstream                     | Versions                                 | Stability branch |
+|-----------------------|------------------------------|------------------------------------------|------------------|
+| [wodby/adminer]       | [vrana/adminer]              | `4`                                      |                  |
+| [wodby/cachet]        | [CachetHQ/Cachet]            | `2`                                      |                  |
+| [wodby/drupal]        | [drupal]                     | `11`, `10`, `7`                          | `4.x`            |
+| [wodby/elasticsearch] | [elastic/elasticsearch]      | `7`                                      |                  |
+| [wodby/kibana]        | [elastic/kibana]             | `7`                                      |                  |
+| [wodby/mariadb]       | [mariadb]                    | `11.4`, `11.2`, `10.11`,  `10.6`, `10.5` |                  |
+| [wodby/matomo]        | [matomo-org/matomo]          | `5`                                      |                  |
+| [wodby/nginx]         | [nginx]                      | `1.27`, `1.26`                           |                  |
+| [wodby/varnish]       | [varnishcache/varnish-cache] | `6.0`                                    |                  |
+| [wodby/webgrind]      | [jokkedk/webgrind]           | `1`                                      |                  |
+| [wodby/wordpress]     | [wordpress]                  | `6`                                      | `4.x`            |
+| [wodby/xhprof]        | [longxinH/xhprof]            | `2`                                      |                  |
 
 ### Docker4X projects
 
