@@ -21,18 +21,18 @@
 - New stability tag release on version update
 - New stability tag release on Alpine Linux update
 
-| Image             | Upstream (base image) | Versions                             |
-|-------------------|-----------------------|--------------------------------------|
-| [wodby/alpine]    | [alpine]              | `3.20`, `3.19`, `3.18`, `3.17`       |
-| [wodby/apache]    | [_/httpd]             | `2.4`                                |
-| [wodby/memcached] | [_/memcached]         | `1`                                  |
-| [wodby/node]      | [node]                | `22`, `20`, `18`                     |
-| [wodby/php]       | [_/php]               | `8.3`, `8.2`, `8.1`                  |
-| [wodby/postgres]  | [_/postgres]          | `16`, `15`, `14`, `13`, `12`         |
-| [wodby/python]    | [python]              | `3.12`, `3.11`, `3.10`, `3.9`, `3.8` |
-| [wodby/valkey]    | [valkey/valkey]       | `8.0`, `7.2`                         |
-| [wodby/redis]     | [redis]               | `7`                                  |
-| [wodby/ruby]      | [ruby]                | `3.3`, `3.2`, `3.1`                  |
+| Image             | Upstream (base image) | Versions                              |
+|-------------------|-----------------------|---------------------------------------|
+| [wodby/alpine]    | [alpine]              | `3.20`, `3.19`, `3.18`, `3.17`        |
+| [wodby/apache]    | [_/httpd]             | `2.4`                                 |
+| [wodby/memcached] | [_/memcached]         | `1`                                   |
+| [wodby/node]      | [node]                | `22`, `20`, `18`                      |
+| [wodby/php]       | [_/php]               | `8.3`, `8.2`, `8.1`                   |
+| [wodby/postgres]  | [_/postgres]          | `16`, `15`, `14`, `13`, `12`          |
+| [wodby/python]    | [python]              | `3.13`, `3.12`, `3.11`, `3.10`, `3.9` |
+| [wodby/valkey]    | [valkey/valkey]       | `8.0`, `7.2`                          |
+| [wodby/redis]     | [redis]               | `7`                                   |
+| [wodby/ruby]      | [ruby]                | `3.3`, `3.2`, `3.1`                   |
 
 ### Descendant images
 
