@@ -40,17 +40,17 @@
 - Rebase to newer stability tag
 - New stability tag release
 
-| Image                 | Upstream (base image) | Versions            | Stability branch |
-|-----------------------|-----------------------|---------------------|------------------|
-| [wodby/adminer]       | [wodby/php]           | `8.1`               |                  |
-| [wodby/drupal-php]    | [wodby/php]           | `8.3`, `8.2`, `8.1` | `4.x`            |
-| [wodby/drupal]        | [wodby/drupal-php]    | `8.3`, `8.2`, `8.1` | `4.x`            |
-| [wodby/matomo]        | [wodby/php]           | `8.1`               |                  |
-| [wodby/webgrind]      | [wodby/php]           | `8.1`               |                  |
-| [wodby/wordpress-php] | [wodby/php]           | `8.3`, `8.2`, `8.1` | `4.x`            |
-| [wodby/wordpress]     | [wodby/wordpress-php] | `8.3`, `8.2`, `8.1` | `4.x`            |
-| [wodby/xhprof]        | [wodby/php]           | `8.1`               |                  |
-| [wodby/laravel-php]   | [wodby/php]           | `8.3`, `8.2`, `8.1` |                  |
+| Image                 | Upstream (base image) | Versions                   | Stability branch |
+|-----------------------|-----------------------|----------------------------|------------------|
+| [wodby/adminer]       | [wodby/php]           | `8.1`                      |                  |
+| [wodby/drupal-php]    | [wodby/php]           | `8.4`, `8.3`, `8.2`, `8.1` | `4.x`            |
+| [wodby/drupal]        | [wodby/drupal-php]    | `8.4`, `8.3`, `8.2`, `8.1` | `4.x`            |
+| [wodby/matomo]        | [wodby/php]           | `8.1`                      |                  |
+| [wodby/webgrind]      | [wodby/php]           | `8.1`                      |                  |
+| [wodby/wordpress-php] | [wodby/php]           | `8.4`, `8.3`, `8.2`, `8.1` | `4.x`            |
+| [wodby/wordpress]     | [wodby/wordpress-php] | `8.4`, `8.3`, `8.2`, `8.1` | `4.x`            |
+| [wodby/xhprof]        | [wodby/php]           | `8.1`                      |                  |
+| [wodby/laravel-php]   | [wodby/php]           | `8.4`, `8.3`, `8.2`, `8.1` |                  |
 
 ### Version updates from upstream other than base image
 
