@@ -28,7 +28,7 @@
 | [wodby/memcached] | [_/memcached]         | `1`                                   |
 | [wodby/node]      | [node]                | `22`, `20`, `18`                      |
 | [wodby/php]       | [_/php]               | `8.4`, `8.3`, `8.2`, `8.1`            |
-| [wodby/postgres]  | [_/postgres]          | `16`, `15`, `14`, `13`, `12`          |
+| [wodby/postgres]  | [_/postgres]          | `17`, `16`, `15`, `14`, `13`          |
 | [wodby/python]    | [python]              | `3.13`, `3.12`, `3.11`, `3.10`, `3.9` |
 | [wodby/valkey]    | [valkey/valkey]       | `8.0`, `7.2`                          |
 | [wodby/redis]     | [redis]               | `7`                                   |
