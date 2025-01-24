@@ -45,6 +45,7 @@
 | [wodby/adminer]       | [wodby/php]           | `8.1`                      |                  |
 | [wodby/drupal-php]    | [wodby/php]           | `8.4`, `8.3`, `8.2`, `8.1` | `4.x`            |
 | [wodby/drupal]        | [wodby/drupal-php]    | `8.4`, `8.3`, `8.2`, `8.1` | `4.x`            |
+| [wodby/drupal-cms]    | [wodby/drupal-php]    | `8.3`                      |                  |
 | [wodby/matomo]        | [wodby/php]           | `8.1`                      |                  |
 | [wodby/webgrind]      | [wodby/php]           | `8.1`                      |                  |
 | [wodby/wordpress-php] | [wodby/php]           | `8.4`, `8.3`, `8.2`, `8.1` | `4.x`            |
@@ -62,6 +63,7 @@
 | [wodby/adminer]       | [vrana/adminer]              | `4`                                      |                  |
 | [wodby/cachet]        | [CachetHQ/Cachet]            | `2`                                      |                  |
 | [wodby/drupal]        | [drupal]                     | `11`, `10`, `7`                          | `4.x`            |
+| [wodby/drupal-cms]    | [drupal-cms]                 | `1`                                      |                  |
 | [wodby/elasticsearch] | [elastic/elasticsearch]      | `7`                                      |                  |
 | [wodby/kibana]        | [elastic/kibana]             | `7`                                      |                  |
 | [wodby/mariadb]       | [mariadb]                    | `11.4`, `11.2`, `10.11`,  `10.6`, `10.5` |                  |
@@ -100,6 +102,8 @@ Not automated:
 [CachetHQ/Cachet]: https://github.com/CachetHQ/Cachet
 
 [drupal]: https://github.com/drupal/drupal
+
+[drupal-cms]: https://git.drupalcode.org/project/cms
 
 [elastic/elasticsearch]: https://github.com/elastic/elasticsearch
 
@@ -170,6 +174,8 @@ Not automated:
 [wodby/laravel-php]: https://github.com/wodby/laravel-php
 
 [wodby/drupal]: https://github.com/wodby/drupal
+
+[wodby/drupal-cms]: https://github.com/wodby/drupal-cms
 
 [wodby/elasticsearch]: https://github.com/wodby/elasticsearch
 
