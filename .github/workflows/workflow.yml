@@ -54,7 +54,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        script: [drupal-php,wordpress-php,adminer-php,matomo-php,webgrind-php,laravel-php,drupal,wordpress,xhprof]
+        script: [drupal-php,wordpress-php,adminer-php,matomo-php,webgrind-php,laravel-php,drupal,wordpress,xhprof,drupal-cms]
     steps:
     - uses: actions/checkout@v4
     - uses: ./.github/actions
@@ -65,7 +65,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        script: [adminer,cachet,drupal,elasticsearch,kibana,mariadb,matomo,nginx,varnish,webgrind,wordpress,xhprof,]
+        script: [adminer,cachet,drupal,elasticsearch,kibana,mariadb,matomo,nginx,varnish,webgrind,wordpress,xhprof,drupal-cms]
     steps:
     - uses: actions/checkout@v4
     - uses: ./.github/actions

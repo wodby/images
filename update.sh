@@ -9,6 +9,21 @@ fi
 git config --global user.email "${GIT_USER_EMAIL}"
 git config --global user.name "${GIT_USER_NAME}"
 
+urlencode() {
+    local length="${#1}"
+    local encoded=""
+    for (( i = 0; i < length; i++ )); do
+        local c="${1:i:1}"
+        case "$c" in
+            [a-zA-Z0-9.~_-]) encoded+="$c" ;;
+            *) printf -v hex '%%%02X' "'$c"
+               encoded+="$hex"
+               ;;
+        esac
+    done
+    echo "$encoded"
+}
+
 _git_commit() {
   local dir="${1}"
   local msg="${2}"
@@ -127,6 +142,30 @@ _github_get_latest_ver() {
   fi
 }
 
+_gitlab_get_latest_ver() {
+  local version="${1}"
+  local url="${2}"
+
+  local host="${url%%/*}"
+  local encoded_path=$(urlencode "${url#*/}")
+  
+  local api_url="https://$host/api/v4/projects/$encoded_path/repository/tags"
+
+  local expr=".[] | select ( .name  | startswith(\"${version}\")).name"
+
+  local -a versions
+
+  # Only stable versions.
+  versions=($(curl -s "${url}" | jq -r "${expr}" | grep -oP "^[0-9\.]+$" | sort -rV))
+
+  if [[ "${#versions}" == 0 ]]; then
+    echo >&2 "Couldn't find latest version in line ${version} of ${slug}."
+    exit 1
+  else
+    echo "${versions[0]}"
+  fi
+}
+
 _get_latest_version() {
   local upstream="${1%:*}"
   local version="${2}"
@@ -136,6 +175,8 @@ _get_latest_version() {
   # Get latest stable version from github.
   if [[ "${upstream}" == "github.com"* ]]; then
     latest_ver=$(_github_get_latest_ver "${version}" "${upstream/github.com\//}" "${name}")
+  elif [[ "${upstream}" == "git.drupalcode.org"* ]]; then
+    latest_ver=$(_gitlab_get_latest_ver "${version}" "${upstream}")
   # From docker hub, only patch updates.
   else
     local makefilePath
