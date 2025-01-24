@@ -156,7 +156,7 @@ _gitlab_get_latest_ver() {
   local -a versions
 
   # Only stable versions.
-  versions=($(curl -s "${url}" | jq -r "${expr}" | grep -oP "^[0-9\.]+$" | sort -rV))
+  versions=($(curl -s "${api_url}" | jq -r "${expr}" | grep -oP "^[0-9\.]+$" | sort -rV))
 
   if [[ "${#versions}" == 0 ]]; then
     echo >&2 "Couldn't find latest version in line ${version} of ${slug}."
