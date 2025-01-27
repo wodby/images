@@ -697,3 +697,18 @@ update_drupal_vanilla() {
   _git_commit /tmp/drupal-vanilla "Update Drupal 7"
   git push origin
 }
+
+update_drupal_cms_template() {
+  echo "Updating Drupal CMS 1.x template"
+  _git_clone "wodby/drupal-cms-template"
+  git clone "https://git.drupalcode.org/project/cms.git" /tmp/cms
+  cd /tmp/cms
+  latest_ver=$(git show-ref --tags | grep -P -o '(?<=refs/tags/)1\.[0-9]+\.[0-9]+$' | sort -rV | head -n1)
+  git checkout "${latest_ver}"
+  cp -R composer.json web /tmp/drupal-cms-template
+  cd /tmp/drupal-cms-template
+  apk add --update composer
+  composer update --no-install --ignore-platform-reqs
+  _git_commit /tmp/drupal-cms-template "Update Drupal CMS 1.x"
+  git push origin
+}

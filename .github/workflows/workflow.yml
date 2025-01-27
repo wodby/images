@@ -3,10 +3,10 @@ name: Update
 on:
   push:
     branches:
-    - master
+      - master
 
   schedule:
-  - cron: '0 2 * * *'
+    - cron: '0 2 * * *'
 
   pull_request:
   workflow_dispatch:
@@ -22,64 +22,67 @@ env:
 jobs:
   repos:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        script: [ drupal-vanilla,drupal-cms-template ]
     steps:
-    - uses: actions/checkout@v4
-    - uses: ./.github/actions
-      with:
-        dir: repos
-        script: drupal-vanilla
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions
+        with:
+          dir: repos
+          script: ${{ matrix.script }}
   alpine:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        script: [mariadb,nginx,opensmtpd,varnish,squid]
+        script: [ mariadb,nginx,opensmtpd,varnish,squid ]
     steps:
-    - uses: actions/checkout@v4
-    - uses: ./.github/actions
-      with:
-        dir: alpine
-        script: ${{ matrix.script }}
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions
+        with:
+          dir: alpine
+          script: ${{ matrix.script }}
   images:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        script: [alpine,apache,memcached,node,php,postgres,python,redis,valkey,ruby]
+        script: [ alpine,apache,memcached,node,php,postgres,python,redis,valkey,ruby ]
     steps:
-    - uses: actions/checkout@v4
-    - uses: ./.github/actions
-      with:
-        dir: images
-        script: ${{ matrix.script }}
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions
+        with:
+          dir: images
+          script: ${{ matrix.script }}
   stability-tags:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        script: [drupal-php,wordpress-php,adminer-php,matomo-php,webgrind-php,laravel-php,drupal,wordpress,xhprof,drupal-cms]
+        script: [ drupal-php,wordpress-php,adminer-php,matomo-php,webgrind-php,laravel-php,drupal,wordpress,xhprof,drupal-cms ]
     steps:
-    - uses: actions/checkout@v4
-    - uses: ./.github/actions
-      with:
-        dir: stability-tags
-        script: ${{ matrix.script }}
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions
+        with:
+          dir: stability-tags
+          script: ${{ matrix.script }}
   upstream:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        script: [adminer,cachet,drupal,elasticsearch,kibana,mariadb,matomo,nginx,varnish,webgrind,wordpress,xhprof,drupal-cms]
+        script: [ adminer,cachet,drupal,elasticsearch,kibana,mariadb,matomo,nginx,varnish,webgrind,wordpress,xhprof,drupal-cms ]
     steps:
-    - uses: actions/checkout@v4
-    - uses: ./.github/actions
-      with:
-        dir: upstream
-        script: ${{ matrix.script }}
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions
+        with:
+          dir: upstream
+          script: ${{ matrix.script }}
   docker4x:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        script: [drupal,php,python,ruby,wordpress,laravel]
+        script: [ drupal,php,python,ruby,wordpress,laravel ]
     steps:
-    - uses: actions/checkout@v4
-    - uses: ./.github/actions
-      with:
-        dir: docker4x
-        script: ${{ matrix.script }}
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions
+        with:
+          dir: docker4x
+          script: ${{ matrix.script }}
