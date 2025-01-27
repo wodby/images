@@ -707,7 +707,7 @@ update_drupal_cms_template() {
   git checkout "${latest_ver}"
   cp -R composer.json web /tmp/drupal-cms-template
   cd /tmp/drupal-cms-template
-  apk add --update composer
+  # Drupal CMS source has no composer.lock file by default.
   composer update --no-install --ignore-platform-reqs
   _git_commit /tmp/drupal-cms-template "Update Drupal CMS 1.x"
   git push origin
