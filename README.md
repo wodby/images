@@ -87,6 +87,13 @@ Update images stability tags
 | [wodby/docker4wordpress] |
 | [wodby/docker4laravel]   |
 
+### Build templates
+
+| Project                     | Versions |
+|-----------------------------|----------|
+| [wodby/vanilla-drupal]      | 11 10 7  |
+| [wodby/drupal-cms-template] | 1        |
+
 Not automated:
 
 - Adding new minor/major version
@@ -170,6 +177,10 @@ Not automated:
 [wodby/docker4laravel]: https://github.com/wodby/docker4laravel
 
 [wodby/drupal-php]: https://github.com/wodby/drupal-php
+
+[wodby/drupal-cms-template]: https://github.com/wodby/drupal-cms-template
+
+[wodby/drupal-vanilla]: https://github.com/wodby/drupal-vanilla
 
 [wodby/laravel-php]: https://github.com/wodby/laravel-php
 
