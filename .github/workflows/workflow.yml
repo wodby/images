@@ -27,7 +27,6 @@ jobs:
         script: [ drupal-vanilla,drupal-cms-template ]
     steps:
       - uses: actions/checkout@v4
-      - uses: php-actions/composer@v6        
       - uses: ./.github/actions
         with:
           dir: repos
