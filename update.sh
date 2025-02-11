@@ -127,7 +127,7 @@ _github_get_latest_ver() {
 
   local url="https://api.github.com/repos/${slug}/git/refs/tags"
   local user="${GITHUB_MACHINE_USER_API_TOKEN}:x-oauth-basic"
-  local expr=".[] | select ( .ref | ltrimstr(\"refs/tags/\") | ltrimstr(\"${name}-\") | ltrimstr(\"v\") | ltrimstr(\"release-\") | startswith(\"${version}\")).ref"
+  local expr=".[] | select ( .ref | ltrimstr(\"refs/tags/\") | ltrimstr(\"releases/${name}/\") | ltrimstr(\"${name}-\") | ltrimstr(\"v\") | ltrimstr(\"release-\") | startswith(\"${version}\")).ref"
 
   local -a versions
 

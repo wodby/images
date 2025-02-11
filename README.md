@@ -73,6 +73,7 @@
 | [wodby/webgrind]      | [jokkedk/webgrind]           | `1`                                      |                  |
 | [wodby/wordpress]     | [wordpress]                  | `6`                                      | `4.x`            |
 | [wodby/xhprof]        | [longxinH/xhprof]            | `2`                                      |                  |
+| [wodby/solr]          | [apache/solr]                | `9`                                      |                  |
 
 ### Docker4X projects
 
@@ -147,6 +148,8 @@ Not automated:
 [vrana/adminer]: https://github.com/vrana/adminer
 
 [longxinH/xhprof]: https://github.com/longxinH/xhprof
+
+[apache/solr]: https://github.com/apache/solr
 
 [wodby/adminer]: https://github.com/wodby/adminer
 
