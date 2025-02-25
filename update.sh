@@ -301,8 +301,8 @@ _update_versions() {
         minor_update=1
         sed -i -E "s/(tags): .+?${version//\./\\.}\.[0-9\.]+/\1: ${latest_ver%.*}/g" .github/workflows/workflow.yml
         sed -i -E "s/\`${version//\./\\.}\.[0-9\.]+\`/\`${latest_ver%.*}\`/g" README.md
+        sed -i -E "s/\`${version//\./\\.}\.[0-9\.]+-dev\`/\`${latest_ver%.*}-dev\`/g" README.md
         sed -i -E "s/\:${version//\./\\.}\.[0-9\.]+(-X\.X\.X)/:${latest_ver%.*}\1/g" README.md
-        sed -i -E "s/\:${version//\./\\.}\.[0-9\.]+-dev/:${latest_ver%.*}\1/g" README.md
       fi
 
       sed -i -E "s/(${name^^}_VER \?= )${cur_ver}/\1${latest_ver}/" "${dir}/Makefile"
