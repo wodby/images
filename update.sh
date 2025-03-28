@@ -132,7 +132,7 @@ _github_get_latest_ver() {
   local -a versions
 
   # Only stable versions.
-  versions=($(curl -s -u "${user}" "${url}" | jq -r "${expr}" | sed -E "s/refs\/tags\/(v|release-|releases\/${name}\/|${name}-)?//" | grep -oP "^[0-9\.]+$" | sort -rV))
+  versions=($(curl -s -u "${user}" "${url}" | jq -r "${expr}" | sed -E "s/refs\/tags\/(v|release-|releases\/${name}\/|${name}-)?//" | grep -oP "^[0-9.]+$" | sort -rV))
 
   if [[ "${#versions}" == 0 ]]; then
     echo >&2 "Couldn't find latest version in line ${version} of ${slug}."
@@ -156,7 +156,7 @@ _gitlab_get_latest_ver() {
   local -a versions
 
   # Only stable versions.
-  versions=($(curl -s "${api_url}" | jq -r "${expr}" | grep -oP "^[0-9\.]+$" | sort -rV))
+  versions=($(curl -s "${api_url}" | jq -r "${expr}" | grep -oP "^[0-9.]+$" | sort -rV))
 
   if [[ "${#versions}" == 0 ]]; then
     echo >&2 "Couldn't find latest version in line ${version} of ${slug}."
@@ -191,7 +191,7 @@ _get_latest_version() {
       suffix="(?=\-alpine$)"
     fi
 
-    latest_ver=$(_get_image_tags "${upstream}" "^(${version//\./\\.}\.[0-9\.]+)${suffix}")
+    latest_ver=$(_get_image_tags "${upstream}" "^(${version//\./\\.}\.[0-9.]+)${suffix}")
   fi
 
   if [[ -z "${latest_ver}" ]]; then
@@ -229,7 +229,7 @@ _get_alpine_ver() {
   local ver
 
   docker pull "${image}" >/dev/null
-  ver=$(docker run --rm --entrypoint=/bin/sh "${image}" -c 'cat /etc/os-release' | grep -oP '(?<=VERSION_ID=)[0-9\.]+')
+  ver=$(docker run --rm --entrypoint=/bin/sh "${image}" -c 'cat /etc/os-release' | grep -oP '(?<=VERSION_ID=)[0-9.]+')
 
   if [[ -z "${ver}" ]]; then
     echo >&2 "Failed to detect alpine version"
@@ -265,10 +265,10 @@ _update_versions() {
     # There two ways how we specify versions in workflow.yml (same used for updates below):
     # 1. PHP72: 7.2.8 (or PHP7=7.2.8 depending on the provided version)
     # 2. version: 7.2.8
-    cur_ver=$(grep -oP "(?<=${name^^}${version//./}: )'?[0-9\.]+" .github/workflows/workflow.yml || true)
+    cur_ver=$(grep -oP "(?<=${name^^}${version//./}: )'?[0-9.]+" .github/workflows/workflow.yml || true)
 
     if [[ -z "${cur_ver}" ]]; then
-      cur_ver=$(grep -oP -m1 "(?<=version: )'?${version//\./\\.}[0-9\.]+" .github/workflows/workflow.yml || true)
+      cur_ver=$(grep -oP -m1 "(?<=version: )'?${version//\./\\.}[0-9.]+" .github/workflows/workflow.yml || true)
     fi
 
     if [[ -z "${cur_ver}" ]]; then
@@ -291,18 +291,18 @@ _update_versions() {
       sed -i -E "s/(${name^^}${version//./}): .+/\1: '${latest_ver}'/g" .github/workflows/workflow.yml
 
       if [[ -z "${has_quotes}" ]]; then
-        sed -i -E "s/(version): ${version//\./\\.}\.[0-9\.]+/\1: '${latest_ver}'/g" .github/workflows/workflow.yml
+        sed -i -E "s/(version): ${version//\./\\.}\.[0-9.]+/\1: '${latest_ver}'/g" .github/workflows/workflow.yml
       else
-        sed -i -E "s/(version): '${version//\./\\.}\.[0-9\.]+'/\1: '${latest_ver}'/g" .github/workflows/workflow.yml
+        sed -i -E "s/(version): '${version//\./\\.}\.[0-9.]+'/\1: '${latest_ver}'/g" .github/workflows/workflow.yml
       fi
 
       # For semver minor updates we should also update tags info.
       if [[ "${latest_ver%.*}" != "${cur_ver%.*}" ]]; then
         minor_update=1
-        sed -i -E "s/(tags): .+?${version//\./\\.}\.[0-9\.]+/\1: ${latest_ver%.*}/g" .github/workflows/workflow.yml
-        sed -i -E "s/\`${version//\./\\.}\.[0-9\.]+\`/\`${latest_ver%.*}\`/g" README.md
-        sed -i -E "s/\`${version//\./\\.}\.[0-9\.]+-dev\`/\`${latest_ver%.*}-dev\`/g" README.md
-        sed -i -E "s/\:${version//\./\\.}\.[0-9\.]+(-X\.X\.X)/:${latest_ver%.*}\1/g" README.md
+        sed -i -E "s/(tags): .+?${version//\./\\.}\.[0-9.]+/\1: ${latest_ver%.*}/g" .github/workflows/workflow.yml
+        sed -i -E "s/\`${version//\./\\.}\.[0-9.]+\`/\`${latest_ver%.*}\`/g" README.md
+        sed -i -E "s/\`${version//\./\\.}\.[0-9.]+-dev\`/\`${latest_ver%.*}-dev\`/g" README.md
+        sed -i -E "s/\:${version//\./\\.}\.[0-9.]+(-X\.X\.X)/:${latest_ver%.*}\1/g" README.md
       fi
 
       sed -i -E "s/(${name^^}_VER \?= )${cur_ver}/\1${latest_ver}/" "${dir}/Makefile"
@@ -440,14 +440,14 @@ _update_base_alpine_image() {
   echo "Checking for alpine base image tag updates"
   echo "=========================================="
 
-  latest=$(_get_image_tags "${base_image}" "(?<=${version//\./\\.}-)[0-9\.]+")
+  latest=$(_get_image_tags "${base_image}" "(?<=${version//\./\\.}-)[0-9.]+")
 
   if [[ -z "${latest}" ]]; then
     echo >&2 "Failed to acquire latest image tag"
     exit 1
   fi
 
-  current=$(grep -oP "(?<=BASE_IMAGE_STABILITY_TAG: )[0-9\.]+$" .github/workflows/workflow.yml)
+  current=$(grep -oP "(?<=BASE_IMAGE_STABILITY_TAG: )[0-9.]+$" .github/workflows/workflow.yml)
 
   if [[ $(compare_semver "${latest}" "${current}") == 0 ]]; then
     sed -i -E "s/(BASE_IMAGE_STABILITY_TAG: )${current}/\1${latest}/" .github/workflows/workflow.yml
@@ -496,14 +496,14 @@ _update_stability_tag() {
     git merge --no-edit master
   fi
 
-  latest=$(_get_image_tags "${base_image}" "(?<=${version//\./\\.}-)[0-9\.]+")
+  latest=$(_get_image_tags "${base_image}" "(?<=${version//\./\\.}-)[0-9.]+")
 
   if [[ -z "${latest}" ]]; then
     echo >&2 "Failed to acquire latest image tag"
     exit 1
   fi
 
-  current=$(grep -oP "(?<=BASE_IMAGE_STABILITY_TAG: )[0-9\.]+$" .github/workflows/workflow.yml)
+  current=$(grep -oP "(?<=BASE_IMAGE_STABILITY_TAG: )[0-9.]+$" .github/workflows/workflow.yml)
 
   if [[ $(compare_semver "${latest}" "${current}") == 0 ]]; then
     sed -i -E "s/(BASE_IMAGE_STABILITY_TAG: )${current}/\1${latest}/" .github/workflows/workflow.yml
@@ -651,10 +651,10 @@ update_docker4x() {
     fi
 
     if [[ $(compare_semver "${latest}" "${current}") == 0 ]]; then
-      sed -i -E "s/^(${env_var}=[0-9\.-]+?)${current}$/\1${latest}/" .env
+      sed -i -E "s/^(${env_var}=[0-9.-]+?)${current}$/\1${latest}/" .env
 
       # Update tests.
-      find tests/ -name .env -exec sed -i -E "s/^(#?${env_var}=[0-9\.]+(:?-dev|-dev-macos)?-)${current}$/\1${latest}/" .env {} +
+      find tests/ -name .env -exec sed -i -E "s/^(#?${env_var}=[0-9.]+(:?-dev|-dev-macos)?-)${current}$/\1${latest}/" .env {} +
 
       # Update env var like like $DRUPAL_STABILITY_TAG in tests.
       if [[ "${name}" == "${project#*docker4}" ]]; then
