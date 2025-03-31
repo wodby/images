@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        script: [ drupal-vanilla,drupal-cms-template ]
+        script: [ wordpress-vanilla,drupal-vanilla,drupal-cms-template ]
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions
