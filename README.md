@@ -92,7 +92,8 @@ Update images stability tags
 
 | Project                     | Versions |
 |-----------------------------|----------|
-| [wodby/vanilla-drupal]      | 11 10 7  |
+| [wodby/drupal-vanilla]      | 11 10 7  |
+| [wodby/wordpress-vanilla]   |          |
 | [wodby/drupal-cms-template] | 1        |
 
 Not automated:
@@ -184,6 +185,8 @@ Not automated:
 [wodby/drupal-cms-template]: https://github.com/wodby/drupal-cms-template
 
 [wodby/drupal-vanilla]: https://github.com/wodby/drupal-vanilla
+
+[wodby/wordpress-vanilla]: https://github.com/wodby/wordpress-vanilla
 
 [wodby/laravel-php]: https://github.com/wodby/laravel-php
 

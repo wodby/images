@@ -699,6 +699,16 @@ update_drupal_vanilla() {
   git push origin
 }
 
+update_wordpress_vanilla() {
+  echo "Updating WordPress"
+  # Drupal CMS source has no composer.lock file by default.
+  _git_clone "wodby/wordpress-vanilla"
+  apk add --update composer
+  composer update --no-install --ignore-platform-reqs
+  _git_commit /tmp/drupal-vanilla "Update WordPress"
+  git push origin
+}
+
 update_drupal_cms_template() {
   echo "Updating Drupal CMS 1.x template"
   _git_clone "wodby/drupal-cms-template"
