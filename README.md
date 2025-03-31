@@ -152,6 +152,8 @@ Not automated:
 
 [apache/solr]: https://github.com/apache/solr
 
+[wodby/solr]: https://github.com/wodby/solr
+
 [wodby/adminer]: https://github.com/wodby/adminer
 
 [wodby/alpine]: https://github.com/wodby/alpine

@@ -705,7 +705,7 @@ update_wordpress_vanilla() {
   _git_clone "wodby/wordpress-vanilla"
   apk add --update composer
   composer update --no-install --ignore-platform-reqs
-  _git_commit /tmp/drupal-vanilla "Update WordPress"
+  _git_commit /tmp/wordpress-vanilla "Update WordPress"
   git push origin
 }
 
