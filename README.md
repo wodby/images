@@ -32,7 +32,7 @@
 | [wodby/python]    | [python]              | `3.13`, `3.12`, `3.11`, `3.10`, `3.9` |
 | [wodby/valkey]    | [valkey/valkey]       | `8.0`, `7.2`                          |
 | [wodby/redis]     | [redis]               | `7`                                   |
-| [wodby/ruby]      | [ruby]                | `3.3`, `3.2`, `3.1`                   |
+| [wodby/ruby]      | [ruby]                | `3.4`, `3.3`, `3.2`                   |
 
 ### Descendant images
 
