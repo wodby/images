@@ -4,4 +4,4 @@ set -e
 
 . ../update.sh
 
-update_base_alpine "wodby/opensmtpd" "3.20" "true"
+update_base_alpine "wodby/opensmtpd" "3.21" "true"

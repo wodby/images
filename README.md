@@ -10,7 +10,7 @@
 |-------------------|----------------|
 | [wodby/mariadb]   | `3.20`         |
 | [wodby/nginx]     | `3.21`         |
-| [wodby/opensmtpd] | `3.20`         |
+| [wodby/opensmtpd] | `3.21`         |
 | [wodby/varnish]   | `3.20`         |
 | [wodby/squid]     | `3.17`         |
 
