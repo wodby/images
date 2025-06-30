@@ -9,7 +9,7 @@
 | Image             | Alpine version |
 |-------------------|----------------|
 | [wodby/mariadb]   | `3.20`         |
-| [wodby/nginx]     | `3.21`         |
+| [wodby/nginx]     | `3.22`         |
 | [wodby/opensmtpd] | `3.21`         |
 | [wodby/varnish]   | `3.20`         |
 | [wodby/squid]     | `3.17`         |
@@ -68,7 +68,7 @@
 | [wodby/kibana]        | [elastic/kibana]             | `7`                                      |                  |
 | [wodby/mariadb]       | [mariadb]                    | `11.4`, `11.2`, `10.11`,  `10.6`, `10.5` |                  |
 | [wodby/matomo]        | [matomo-org/matomo]          | `5`                                      |                  |
-| [wodby/nginx]         | [nginx]                      | `1.28`, `1.27`                           |                  |
+| [wodby/nginx]         | [nginx]                      | `1.29`, `1.28`                           |                  |
 | [wodby/varnish]       | [varnishcache/varnish-cache] | `6.0`                                    |                  |
 | [wodby/webgrind]      | [jokkedk/webgrind]           | `1`                                      |                  |
 | [wodby/wordpress]     | [wordpress]                  | `6`                                      | `4.x`            |

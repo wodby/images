@@ -4,4 +4,4 @@ set -e
 
 . ../update.sh
 
-update_from_upstream "wodby/nginx" "1.28 1.27" "github.com/nginx/nginx"
+update_from_upstream "wodby/nginx" "1.29 1.28" "github.com/nginx/nginx"
