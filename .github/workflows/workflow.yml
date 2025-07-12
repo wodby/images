@@ -68,7 +68,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        script: [ adminer,cachet,drupal,elasticsearch,kibana,mariadb,matomo,nginx,varnish,webgrind,wordpress,xhprof,drupal-cms,solr ]
+        script: [ alpine,adminer,cachet,drupal,elasticsearch,kibana,mariadb,matomo,nginx,varnish,webgrind,wordpress,xhprof,drupal-cms,solr ]
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions
