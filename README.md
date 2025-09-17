@@ -102,6 +102,7 @@ Not automated:
 - Switching the latest version
 - New stability branches for major stability tags updates
 - [wodby/opensmtpd] (installed from Alpine repository package)
+- [wodby/adminer] not auto-updates for the base image (php:8.4-apache)
 
 [adoptium/containers]: https://github.com/adoptium/containers
 
