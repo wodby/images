@@ -8,7 +8,7 @@
 
 | Image             | Alpine version |
 |-------------------|----------------|
-| [wodby/mariadb]   | `3.20`         |
+| [wodby/mariadb]   | `3.22`         |
 | [wodby/nginx]     | `3.22`         |
 | [wodby/opensmtpd] | `3.21`         |
 | [wodby/varnish]   | `3.20`         |
@@ -65,7 +65,7 @@
 | [wodby/drupal-cms]    | [drupal-cms]                 | `1`                                      |                  |
 | [wodby/elasticsearch] | [elastic/elasticsearch]      | `7`                                      |                  |
 | [wodby/kibana]        | [elastic/kibana]             | `7`                                      |                  |
-| [wodby/mariadb]       | [mariadb]                    | `11.4`, `11.2`, `10.11`,  `10.6`, `10.5` |                  |
+| [wodby/mariadb]       | [mariadb]                    | `11.8`, `11.4`, `11.2`, `10.11`,  `10.6` |                  |
 | [wodby/matomo]        | [matomo-org/matomo]          | `5`                                      |                  |
 | [wodby/nginx]         | [nginx]                      | `1.29`, `1.28`                           |                  |
 | [wodby/varnish]       | [varnishcache/varnish-cache] | `6.0`                                    |                  |
