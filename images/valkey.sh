@@ -4,4 +4,4 @@ set -e
 
 . ../update.sh
 
-update_from_base_image "wodby/valkey" "8.1 8.0 7.2"
+update_from_base_image "wodby/valkey" "9.0 8.1 8.0 7.2"
