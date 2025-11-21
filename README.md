@@ -18,8 +18,8 @@
 
 - Minor/patch version update
 - Rebuild against updated base image
-- New stability tag release on version update
-- New stability tag release on Alpine Linux update
+- New stability tag released on version update
+- New stability tag released on Alpine Linux update
 
 | Image             | Upstream (base image) | Versions                               |
 |-------------------|-----------------------|----------------------------------------|
@@ -37,7 +37,7 @@
 ### Descendant images
 
 - Rebuild against updated base image
-- Rebase to newer stability tag
+- Rebase to the new stability tag
 - New stability tag release
 
 | Image                 | Upstream (base image) | Versions                   | Stability branch |
@@ -52,7 +52,7 @@
 | [wodby/xhprof]        | [wodby/php]           | `8.1`                      |                  |
 | [wodby/laravel-php]   | [wodby/php]           | `8.4`, `8.3`, `8.2`, `8.1` |                  |
 
-### Version updates from upstream other than base image
+### Version updates from upstream other than the base image
 
 - Minor/patch version updates
 - New stability tag release
