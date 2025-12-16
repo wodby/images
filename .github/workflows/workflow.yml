@@ -26,7 +26,7 @@ jobs:
       matrix:
         script: [ wordpress-vanilla,drupal-vanilla,drupal-cms-template ]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: ./.github/actions
         with:
           dir: repos
@@ -37,7 +37,7 @@ jobs:
       matrix:
         script: [ mariadb,nginx,opensmtpd,varnish,squid ]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: ./.github/actions
         with:
           dir: alpine
@@ -48,7 +48,7 @@ jobs:
       matrix:
         script: [ alpine,apache,memcached,node,php,postgres,python,redis,valkey,ruby ]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: ./.github/actions
         with:
           dir: images
@@ -59,7 +59,7 @@ jobs:
       matrix:
         script: [ drupal-php,wordpress-php,matomo-php,webgrind-php,laravel-php,drupal,wordpress,xhprof,drupal-cms ]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: ./.github/actions
         with:
           dir: stability-tags
@@ -68,9 +68,9 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        script: [ adminer,cachet,drupal,elasticsearch,kibana,mariadb,matomo,nginx,varnish,webgrind,wordpress,xhprof,drupal-cms,solr ]
+        script: [ adminer,cachet,drupal,elasticsearch,kibana,mariadb,matomo,nginx,varnish,webgrind,wordpress,xhprof,drupal-cms,solr,zookeeper ]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: ./.github/actions
         with:
           dir: upstream
@@ -81,7 +81,7 @@ jobs:
       matrix:
         script: [ drupal,php,python,ruby,wordpress,laravel ]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: ./.github/actions
         with:
           dir: docker4x
