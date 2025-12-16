@@ -73,6 +73,7 @@
 | [wodby/wordpress]     | [wordpress]                  | `6`                                      | `4.x`            |
 | [wodby/xhprof]        | [longxinH/xhprof]            | `2`                                      |                  |
 | [wodby/solr]          | [apache/solr]                | `9`                                      |                  |
+| [wodby/zookeeper]     | [apache/zookeeper]           | `3.9`                                    |                  |
 
 ### Docker4X projects
 
@@ -152,7 +153,11 @@ Not automated:
 
 [apache/solr]: https://github.com/apache/solr
 
+[apache/zookeeper]: https://github.com/apache/zookeeper
+
 [wodby/solr]: https://github.com/wodby/solr
+
+[wodby/zookeeper]: https://github.com/wodby/zookeeper
 
 [wodby/adminer]: https://github.com/wodby/adminer
 
