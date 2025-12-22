@@ -50,7 +50,7 @@
 | [wodby/wordpress-php] | [wodby/php]           | `8.5`, `8.4`, `8.3`, `8.2`, `8.1` | `4.x`            |
 | [wodby/wordpress]     | [wodby/wordpress-php] | `8.5`, `8.4`, `8.3`, `8.2`, `8.1` | `4.x`            |
 | [wodby/xhprof]        | [wodby/php]           | `8.1`                             |                  |
-| [wodby/laravel-php]   | [wodby/php]           | `8.4`, `8.3`, `8.2`, `8.1`        |                  |
+| [wodby/laravel-php]   | [wodby/php]           | `8.5`, `8.4`, `8.3`, `8.2`, `8.1` |                  |
 
 ### Version updates from upstream other than the base image
 
