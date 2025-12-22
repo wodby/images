@@ -43,8 +43,8 @@
 | Image                 | Upstream (base image) | Versions                          | Stability branch |
 |-----------------------|-----------------------|-----------------------------------|------------------|
 | [wodby/drupal-php]    | [wodby/php]           | `8.5`, `8.4`, `8.3`, `8.2`, `8.1` | `4.x`            |
-| [wodby/drupal]        | [wodby/drupal-php]    | `8.4`, `8.3`, `8.2`, `8.1`        | `4.x`            |
-| [wodby/drupal-cms]    | [wodby/drupal-php]    | `8.3`                             |                  |
+| [wodby/drupal]        | [wodby/drupal-php]    | `8.5`, `8.4`, `8.3`, `8.2`, `8.1` | `4.x`            |
+| [wodby/drupal-cms]    | [wodby/drupal-php]    | `8.4`                             |                  |
 | [wodby/matomo]        | [wodby/php]           | `8.1`                             |                  |
 | [wodby/webgrind]      | [wodby/php]           | `8.1`                             |                  |
 | [wodby/wordpress-php] | [wodby/php]           | `8.5`, `8.4`, `8.3`, `8.2`, `8.1` | `4.x`            |
@@ -61,7 +61,7 @@
 |-----------------------|------------------------------|------------------------------------------|------------------|
 | [wodby/adminer]       | [vrana/adminer]              | `5`                                      |                  |
 | [wodby/cachet]        | [CachetHQ/Cachet]            | `2`                                      |                  |
-| [wodby/drupal]        | [drupal]                     | `11`, `10`, `7`                          | `4.x`            |
+| [wodby/drupal]        | [drupal]                     | `11`, `10`                               | `4.x`            |
 | [wodby/drupal-cms]    | [drupal-cms]                 | `1`                                      |                  |
 | [wodby/elasticsearch] | [elastic/elasticsearch]      | `7`                                      |                  |
 | [wodby/kibana]        | [elastic/kibana]             | `7`                                      |                  |
