@@ -62,7 +62,7 @@
 | [wodby/adminer]       | [vrana/adminer]              | `5`                                      |                  |
 | [wodby/cachet]        | [CachetHQ/Cachet]            | `2`                                      |                  |
 | [wodby/drupal]        | [drupal]                     | `11`, `10`                               | `4.x`            |
-| [wodby/drupal-cms]    | [drupal-cms]                 | `1`                                      |                  |
+| [wodby/drupal-cms]    | [drupal-cms]                 | `2`                                      |                  |
 | [wodby/elasticsearch] | [elastic/elasticsearch]      | `7`                                      |                  |
 | [wodby/kibana]        | [elastic/kibana]             | `7`                                      |                  |
 | [wodby/mariadb]       | [mariadb]                    | `11.8`, `11.4`, `11.2`, `10.11`,  `10.6` |                  |
@@ -94,7 +94,7 @@ Update images stability tags
 |-----------------------------|----------|
 | [wodby/drupal-vanilla]      | 11 10 7  |
 | [wodby/wordpress-vanilla]   |          |
-| [wodby/drupal-cms-template] | 1        |
+| [wodby/drupal-cms-template] | 2        |
 
 Not automated:
 
