@@ -710,11 +710,11 @@ update_wordpress_vanilla() {
 }
 
 update_drupal_cms_template() {
-  echo "Updating Drupal CMS 1.x template"
+  echo "Updating Drupal CMS 2.x template"
   _git_clone "wodby/drupal-cms-template"
   git clone "https://git.drupalcode.org/project/cms.git" /tmp/cms
   cd /tmp/cms
-  latest_ver=$(git show-ref --tags | grep -P -o '(?<=refs/tags/)1\.[0-9]+\.[0-9]+$' | sort -rV | head -n1)
+  latest_ver=$(git show-ref --tags | grep -P -o '(?<=refs/tags/)2\.[0-9]+\.[0-9]+$' | sort -rV | head -n1)
   git checkout "${latest_ver}"
   rm -r /tmp/drupal-cms-template/web
   cp -R composer.json web /tmp/drupal-cms-template
@@ -723,6 +723,6 @@ update_drupal_cms_template() {
   # Drupal CMS source has no composer.lock file by default.
   apk add --update composer
   composer update --no-install --ignore-platform-reqs
-  _git_commit /tmp/drupal-cms-template "Update Drupal CMS 1.x"
+  _git_commit /tmp/drupal-cms-template "Update Drupal CMS 2.x"
   git push origin
 }
