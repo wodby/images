@@ -48,6 +48,7 @@ jobs:
       matrix:
         script: [ alpine,apache,memcached,node,php,postgres,python,redis,valkey,ruby ]
     steps:
+      - uses: docker/setup-docker-action@v4
       - uses: actions/checkout@v6
       - uses: ./.github/actions
         with:
