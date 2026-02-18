@@ -4,4 +4,4 @@ set -e
 
 . ../update.sh
 
-rebuild_and_rebase "wodby/xhprof" "8.1"
+rebuild_and_rebase "wodby/xhprof" "8.2"
