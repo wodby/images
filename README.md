@@ -45,11 +45,11 @@
 | [wodby/drupal-php]    | [wodby/php]           | `8.5`, `8.4`, `8.3`, `8.2` | `4.x`            |
 | [wodby/drupal]        | [wodby/drupal-php]    | `8.5`, `8.4`, `8.3`, `8.2` | `4.x`            |
 | [wodby/drupal-cms]    | [wodby/drupal-php]    | `8.4`                      |                  |
-| [wodby/matomo]        | [wodby/php]           | `8.1`                      |                  |
-| [wodby/webgrind]      | [wodby/php]           | `8.1`                      |                  |
+| [wodby/matomo]        | [wodby/php]           | `8.2`                      |                  |
+| [wodby/webgrind]      | [wodby/php]           | `8.2`                      |                  |
 | [wodby/wordpress-php] | [wodby/php]           | `8.5`, `8.4`, `8.3`, `8.2` | `4.x`            |
 | [wodby/wordpress]     | [wodby/wordpress-php] | `8.5`, `8.4`, `8.3`, `8.2` | `4.x`            |
-| [wodby/xhprof]        | [wodby/php]           | `8.1`                      |                  |
+| [wodby/xhprof]        | [wodby/php]           | `8.2`                      |                  |
 | [wodby/laravel-php]   | [wodby/php]           | `8.5`, `8.4`, `8.3`, `8.2` |                  |
 
 ### Version updates from upstream other than the base image
