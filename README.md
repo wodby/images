@@ -27,7 +27,7 @@
 | [wodby/apache]    | [_/httpd]             | `2.4`                                  |
 | [wodby/memcached] | [_/memcached]         | `1`                                    |
 | [wodby/node]      | [node]                | `24`, `22`, `20`                       |
-| [wodby/php]       | [_/php]               | `8.5`, `8.4`, `8.3`, `8.2`, `8.1`      |
+| [wodby/php]       | [_/php]               | `8.5`, `8.4`, `8.3`, `8.2`             |
 | [wodby/postgres]  | [_/postgres]          | `18`, `17`, `16`, `15`, `14`           |
 | [wodby/python]    | [python]              | `3.14`, `3.13`, `3.12`, `3.11`, `3.10` |
 | [wodby/valkey]    | [valkey/valkey]       | `9.0`, `8.1`, `8.0`, `7.2`             |
@@ -40,17 +40,17 @@
 - Rebase to the new stability tag
 - New stability tag release
 
-| Image                 | Upstream (base image) | Versions                          | Stability branch |
-|-----------------------|-----------------------|-----------------------------------|------------------|
-| [wodby/drupal-php]    | [wodby/php]           | `8.5`, `8.4`, `8.3`, `8.2`, `8.1` | `4.x`            |
-| [wodby/drupal]        | [wodby/drupal-php]    | `8.5`, `8.4`, `8.3`, `8.2`, `8.1` | `4.x`            |
-| [wodby/drupal-cms]    | [wodby/drupal-php]    | `8.4`                             |                  |
-| [wodby/matomo]        | [wodby/php]           | `8.1`                             |                  |
-| [wodby/webgrind]      | [wodby/php]           | `8.1`                             |                  |
-| [wodby/wordpress-php] | [wodby/php]           | `8.5`, `8.4`, `8.3`, `8.2`, `8.1` | `4.x`            |
-| [wodby/wordpress]     | [wodby/wordpress-php] | `8.5`, `8.4`, `8.3`, `8.2`, `8.1` | `4.x`            |
-| [wodby/xhprof]        | [wodby/php]           | `8.1`                             |                  |
-| [wodby/laravel-php]   | [wodby/php]           | `8.5`, `8.4`, `8.3`, `8.2`, `8.1` |                  |
+| Image                 | Upstream (base image) | Versions                   | Stability branch |
+|-----------------------|-----------------------|----------------------------|------------------|
+| [wodby/drupal-php]    | [wodby/php]           | `8.5`, `8.4`, `8.3`, `8.2` | `4.x`            |
+| [wodby/drupal]        | [wodby/drupal-php]    | `8.5`, `8.4`, `8.3`, `8.2` | `4.x`            |
+| [wodby/drupal-cms]    | [wodby/drupal-php]    | `8.4`                      |                  |
+| [wodby/matomo]        | [wodby/php]           | `8.1`                      |                  |
+| [wodby/webgrind]      | [wodby/php]           | `8.1`                      |                  |
+| [wodby/wordpress-php] | [wodby/php]           | `8.5`, `8.4`, `8.3`, `8.2` | `4.x`            |
+| [wodby/wordpress]     | [wodby/wordpress-php] | `8.5`, `8.4`, `8.3`, `8.2` | `4.x`            |
+| [wodby/xhprof]        | [wodby/php]           | `8.1`                      |                  |
+| [wodby/laravel-php]   | [wodby/php]           | `8.5`, `8.4`, `8.3`, `8.2` |                  |
 
 ### Version updates from upstream other than the base image
 
