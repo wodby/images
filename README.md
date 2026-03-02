@@ -74,6 +74,7 @@
 | [wodby/xhprof]        | [longxinH/xhprof]            | `2`                                      |                  |
 | [wodby/solr]          | [apache/solr]                | `9`                                      |                  |
 | [wodby/zookeeper]     | [apache/zookeeper]           | `3.9`                                    |                  |
+| [wodby/openclaw]      | [openclaw/openclaw]          | `2026`                                   |                  |
 
 ### Docker4X projects
 
@@ -123,7 +124,9 @@ Not automated:
 
 [jokkedk/webgrind]: https://github.com/jokkedk/webgrind
 
-[mariadb]: https://github.com/docker-library/mariadb
+[mariadb]: https://github.com/MariaDB/server
+
+[openclaw]: https://github.com/openclaw/openclaw
 
 [matomo-org/matomo]: https://github.com/matomo-org/matomo
 
@@ -220,6 +223,8 @@ Not automated:
 [wodby/openjdk]: https://github.com/wodby/openjdk
 
 [wodby/opensmtpd]: https://github.com/wodby/opensmtpd
+
+[wodby/openclaw]: https://github.com/wodby/openclaw
 
 [wodby/php]: https://github.com/wodby/php
 
