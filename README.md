@@ -9,8 +9,8 @@
 | Image             | Alpine version |
 |-------------------|----------------|
 | [wodby/mariadb]   | `3.22`         |
-| [wodby/nginx]     | `3.22`         |
-| [wodby/opensmtpd] | `3.21`         |
+| [wodby/nginx]     | `3.23`         |
+| [wodby/opensmtpd] | `3.23`         |
 | [wodby/varnish]   | `3.22`         |
 | [wodby/squid]     | `3.17`         |
 
