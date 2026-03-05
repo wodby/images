@@ -11,7 +11,7 @@
 | [wodby/mariadb]   | `3.22`         |
 | [wodby/nginx]     | `3.23`         |
 | [wodby/opensmtpd] | `3.23`         |
-| [wodby/varnish]   | `3.22`         |
+| [wodby/vinyl]     | `3.22`, `3.23` |
 | [wodby/squid]     | `3.17`         |
 
 ### Images based on official images (or forks)
@@ -21,18 +21,18 @@
 - New stability tag released on version update
 - New stability tag released on Alpine Linux update
 
-| Image             | Upstream (base image) | Versions                               |
-|-------------------|-----------------------|----------------------------------------|
-| [wodby/alpine]    | [alpine]              | `3.23`, `3.22`, `3.21`, `3.20`         |
-| [wodby/apache]    | [_/httpd]             | `2.4`                                  |
-| [wodby/memcached] | [_/memcached]         | `1`                                    |
-| [wodby/node]      | [node]                | `24`, `22`, `20`                       |
-| [wodby/php]       | [_/php]               | `8.5`, `8.4`, `8.3`, `8.2`             |
-| [wodby/postgres]  | [_/postgres]          | `18`, `17`, `16`, `15`, `14`           |
+| Image             | Upstream (base image) | Versions                              |
+|-------------------|-----------------------|---------------------------------------|
+| [wodby/alpine]    | [alpine]              | `3.23`, `3.22`, `3.21`, `3.20`        |
+| [wodby/apache]    | [_/httpd]             | `2.4`                                 |
+| [wodby/memcached] | [_/memcached]         | `1`                                   |
+| [wodby/node]      | [node]                | `24`, `22`, `20`                      |
+| [wodby/php]       | [_/php]               | `8.5`, `8.4`, `8.3`, `8.2`            |
+| [wodby/postgres]  | [_/postgres]          | `18`, `17`, `16`, `15`, `14`          |
 | [wodby/python]    | [python]              | `3.14`, `3.13`, `3.12`, `3.11`, `3.10` |
-| [wodby/valkey]    | [valkey/valkey]       | `9.0`, `8.1`, `8.0`, `7.2`             |
-| [wodby/redis]     | [redis]               | `8.4`, `8.2`, `8.0`, `7.4`             |
-| [wodby/ruby]      | [ruby]                | `3.4`, `3.3`, `3.2`                    |
+| [wodby/valkey]    | [valkey/valkey]       | `9.0`, `8.1`, `8.0`, `7.2`            |
+| [wodby/redis]     | [redis]               | `8.6`, `8.4`, `8.2`, `7.4`      |
+| [wodby/ruby]      | [ruby]                | `3.4`, `3.3`, `3.2`                   |
 
 ### Descendant images
 
@@ -68,7 +68,6 @@
 | [wodby/mariadb]       | [mariadb]                    | `11.8`, `11.4`, `11.2`, `10.11`,  `10.6` |                  |
 | [wodby/matomo]        | [matomo-org/matomo]          | `5`                                      |                  |
 | [wodby/nginx]         | [nginx]                      | `1.29`, `1.28`                           |                  |
-| [wodby/varnish]       | [varnishcache/varnish-cache] | `6.0`                                    |                  |
 | [wodby/webgrind]      | [jokkedk/webgrind]           | `1`                                      |                  |
 | [wodby/wordpress]     | [wordpress]                  | `6`                                      | `4.x`            |
 | [wodby/xhprof]        | [longxinH/xhprof]            | `2`                                      |                  |
@@ -105,6 +104,7 @@ Not automated:
 - New stability branches for major stability tags updates
 - [wodby/opensmtpd] (installed from Alpine repository package)
 - [wodby/adminer] not auto-updates for the base image (php:8.4-apache)
+- [wodby/vinul] upstream is outside of github (https://code.vinyl-cache.org/vinyl-cache/vinyl-cache)
 
 [adoptium/containers]: https://github.com/adoptium/containers
 
@@ -147,8 +147,6 @@ Not automated:
 [redis]: https://github.com/docker-library/redis
 
 [ruby]: https://github.com/docker-library/ruby
-
-[varnishcache/varnish-cache]: https://github.com/varnishcache/varnish-cache
 
 [vrana/adminer]: https://github.com/vrana/adminer
 
@@ -238,7 +236,7 @@ Not automated:
 
 [wodby/ruby]: https://github.com/wodby/ruby
 
-[wodby/varnish]: https://github.com/wodby/varnish
+[wodby/vinyl]: https://github.com/wodby/vinyl
 
 [wodby/webgrind]: https://github.com/wodby/webgrind
 
