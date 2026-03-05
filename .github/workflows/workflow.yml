@@ -35,7 +35,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        script: [ mariadb,nginx,opensmtpd,varnish,squid ]
+        script: [ mariadb,nginx,opensmtpd,vinyl,squid ]
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions
