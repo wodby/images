@@ -209,6 +209,31 @@ _git_clone() {
   cd "/tmp/${slug#*/}"
 }
 
+_assert_all_entries_copied() {
+  local source_dir="${1}"
+  local target_dir="${2}"
+  local -a missing_entries=()
+  local entry
+  local name
+
+  while IFS= read -r entry; do
+    name="${entry##*/}"
+
+    if [[ "${name}" == .* ]] || [[ "${name}" == *.md ]]; then
+      continue
+    fi
+
+    if [[ ! -e "${target_dir}/${name}" ]]; then
+      missing_entries+=("${name}")
+    fi
+  done < <(find "${source_dir}" -mindepth 1 -maxdepth 1 | sort)
+
+  if [[ "${#missing_entries[@]}" -gt 0 ]]; then
+    echo >&2 "Failed to copy upstream entries: ${missing_entries[*]}"
+    exit 1
+  fi
+}
+
 _get_base_image() {
   local path
   local base_image
@@ -716,8 +741,9 @@ update_drupal_cms_template() {
   cd /tmp/cms
   latest_ver=$(git show-ref --tags | grep -P -o '(?<=refs/tags/)2\.[0-9]+\.[0-9]+$' | sort -rV | head -n1)
   git checkout "${latest_ver}"
-  rm -r /tmp/drupal-cms-template/assets /tmp/drupal-cms-template/config
+  rm -rf /tmp/drupal-cms-template/assets /tmp/drupal-cms-template/config
   cp -R composer.json assets config /tmp/drupal-cms-template
+  _assert_all_entries_copied /tmp/cms /tmp/drupal-cms-template
   cd /tmp/drupal-cms-template
   git add .
   # Drupal CMS source has no composer.lock file by default.
