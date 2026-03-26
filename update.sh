@@ -716,7 +716,8 @@ update_drupal_cms_template() {
   cd /tmp/cms
   latest_ver=$(git show-ref --tags | grep -P -o '(?<=refs/tags/)2\.[0-9]+\.[0-9]+$' | sort -rV | head -n1)
   git checkout "${latest_ver}"
-  cp -R composer.json /tmp/drupal-cms-template
+  rm -r /tmp/drupal-cms-template/assets /tmp/drupal-cms-template/config
+  cp -R composer.json assets config /tmp/drupal-cms-template
   cd /tmp/drupal-cms-template
   git add .
   # Drupal CMS source has no composer.lock file by default.
