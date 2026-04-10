@@ -746,7 +746,7 @@ update_drupal_cms_template() {
   cd /tmp/cms
   latest_ver=$(git show-ref --tags | grep -P -o '(?<=refs/tags/)2\.[0-9]+\.[0-9]+$' | sort -rV | head -n1)
   git checkout "${latest_ver}"
-  cp -R composer.json /tmp/drupal-cms-template
+  cp -R assets config composer.json /tmp/drupal-cms-template
   _assert_all_entries_copied /tmp/cms /tmp/drupal-cms-template
   cd /tmp/drupal-cms-template
   git add .
