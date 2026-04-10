@@ -698,9 +698,12 @@ update_drupal_vanilla() {
   echo "Updating Drupal 11"
   _git_clone "wodby/drupal-vanilla"
   _git_clone "drupal/recommended-project"
+  apk add --update composer
   latest_ver=$(git show-ref --tags | grep -P -o '(?<=refs/tags/)11\.[0-9]+\.[0-9]+$' | sort -rV | head -n1)
   git checkout "${latest_ver}"
   cp composer.json composer.lock /tmp/drupal-vanilla
+  cd /tmp/drupal-vanilla
+  composer require drush/drush --no-install --ignore-platform-reqs
   _git_commit /tmp/drupal-vanilla "Update Drupal 11"
   git push origin
 
@@ -711,6 +714,8 @@ update_drupal_vanilla() {
   latest_ver=$(git show-ref --tags | grep -P -o '(?<=refs/tags/)10\.[0-9]+\.[0-9]+$' | sort -rV | head -n1)
   git checkout "${latest_ver}"
   cp composer.json composer.lock /tmp/drupal-vanilla
+  cd /tmp/drupal-vanilla
+  composer require drush/drush --no-install --ignore-platform-reqs
   _git_commit /tmp/drupal-vanilla "Update Drupal 10"
   git push origin
 
@@ -747,7 +752,7 @@ update_drupal_cms_template() {
   git add .
   # Drupal CMS source has no composer.lock file by default.
   apk add --update composer
-  composer update --no-install --ignore-platform-reqs
+  composer require drush/drush --no-install --ignore-platform-reqs
   _git_commit /tmp/drupal-cms-template "Update Drupal CMS 2.x"
   git push origin
 }
