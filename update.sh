@@ -29,10 +29,10 @@ _git_commit() {
   local msg="${2}"
 
   cd "${dir}"
-  git update-index -q --refresh
+  git add -A
 
-  if [[ "$(git diff-index --name-only HEAD --)" ]]; then
-    git commit -am "${msg}"
+  if ! git diff --cached --quiet; then
+    git commit -m "${msg}"
   else
     echo 'Nothing to commit'
   fi
@@ -749,7 +749,6 @@ update_drupal_cms_template() {
   cp -R assets config composer.json /tmp/drupal-cms-template
   _assert_all_entries_copied /tmp/cms /tmp/drupal-cms-template
   cd /tmp/drupal-cms-template
-  git add .
   # Drupal CMS source has no composer.lock file by default.
   apk add --update composer
   composer require drush/drush --no-install --ignore-platform-reqs
