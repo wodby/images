@@ -33,6 +33,7 @@
 | [wodby/valkey]    | [valkey/valkey]       | `9.0`, `8.1`, `8.0`, `7.2`             |
 | [wodby/redis]     | [redis]               | `8.6`, `8.4`, `8.2`, `7.4`             |
 | [wodby/ruby]      | [ruby]                | `4.0`, `3.4`, `3.3`                    |
+| [wodby/rabbitmq]  | [rabbitmq]            | `4.2`                                  |
 
 ### Descendant images
 
@@ -57,23 +58,23 @@
 - Minor/patch version updates
 - New stability tag release
 
-| Image                 | Upstream                     | Versions                                 | Stability branch |
-|-----------------------|------------------------------|------------------------------------------|------------------|
-| [wodby/adminer]       | [vrana/adminer]              | `5`                                      |                  |
-| [wodby/cachet]        | [CachetHQ/Cachet]            | `2`                                      |                  |
-| [wodby/drupal]        | [drupal]                     | `11`, `10`                               | `4.x`            |
-| [wodby/drupal-cms]    | [drupal-cms]                 | `2`                                      |                  |
-| [wodby/elasticsearch] | [elastic/elasticsearch]      | `7`                                      |                  |
-| [wodby/kibana]        | [elastic/kibana]             | `7`                                      |                  |
-| [wodby/mariadb]       | [mariadb]                    | `11.8`, `11.4`, `11.2`, `10.11`,  `10.6` |                  |
-| [wodby/matomo]        | [matomo-org/matomo]          | `5`                                      |                  |
-| [wodby/nginx]         | [nginx]                      | `1.29`, `1.28`                           |                  |
-| [wodby/webgrind]      | [jokkedk/webgrind]           | `1`                                      |                  |
-| [wodby/wordpress]     | [wordpress]                  | `6`                                      | `4.x`            |
-| [wodby/xhprof]        | [longxinH/xhprof]            | `2`                                      |                  |
-| [wodby/solr]          | [apache/solr]                | `9`                                      |                  |
-| [wodby/zookeeper]     | [apache/zookeeper]           | `3.9`                                    |                  |
-| [wodby/openclaw]      | [openclaw/openclaw]          | `2026`                                   |                  |
+| Image                 | Upstream                | Versions                                 | Stability branch |
+|-----------------------|-------------------------|------------------------------------------|------------------|
+| [wodby/adminer]       | [vrana/adminer]         | `5`                                      |                  |
+| [wodby/cachet]        | [CachetHQ/Cachet]       | `2`                                      |                  |
+| [wodby/drupal]        | [drupal]                | `11`, `10`                               | `4.x`            |
+| [wodby/drupal-cms]    | [drupal-cms]            | `2`                                      |                  |
+| [wodby/elasticsearch] | [elastic/elasticsearch] | `7`                                      |                  |
+| [wodby/kibana]        | [elastic/kibana]        | `7`                                      |                  |
+| [wodby/mariadb]       | [mariadb]               | `11.8`, `11.4`, `11.2`, `10.11`,  `10.6` |                  |
+| [wodby/matomo]        | [matomo-org/matomo]     | `5`                                      |                  |
+| [wodby/nginx]         | [nginx]                 | `1.29`, `1.28`                           |                  |
+| [wodby/webgrind]      | [jokkedk/webgrind]      | `1`                                      |                  |
+| [wodby/wordpress]     | [wordpress]             | `6`                                      | `4.x`            |
+| [wodby/xhprof]        | [longxinH/xhprof]       | `2`                                      |                  |
+| [wodby/solr]          | [apache/solr]           | `9`                                      |                  |
+| [wodby/zookeeper]     | [apache/zookeeper]      | `3.9`                                    |                  |
+| [wodby/openclaw]      | [openclaw/openclaw]     | `2026`                                   |                  |
 
 ### Docker4X projects
 
@@ -147,6 +148,8 @@ Not automated:
 [redis]: https://github.com/docker-library/redis
 
 [ruby]: https://github.com/docker-library/ruby
+
+[rabbitmq]: https://github.com/docker-library/rabbitmq
 
 [vrana/adminer]: https://github.com/vrana/adminer
 
