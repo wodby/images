@@ -46,7 +46,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        script: [ alpine,apache,memcached,node,php,postgres,python,redis,valkey,ruby ]
+        script: [ alpine,apache,memcached,node,php,postgres,python,redis,valkey,ruby,rabbitmq ]
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions
