@@ -68,7 +68,7 @@
 | [wodby/kibana]        | [elastic/kibana]        | `7`                                      |                  |
 | [wodby/mariadb]       | [mariadb]               | `11.8`, `11.4`, `11.2`, `10.11`,  `10.6` |                  |
 | [wodby/matomo]        | [matomo-org/matomo]     | `5`                                      |                  |
-| [wodby/nginx]         | [nginx]                 | `1.29`, `1.28`                           |                  |
+| [wodby/nginx]         | [nginx]                 | `1.31`, `1.30`                           |                  |
 | [wodby/webgrind]      | [jokkedk/webgrind]      | `1`                                      |                  |
 | [wodby/wordpress]     | [wordpress]             | `6`                                      | `4.x`            |
 | [wodby/xhprof]        | [longxinH/xhprof]       | `2`                                      |                  |
