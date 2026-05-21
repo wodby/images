@@ -276,6 +276,47 @@ _git_clone() {
   cd "/tmp/${slug#*/}"
 }
 
+_install_composer() {
+  local tmp_dir
+  local expected_checksum
+  local actual_checksum
+
+  apk add --no-cache php-cli php-openssl php-phar php-mbstring ca-certificates
+
+  tmp_dir=$(mktemp -d)
+
+  if ! (
+    cd "${tmp_dir}"
+
+    expected_checksum=$(php -r 'copy("https://composer.github.io/installer.sig", "php://stdout");') || {
+      echo >&2 "Failed to fetch Composer installer signature"
+      exit 1
+    }
+
+    php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" || {
+      echo >&2 "Failed to download Composer installer"
+      exit 1
+    }
+
+    actual_checksum=$(php -r "echo hash_file('sha384', 'composer-setup.php');") || {
+      echo >&2 "Failed to calculate Composer installer checksum"
+      exit 1
+    }
+
+    if [[ "${expected_checksum}" != "${actual_checksum}" ]]; then
+      echo >&2 "Composer installer checksum verification failed"
+      exit 1
+    fi
+
+    php composer-setup.php --install-dir=/usr/local/bin --filename=composer
+  ); then
+    rm -rf "${tmp_dir}"
+    return 1
+  fi
+
+  rm -rf "${tmp_dir}"
+}
+
 _assert_all_entries_copied() {
   local source_dir="${1}"
   local target_dir="${2}"
@@ -805,7 +846,7 @@ update_drupal_vanilla() {
   echo "Updating Drupal 11"
   _git_clone "wodby/drupal-vanilla"
   _git_clone "drupal/recommended-project"
-  apk add --update composer
+  _install_composer
   latest_ver=$(git show-ref --tags | grep -P -o '(?<=refs/tags/)11\.[0-9]+\.[0-9]+$' | sort -rV | head -n1 || true)
   if [[ -z "${latest_ver}" ]]; then
     echo >&2 "Failed to detect latest Drupal 11 version"
@@ -814,7 +855,7 @@ update_drupal_vanilla() {
   git checkout "${latest_ver}"
   cp composer.json composer.lock /tmp/drupal-vanilla
   cd /tmp/drupal-vanilla
-  composer require drush/drush --no-install --ignore-platform-reqs
+  composer require --dev drush/drush --no-update --ignore-platform-reqs
   _git_commit /tmp/drupal-vanilla "Update Drupal 11"
   git push origin
 
@@ -830,7 +871,7 @@ update_drupal_vanilla() {
   git checkout "${latest_ver}"
   cp composer.json composer.lock /tmp/drupal-vanilla
   cd /tmp/drupal-vanilla
-  composer require drush/drush --no-install --ignore-platform-reqs
+  composer require --dev drush/drush --no-update --ignore-platform-reqs
   _git_commit /tmp/drupal-vanilla "Update Drupal 10"
   git push origin
 
@@ -848,7 +889,7 @@ update_wordpress_vanilla() {
   echo "Updating WordPress"
   # Drupal CMS source has no composer.lock file by default.
   _git_clone "wodby/wordpress-vanilla"
-  apk add --update composer
+  _install_composer
   composer update --no-install --ignore-platform-reqs
   _git_commit /tmp/wordpress-vanilla "Update WordPress"
   git push origin
@@ -869,8 +910,8 @@ update_drupal_cms_template() {
   _assert_all_entries_copied /tmp/cms /tmp/drupal-cms-template
   cd /tmp/drupal-cms-template
   # Drupal CMS source has no composer.lock file by default.
-  apk add --update composer
-  composer require drush/drush --no-install --ignore-platform-reqs
+  _install_composer
+  composer require --dev drush/drush --no-update --ignore-platform-reqs
   _git_commit /tmp/drupal-cms-template "Update Drupal CMS 2.x"
   git push origin
 }
