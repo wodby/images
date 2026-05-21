@@ -66,12 +66,29 @@ _get_image_tags() {
 _get_timestamp() {
   local repo="${1}"
   local tag="${2}"
+  local namespace
+  local name
+  local url
+  local response
 
-  if [[ ! "${repo}" =~ / ]]; then
-    repo="library/${repo}"
+  if [[ "${repo}" =~ / ]]; then
+    namespace="${repo%/*}"
+    name="${repo#*/}"
+  else
+    namespace="library"
+    name="${repo}"
   fi
 
-  curl -L -s "https://hub.docker.com/v2/repositories/${repo}/tags/${tag}" | jq -r '.last_updated'
+  url="https://hub.docker.com/v2/namespaces/${namespace}/repositories/${name}/tags/${tag}"
+  response=$(curl -fsSL --connect-timeout 10 --max-time 30 --retry 3 "${url}") || {
+    echo >&2 "Failed to fetch Docker Hub tag metadata for ${namespace}/${name}:${tag}"
+    exit 1
+  }
+
+  jq -er '.last_updated' <<<"${response}" || {
+    echo >&2 "Failed to parse Docker Hub tag metadata for ${namespace}/${name}:${tag}"
+    exit 1
+  }
 }
 
 _join_ws() {
