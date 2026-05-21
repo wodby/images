@@ -70,7 +70,7 @@
 | [wodby/matomo]        | [matomo-org/matomo]     | `5`                                      |                  |
 | [wodby/nginx]         | [nginx]                 | `1.31`, `1.30`                           |                  |
 | [wodby/webgrind]      | [jokkedk/webgrind]      | `1`                                      |                  |
-| [wodby/wordpress]     | [wordpress]             | `6`                                      | `4.x`            |
+| [wodby/wordpress]     | [wordpress]             | `7`                                      | `4.x`            |
 | [wodby/xhprof]        | [longxinH/xhprof]       | `2`                                      |                  |
 | [wodby/solr]          | [apache/solr]           | `9`                                      |                  |
 | [wodby/zookeeper]     | [apache/zookeeper]      | `3.9`                                    |                  |
