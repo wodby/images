@@ -909,9 +909,11 @@ update_drupal_cms_template() {
   cp -R assets config composer.json /tmp/drupal-cms-template
   _assert_all_entries_copied /tmp/cms /tmp/drupal-cms-template
   cd /tmp/drupal-cms-template
-  # Drupal CMS source has no composer.lock file by default.
+  # Drupal CMS source has no composer.lock file by default, but this template
+  # repo does and it must be refreshed after copying upstream composer.json.
   _install_composer
   composer require --dev drush/drush --no-update --ignore-platform-reqs
+  composer update --no-install --ignore-platform-reqs
   _git_commit /tmp/drupal-cms-template "Update Drupal CMS 2.x"
   git push origin
 }
