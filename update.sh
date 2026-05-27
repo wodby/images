@@ -856,6 +856,7 @@ update_drupal_vanilla() {
   cp composer.json composer.lock /tmp/drupal-vanilla
   cd /tmp/drupal-vanilla
   composer require --dev drush/drush --no-update --ignore-platform-reqs
+  composer update drush/drush --with-all-dependencies --no-install --ignore-platform-reqs
   _git_commit /tmp/drupal-vanilla "Update Drupal 11"
   git push origin
 
@@ -872,6 +873,7 @@ update_drupal_vanilla() {
   cp composer.json composer.lock /tmp/drupal-vanilla
   cd /tmp/drupal-vanilla
   composer require --dev drush/drush --no-update --ignore-platform-reqs
+  composer update drush/drush --with-all-dependencies --no-install --ignore-platform-reqs
   _git_commit /tmp/drupal-vanilla "Update Drupal 10"
   git push origin
 
