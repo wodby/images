@@ -855,8 +855,10 @@ update_drupal_vanilla() {
   git checkout "${latest_ver}"
   cp composer.json composer.lock /tmp/drupal-vanilla
   cd /tmp/drupal-vanilla
-  composer require --dev drush/drush --no-update --ignore-platform-reqs
-  composer update drush/drush --with-all-dependencies --no-install --ignore-platform-reqs
+  # Upstream Drupal releases can temporarily pin packages that Composer 2.9
+  # blocks during lock refresh. Allow adding the downstream Drush dependency
+  # and lockfile refresh in one step.
+  composer require --dev drush/drush --no-install --ignore-platform-reqs --no-blocking
   _git_commit /tmp/drupal-vanilla "Update Drupal 11"
   git push origin
 
@@ -872,8 +874,7 @@ update_drupal_vanilla() {
   git checkout "${latest_ver}"
   cp composer.json composer.lock /tmp/drupal-vanilla
   cd /tmp/drupal-vanilla
-  composer require --dev drush/drush --no-update --ignore-platform-reqs
-  composer update drush/drush --with-all-dependencies --no-install --ignore-platform-reqs
+  composer require --dev drush/drush --no-install --ignore-platform-reqs --no-blocking
   _git_commit /tmp/drupal-vanilla "Update Drupal 10"
   git push origin
 
@@ -914,7 +915,7 @@ update_drupal_cms_template() {
   # Drupal CMS source has no composer.lock file by default, but this template
   # repo does and it must be refreshed after copying upstream composer.json.
   _install_composer
-  composer update --no-install --ignore-platform-reqs
+  composer update --no-install --ignore-platform-reqs --no-blocking
   _git_commit /tmp/drupal-cms-template "Update Drupal CMS 2.x"
   git push origin
 }
