@@ -389,8 +389,11 @@ _update_versions() {
 
   local minor_update
   local version_key
+  local name_key
 
   IFS=' ' read -r -a arr_versions <<<"${version_list}"
+
+  name_key=$(tr '[:lower:]-' '[:upper:]_' <<<"${name}")
 
   echo "============================"
   echo "Checking for version updates"
@@ -403,11 +406,11 @@ _update_versions() {
     # 1. PHP72: 7.2.8 (or PHP7 depending on the provided version)
     # 2. PHP_VER: 7.2.8
     # 3. version: 7.2.8
-    version_key="${name^^}${version//./}"
+    version_key="${name_key}${version//./}"
     cur_ver=$(grep -oPm1 "(?<=${version_key}: )'?[0-9.]+" .github/workflows/workflow.yml || true)
 
     if [[ -z "${cur_ver}" ]]; then
-      version_key="${name^^}_VER"
+      version_key="${name_key}_VER"
       cur_ver=$(grep -oPm1 "(?<=${version_key}: )'?[0-9.]+" .github/workflows/workflow.yml || true)
     fi
 
@@ -454,7 +457,7 @@ _update_versions() {
         sed -i -E "s/\:${version//\./\\.}\.[0-9.]+(-X\.X\.X)/:${latest_series}\1/g" README.md
       fi
 
-      sed -i -E "s/(${name^^}_VER \?= )${cur_ver}/\1${latest_ver}/" "${dir}/Makefile"
+      sed -i -E "s/(${name_key}_VER \?= )${cur_ver}/\1${latest_ver}/" "${dir}/Makefile"
 
       # Update base image timestamps.
       if [[ -f ".${upstream#*/}" ]]; then
