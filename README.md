@@ -64,8 +64,6 @@
 | [wodby/cachet]        | [CachetHQ/Cachet]       | `2`                                      |                  |
 | [wodby/drupal]        | [drupal]                | `11`, `10`                               | `4.x`            |
 | [wodby/drupal-cms]    | [drupal-cms]            | `2`                                      |                  |
-| [wodby/elasticsearch] | [elastic/elasticsearch] | `7`                                      |                  |
-| [wodby/kibana]        | [elastic/kibana]        | `7`                                      |                  |
 | [wodby/mariadb]       | [mariadb]               | `11.8`, `11.4`, `11.2`, `10.11`,  `10.6` |                  |
 | [wodby/matomo]        | [matomo-org/matomo]     | `5`                                      |                  |
 | [wodby/nginx]         | [nginx]                 | `1.31`, `1.30`                           |                  |
@@ -116,10 +114,6 @@ Not automated:
 [drupal]: https://github.com/drupal/drupal
 
 [drupal-cms]: https://git.drupalcode.org/project/cms
-
-[elastic/elasticsearch]: https://github.com/elastic/elasticsearch
-
-[elastic/kibana]: https://github.com/elastic/kibana
 
 [httpd]: https://github.com/docker-library/httpd
 
@@ -204,12 +198,6 @@ Not automated:
 [wodby/drupal]: https://github.com/wodby/drupal
 
 [wodby/drupal-cms]: https://github.com/wodby/drupal-cms
-
-[wodby/elasticsearch]: https://github.com/wodby/elasticsearch
-
-[_/httpd]: https://hub.docker.com/_/httpd
-
-[wodby/kibana]: https://github.com/wodby/kibana
 
 [wodby/mariadb]: https://github.com/wodby/mariadb
 
