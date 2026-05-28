@@ -233,22 +233,31 @@ _gitlab_get_versions() {
   printf '%s\n' "${versions[@]}"
 }
 
-_packagist_get_versions() {
-  local version="${1}"
-  local package="${2}"
+_packagist_list_versions() {
+  local package="${1}"
   local response
   local pkg_encoded="${package//\//%2F}"
-
-  local -a versions
 
   response=$(curl -fsSL "https://repo.packagist.org/p2/${pkg_encoded}.json") || {
     echo >&2 "Failed to fetch package metadata from Packagist for ${package}"
     exit 1
   }
 
+  jq -r --arg package "${package}" '.packages[$package][]?.version' <<<"${response}" \
+    | sed -E 's/^(v|release-)//' \
+    | grep -oP "^[0-9.]+$" \
+    | sort -rV \
+    | uniq || true
+}
+
+_packagist_get_versions() {
+  local version="${1}"
+  local package="${2}"
+
+  local -a versions
+
   mapfile -t versions < <(
-    jq -r --arg package "${package}" '.packages[$package][]?.version' <<<"${response}" \
-      | grep -oP "^[0-9.]+$" \
+    _packagist_list_versions "${package}" \
       | grep -P "^${version//\./\\.}(\\.|$)" \
       | sort -rV \
       | uniq || true
@@ -260,6 +269,13 @@ _packagist_get_versions() {
   fi
 
   printf '%s\n' "${versions[@]}"
+}
+
+_packagist_has_version() {
+  local version="${1}"
+  local package="${2}"
+
+  _packagist_list_versions "${package}" | grep -qx "${version}"
 }
 
 _url_exists() {
@@ -279,7 +295,7 @@ _release_source_has_version() {
   fi
 
   if [[ "${release_source}" == packagist:* ]]; then
-    _packagist_get_versions "${version}" "${release_source#packagist:}" >/dev/null
+    _packagist_has_version "${version}" "${release_source#packagist:}"
     return 0
   fi
 
