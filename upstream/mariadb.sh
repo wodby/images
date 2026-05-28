@@ -4,4 +4,4 @@ set -e
 
 . ../update.sh
 
-update_from_upstream "wodby/mariadb" "11.8 11.4 10.11 10.6" "github.com/MariaDB/server"
+update_from_upstream "wodby/mariadb" "11.8 11.4 10.11 10.6" "github.com/MariaDB/server" "" "https://archive.mariadb.org/mariadb-{{version}}/source/mariadb-{{version}}.tar.gz"
