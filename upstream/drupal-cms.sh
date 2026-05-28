@@ -4,4 +4,4 @@ set -e
 
 . ../update.sh
 
-update_from_upstream "wodby/drupal-cms" "2" "git.drupalcode.org/project/cms"
+update_from_upstream "wodby/drupal-cms" "2" "git.drupalcode.org/project/cms" "" "packagist:drupal/cms"

@@ -4,4 +4,4 @@ set -e
 
 . ../update.sh
 
-update_from_upstream "wodby/solr" "9" "github.com/apache/solr"
+update_from_upstream "wodby/solr" "9" "github.com/apache/solr" "" "https://downloads.apache.org/solr/solr/{{version}}/solr-{{version}}.tgz"

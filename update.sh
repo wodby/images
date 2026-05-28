@@ -164,7 +164,7 @@ _get_dir() {
   echo "${dir}"
 }
 
-_github_get_latest_ver() {
+_github_get_versions() {
   local version="${1}"
   local slug="${2}"
   local name="${3}"
@@ -188,15 +188,15 @@ _github_get_latest_ver() {
   }
   mapfile -t versions < <(sed -E "s/refs\/tags\/(v|release-|releases\/${name}\/|${name}-)?//" <<<"${refs}" | grep -oP "^[0-9.]+$" | sort -rV || true)
 
-  if [[ "${#versions}" == 0 ]]; then
+  if [[ "${#versions[@]}" == 0 ]]; then
     echo >&2 "Couldn't find latest version in line ${version} of ${slug}."
     exit 1
-  else
-    echo "${versions[0]}"
   fi
+
+  printf '%s\n' "${versions[@]}"
 }
 
-_gitlab_get_latest_ver() {
+_gitlab_get_versions() {
   local version="${1}"
   local url="${2}"
   local encoded_path
@@ -225,25 +225,104 @@ _gitlab_get_latest_ver() {
   }
   mapfile -t versions < <(grep -oP "^[0-9.]+$" <<<"${refs}" | sort -rV || true)
 
-  if [[ "${#versions}" == 0 ]]; then
+  if [[ "${#versions[@]}" == 0 ]]; then
     echo >&2 "Couldn't find latest version in line ${version} of ${url}."
     exit 1
-  else
-    echo "${versions[0]}"
   fi
+
+  printf '%s\n' "${versions[@]}"
+}
+
+_packagist_get_versions() {
+  local version="${1}"
+  local package="${2}"
+  local response
+  local pkg_encoded="${package//\//%2F}"
+
+  local -a versions
+
+  response=$(curl -fsSL "https://repo.packagist.org/p2/${pkg_encoded}.json") || {
+    echo >&2 "Failed to fetch package metadata from Packagist for ${package}"
+    exit 1
+  }
+
+  mapfile -t versions < <(
+    jq -r --arg package "${package}" '.packages[$package][]?.version' <<<"${response}" \
+      | grep -oP "^[0-9.]+$" \
+      | grep -P "^${version//\./\\.}(\\.|$)" \
+      | sort -rV \
+      | uniq || true
+  )
+
+  if [[ "${#versions[@]}" == 0 ]]; then
+    echo >&2 "Couldn't find latest version in line ${version} of ${package} on Packagist."
+    exit 1
+  fi
+
+  printf '%s\n' "${versions[@]}"
+}
+
+_url_exists() {
+  local url="${1}"
+
+  curl -fsSIL --connect-timeout 10 --max-time 30 --retry 3 -o /dev/null "${url}" \
+    || curl -fsSL --connect-timeout 10 --max-time 30 --retry 3 --range 0-0 -o /dev/null "${url}"
+}
+
+_release_source_has_version() {
+  local release_source="${1}"
+  local version="${2}"
+  local url
+
+  if [[ -z "${release_source}" ]]; then
+    return 0
+  fi
+
+  if [[ "${release_source}" == packagist:* ]]; then
+    _packagist_get_versions "${version}" "${release_source#packagist:}" >/dev/null
+    return 0
+  fi
+
+  url="${release_source//\{\{version\}\}/${version}}"
+  _url_exists "${url}"
+}
+
+_release_source_get_latest_ver() {
+  local version="${1}"
+  local release_source="${2}"
+  local -a versions
+
+  if [[ "${release_source}" == packagist:* ]]; then
+    mapfile -t versions < <(_packagist_get_versions "${version}" "${release_source#packagist:}")
+    echo "${versions[0]}"
+    return 0
+  fi
+
+  return 1
 }
 
 _get_latest_version() {
   local upstream="${1%:*}"
   local version="${2}"
   local name="${3}"
+  local release_source="${4:-}"
   local latest_ver
 
-  # Get latest stable version from github.
+  local -a versions
+
+  if [[ -n "${release_source}" ]]; then
+    latest_ver=$(_release_source_get_latest_ver "${version}" "${release_source}" || true)
+    if [[ -n "${latest_ver}" ]]; then
+      echo "${latest_ver}"
+      return 0
+    fi
+  fi
+
+  # Get latest stable versions from upstream.
   if [[ "${upstream}" == "github.com"* ]]; then
-    latest_ver=$(_github_get_latest_ver "${version}" "${upstream/github.com\//}" "${name}")
+    mapfile -t versions < <(_github_get_versions "${version}" "${upstream/github.com\//}" "${name}")
   elif [[ "${upstream}" == "git.drupalcode.org"* ]]; then
-    latest_ver=$(_gitlab_get_latest_ver "${version}" "${upstream}")
+    mapfile -t versions < <(_gitlab_get_versions "${version}" "${upstream}")
   # From docker hub, only patch updates.
   else
     local makefilePath
@@ -259,10 +338,29 @@ _get_latest_version() {
     fi
 
     latest_ver=$(_get_image_tags "${upstream}" "^(${version//\./\\.}\.[0-9.]+)${suffix}")
+    echo "${latest_ver}"
+    return 0
+  fi
+
+  if [[ -n "${release_source}" ]]; then
+    local candidate
+
+    for candidate in "${versions[@]}"; do
+      if _release_source_has_version "${release_source}" "${candidate}"; then
+        latest_ver="${candidate}"
+        break
+      fi
+    done
+  else
+    latest_ver="${versions[0]}"
   fi
 
   if [[ -z "${latest_ver}" ]]; then
-    echo >&2 "Couldn't find latest version of ${version}."
+    if [[ -n "${release_source}" ]]; then
+      echo >&2 "Couldn't find released version in line ${version} from ${release_source}."
+    else
+      echo >&2 "Couldn't find latest version of ${version}."
+    fi
     exit 1
   fi
 
@@ -377,6 +475,7 @@ _update_versions() {
   local upstream="${2%:*}"
   local name="${3}"
   local branch="${4}"
+  local release_source="${5:-}"
 
   local updated=()
   local latest_ver
@@ -431,7 +530,7 @@ _update_versions() {
       fi
     fi
 
-    latest_ver=$(_get_latest_version "${upstream}" "${version}" "${name}")
+    latest_ver=$(_get_latest_version "${upstream}" "${version}" "${name}" "${release_source}")
     latest_series=$(_get_minor_series "${latest_ver}")
     cur_series=$(_get_minor_series "${cur_ver}")
 
@@ -762,10 +861,11 @@ update_from_upstream() {
   local version_list="${2}"
   local upstream="${3%:*}"
   local branch="${4}"
+  local release_source="${5:-}"
 
   _git_clone "${image}"
 
-  _update_versions "${version_list}" "${upstream}" "${image#*/}" "${branch}"
+  _update_versions "${version_list}" "${upstream}" "${image#*/}" "${branch}" "${release_source}"
 }
 
 update_docker4x() {
