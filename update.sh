@@ -282,7 +282,8 @@ _url_exists() {
   local url="${1}"
 
   curl -fsSIL --connect-timeout 10 --max-time 30 --retry 3 -o /dev/null "${url}" \
-    || curl -fsSL --connect-timeout 10 --max-time 30 --retry 3 --range 0-0 -o /dev/null "${url}"
+    || curl -fsSL --connect-timeout 10 --max-time 30 --retry 3 --range 0-0 -o /dev/null "${url}" \
+    || curl -fsSL --connect-timeout 10 --max-time 120 --retry 3 -o /dev/null "${url}"
 }
 
 _release_source_has_version() {
