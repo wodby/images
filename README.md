@@ -23,7 +23,7 @@
 
 | Image             | Upstream (base image) | Versions                               |
 |-------------------|-----------------------|----------------------------------------|
-| [wodby/alpine]    | [alpine]              | `3.23`, `3.22`, `3.21`, `3.20`         |
+| [wodby/alpine]    | [alpine]              | `3.24`, `3.23`, `3.22`, `3.21` |
 | [wodby/apache]    | [_/httpd]             | `2.4`                                  |
 | [wodby/memcached] | [_/memcached]         | `1`                                    |
 | [wodby/node]      | [node]                | `24`, `22`, `20`                       |
