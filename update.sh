@@ -7,9 +7,6 @@ if [[ -n "${DEBUG}" ]]; then
   set -x
 fi
 
-git config --global user.email "${GIT_USER_EMAIL}"
-git config --global user.name "${GIT_USER_NAME}"
-
 urlencode() {
     local length="${#1}"
     local encoded=""
@@ -25,6 +22,22 @@ urlencode() {
     echo "$encoded"
 }
 
+_ensure_git_identity() {
+  local email
+  local name
+
+  email=$(git config --get user.email || true)
+  name=$(git config --get user.name || true)
+
+  if [[ -z "${email}" && -n "${GIT_USER_EMAIL:-}" ]]; then
+    git config --local user.email "${GIT_USER_EMAIL}"
+  fi
+
+  if [[ -z "${name}" && -n "${GIT_USER_NAME:-}" ]]; then
+    git config --local user.name "${GIT_USER_NAME}"
+  fi
+}
+
 _git_commit() {
   local dir="${1}"
   local msg="${2}"
@@ -33,6 +46,7 @@ _git_commit() {
   git add -A
 
   if ! git diff --cached --quiet; then
+    _ensure_git_identity
     git commit -m "${msg}"
   else
     echo 'Nothing to commit'
@@ -142,6 +156,7 @@ _release_tag() {
 
   tag=$(_join_ws "." "${sem_ver[@]}")
 
+  _ensure_git_identity
   git tag -m "${message}" "${tag}"
   git push origin "${tag}"
 }
@@ -598,6 +613,7 @@ _update_versions() {
 
     if [[ -n "${branch}" ]]; then
       git checkout "${branch}"
+      _ensure_git_identity
       git merge --no-edit master
       git push origin
     fi
@@ -695,6 +711,7 @@ _update_timestamps() {
     if [[ "${#ver_with_updated_alpine[@]}" != 0 ]]; then
       # In case there were no new commits but the base image alpine we want to force rebuild latest images against new Alpine.
       if [[ -z "${had_local_commits}" ]]; then
+        _ensure_git_identity
         git commit --allow-empty -m "Rebuild against updated Alpine"
         git push origin
       fi
@@ -752,6 +769,7 @@ _update_base_alpine_image() {
   if [[ -n "${release_tag}" ]]; then
     # In case there were no new commits but the base image was updated we want to force rebuild latest images.
     if [[ -z "${had_local_commits}" ]]; then
+      _ensure_git_identity
       git commit --allow-empty -m "Rebuild against updated Alpine"
       git push origin
     fi
@@ -778,6 +796,7 @@ _update_stability_tag() {
 
   if [[ -n "${branch}" ]]; then
     git checkout "${branch}"
+    _ensure_git_identity
     git merge --no-edit master
   fi
 
@@ -821,6 +840,7 @@ sync_solr_fork() {
   cd /tmp/base-solr
   git remote add upstream "https://github.com/docker-solr/docker-solr"
   git fetch upstream
+  _ensure_git_identity
   git merge --strategy-option ours --no-edit upstream/master
 
   ./tools/update.sh
