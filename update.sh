@@ -382,6 +382,8 @@ _get_latest_version() {
   if [[ -n "${release_source}" ]]; then
     local candidate
 
+    # Use the same release source that image Dockerfiles use for builds, so
+    # upstream update detection only selects versions the build can fetch.
     for candidate in "${versions[@]}"; do
       if _release_source_has_version "${release_source}" "${candidate}"; then
         latest_ver="${candidate}"
