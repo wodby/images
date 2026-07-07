@@ -116,6 +116,25 @@ _get_timestamp() {
   }
 }
 
+_find_timestamp_file() {
+  local base_image="${1%:*}"
+  local fallback="${2:-}"
+  local filename
+
+  filename=".${base_image#*/}"
+  if [[ -f "${filename}" ]]; then
+    echo "${filename}"
+    return 0
+  fi
+
+  if [[ -n "${fallback}" && -f ".${fallback}" ]]; then
+    echo ".${fallback}"
+    return 0
+  fi
+
+  return 1
+}
+
 _join_ws() {
   local IFS=
   local s="${*/#/$1}"
@@ -528,10 +547,12 @@ _update_versions() {
   local minor_update
   local version_key
   local name_key
+  local timestamp_file
 
   IFS=' ' read -r -a arr_versions <<<"${version_list}"
 
   name_key=$(tr '[:lower:]-' '[:upper:]_' <<<"${name}")
+  timestamp_file=$(_find_timestamp_file "${upstream}" "${name}" || true)
 
   echo "============================"
   echo "Checking for version updates"
@@ -598,9 +619,9 @@ _update_versions() {
       sed -i -E "s/(${name_key}_VER \?= )${cur_ver}/\1${latest_ver}/" "${dir}/Makefile"
 
       # Update base image timestamps.
-      if [[ -f ".${upstream#*/}" ]]; then
+      if [[ -n "${timestamp_file}" ]]; then
         latest_timestamp=$(_get_timestamp "${upstream}" "${latest_ver}")
-        sed -i "s/${cur_ver}#.*/${latest_ver}#${latest_timestamp}/" ".${upstream#*/}"
+        sed -i "s/${cur_ver}#.*/${latest_ver}#${latest_timestamp}/" "${timestamp_file}"
       fi
 
       _git_commit ./ "Update ${name} to ${latest_ver}"
@@ -645,10 +666,16 @@ _update_timestamps() {
   local had_local_commits
   local minor_update=""
   local ver_list
+  local timestamp_file
 
   local -a ver_with_updated_alpine
 
   IFS=' ' read -r -a arr_versions <<<"${version_list}"
+  timestamp_file=$(_find_timestamp_file "${base_image}" "${image#*/}" || true)
+  if [[ -z "${timestamp_file}" ]]; then
+    echo >&2 "Failed to find timestamp file"
+    exit 1
+  fi
 
   echo "=============================="
   echo "Checking for timestamp updates"
@@ -661,9 +688,7 @@ _update_timestamps() {
       exit 1
     fi
 
-    local filename="${base_image%:*}"
-    filename=".${filename#*/}"
-    cur_timestamp=$(grep "^${version}" "${filename}" | grep -oP "(?<=#)(.+)$" || true)
+    cur_timestamp=$(grep "^${version}" "${timestamp_file}" | grep -oP "(?<=#)(.+)$" || true)
     if [[ -z "${cur_timestamp}" ]]; then
       echo >&2 "Failed to acquire current timestamp"
       exit 1
@@ -671,7 +696,7 @@ _update_timestamps() {
 
     if [[ "${cur_timestamp}" != "${latest_timestamp}" ]]; then
       echo "Base image has been updated. Triggering rebuild."
-      sed -i "s/${cur_timestamp}/${latest_timestamp}/" "${filename}"
+      sed -i "s/${cur_timestamp}/${latest_timestamp}/" "${timestamp_file}"
       updated=1
 
       # Check for Alpine updates.
