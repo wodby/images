@@ -30,6 +30,7 @@
 | [wodby/php]       | [_/php]               | `8.5`, `8.4`, `8.3`, `8.2`             |
 | [wodby/postgres]  | [_/postgres]          | `18`, `17`, `16`, `15`, `14`           |
 | [wodby/python]    | [python]              | `3.14`, `3.13`, `3.12`, `3.11`, `3.10` |
+| [wodby/go]        | [golang]              | `1.26`, `1.25`                         |
 | [wodby/valkey]    | [valkey/valkey]       | `9.0`, `8.1`, `8.0`, `7.2`             |
 | [wodby/redis]     | [redis]               | `8.6`, `8.4`, `8.2`, `7.4`             |
 | [wodby/ruby]      | [ruby]                | `4.0`, `3.4`, `3.3`                    |
@@ -137,6 +138,8 @@ Not automated:
 
 [python]: https://github.com/docker-library/python
 
+[golang]: https://github.com/docker-library/golang
+
 [valkey]: https://github.com/valkey-io/valkey-container
 
 [redis]: https://github.com/docker-library/redis
@@ -221,6 +224,8 @@ Not automated:
 
 [wodby/python]: https://github.com/wodby/python
 
+[wodby/go]: https://github.com/wodby/go
+
 [wodby/valkey]: https://github.com/wodby/valkey
 
 [wodby/redis]: https://github.com/wodby/redis
@@ -240,4 +245,3 @@ Not automated:
 [wodby/squid]: https://github.com/wodby/squid
 
 [wordpress]: https://github.com/WordPress/WordPress
-
