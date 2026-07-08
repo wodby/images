@@ -68,6 +68,7 @@
 | [wodby/mariadb]       | [mariadb]               | `11.8`, `11.4`, `11.2`, `10.11`,  `10.6` |                  |
 | [wodby/matomo]        | [matomo-org/matomo]     | `5`                                      |                  |
 | [wodby/nginx]         | [nginx]                 | `1.31`, `1.30`                           |                  |
+| [wodby/prometheus]    | [prometheus/prometheus] | `3.13`                                   |                  |
 | [wodby/webgrind]      | [jokkedk/webgrind]      | `1`                                      |                  |
 | [wodby/wordpress]     | [wordpress]             | `7`                                      | `4.x`            |
 | [wodby/xhprof]        | [longxinH/xhprof]       | `2`                                      |                  |
@@ -123,6 +124,8 @@ Not automated:
 [mariadb]: https://github.com/MariaDB/server
 
 [openclaw]: https://github.com/openclaw/openclaw
+
+[prometheus/prometheus]: https://github.com/prometheus/prometheus
 
 [matomo-org/matomo]: https://github.com/matomo-org/matomo
 
@@ -221,6 +224,8 @@ Not automated:
 [wodby/php]: https://github.com/wodby/php
 
 [wodby/postgres]: https://github.com/wodby/postgres
+
+[wodby/prometheus]: https://github.com/wodby/prometheus
 
 [wodby/python]: https://github.com/wodby/python
 
