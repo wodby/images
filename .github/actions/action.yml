@@ -10,15 +10,34 @@ inputs:
 runs:
   using: "composite"
   steps:
+  - name: Prepare update report
+    env:
+      report_file: image-update-reports/${{ inputs.dir }}-${{ inputs.script }}/events.jsonl
+    run: |
+      mkdir -p "$(dirname "${report_file}")"
+      : > "${report_file}"
+    shell: bash
   - name: Run update
     env:
       DEBUG: '1'
       dir: ${{ inputs.dir }}
       script: ${{ inputs.script }}
+      report_file: image-update-reports/${{ inputs.dir }}-${{ inputs.script }}/events.jsonl
     run: |
       set -ex
       docker login -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}"
       docker run -e GITHUB_MACHINE_USER_API_TOKEN -e GITHUB_MACHINE_USER -e GIT_USER_EMAIL -e GIT_USER_NAME -e DEBUG \
+        -e IMAGES_UPDATE_REPORT_FILE="/images/${report_file}" \
+        -e IMAGES_UPDATE_DIR="${dir}" \
+        -e IMAGES_UPDATE_SCRIPT="${script}" \
         --rm -v $PWD:/images -v /var/run/docker.sock:/var/run/docker.sock wodby/docker:dev \
         bash -c "cd /images/${dir} && ./${script}.sh"
     shell: bash
+  - name: Upload update report
+    if: always()
+    uses: actions/upload-artifact@v4
+    with:
+      name: image-update-report-${{ inputs.dir }}-${{ inputs.script }}
+      path: image-update-reports/${{ inputs.dir }}-${{ inputs.script }}
+      if-no-files-found: warn
+      retention-days: 14

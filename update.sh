@@ -38,9 +38,69 @@ _ensure_git_identity() {
   fi
 }
 
+_current_repo_slug() {
+  local url
+  local slug
+
+  url=$(git config --get remote.origin.url || true)
+  slug="${url#https://}"
+  slug="${slug#*@github.com/}"
+  slug="${slug#github.com/}"
+  slug="${slug#git@github.com:}"
+  slug="${slug%.git}"
+
+  if [[ -z "${slug}" || "${slug}" == "${url}" ]]; then
+    slug=$(basename "$(pwd)")
+  fi
+
+  echo "${slug}"
+}
+
+_report_event() {
+  local type="${1}"
+  local repo="${2}"
+  local message="${3}"
+  local version="${4:-}"
+  local previous="${5:-}"
+  local report_dir
+
+  if [[ -z "${IMAGES_UPDATE_REPORT_FILE:-}" ]]; then
+    return 0
+  fi
+
+  if [[ -z "${repo}" ]]; then
+    repo=$(_current_repo_slug)
+  fi
+
+  report_dir=$(dirname "${IMAGES_UPDATE_REPORT_FILE}")
+  mkdir -p "${report_dir}"
+
+  if ! jq -nc \
+    --arg type "${type}" \
+    --arg repo "${repo}" \
+    --arg message "${message}" \
+    --arg version "${version}" \
+    --arg previous "${previous}" \
+    --arg dir "${IMAGES_UPDATE_DIR:-}" \
+    --arg script "${IMAGES_UPDATE_SCRIPT:-}" \
+    '{
+      type: $type,
+      repo: $repo,
+      message: $message,
+      version: $version,
+      previous: $previous,
+      dir: $dir,
+      script: $script,
+      created_at: (now | todateiso8601)
+    }' >> "${IMAGES_UPDATE_REPORT_FILE}"; then
+    echo >&2 "Failed to write update report event"
+  fi
+}
+
 _git_commit() {
   local dir="${1}"
   local msg="${2}"
+  local report_event="${3:-1}"
 
   cd "${dir}"
   git add -A
@@ -48,6 +108,9 @@ _git_commit() {
   if ! git diff --cached --quiet; then
     _ensure_git_identity
     git commit -m "${msg}"
+    if [[ "${report_event}" != "0" ]]; then
+      _report_event "commit" "$(_current_repo_slug)" "${msg}"
+    fi
   else
     echo 'Nothing to commit'
   fi
@@ -178,6 +241,7 @@ _release_tag() {
   _ensure_git_identity
   git tag -m "${message}" "${tag}"
   git push origin "${tag}"
+  _report_event "release_tag" "$(_current_repo_slug)" "${message}" "${tag}"
 }
 
 _get_dir() {
@@ -258,6 +322,52 @@ _gitlab_get_versions() {
     exit 1
   }
   mapfile -t versions < <(grep -oP "^[0-9.]+$" <<<"${refs}" | sort -rV || true)
+
+  if [[ "${#versions[@]}" == 0 ]]; then
+    echo >&2 "Couldn't find latest version in line ${version} of ${url}."
+    exit 1
+  fi
+
+  printf '%s\n' "${versions[@]}"
+}
+
+_git_get_versions() {
+  local version="${1}"
+  local url="${2}"
+  local name="${3}"
+  local tag_prefixes="${4:-}"
+  local refs
+
+  local -a versions
+  local -a prefixes
+
+  IFS=' ' read -r -a prefixes <<<"${tag_prefixes}"
+
+  refs=$(git ls-remote --tags "https://${url}.git") || {
+    echo >&2 "Failed to fetch git tags from ${url}"
+    exit 1
+  }
+
+  mapfile -t versions < <(
+    awk '{print $2}' <<<"${refs}" \
+      | sed -E 's#^refs/tags/##; s#\^\{\}$##' \
+      | while IFS= read -r tag; do
+          tag="${tag#releases/${name}/}"
+          tag="${tag#${name}-}"
+          for prefix in "${prefixes[@]}"; do
+            tag="${tag#${prefix}}"
+          done
+          tag="${tag#release-}"
+          if [[ "${tag}" =~ ^v[0-9] ]]; then
+            tag="${tag#v}"
+          fi
+          printf '%s\n' "${tag}"
+        done \
+      | grep -oP "^[0-9.]+$" \
+      | grep -P "^${version//\./\\.}(\.|$)" \
+      | sort -rV \
+      | uniq || true
+  )
 
   if [[ "${#versions[@]}" == 0 ]]; then
     echo >&2 "Couldn't find latest version in line ${version} of ${url}."
@@ -362,6 +472,7 @@ _get_latest_version() {
   local version="${2}"
   local name="${3}"
   local release_source="${4:-}"
+  local tag_prefixes="${5:-}"
   local latest_ver
 
   local -a versions
@@ -379,6 +490,8 @@ _get_latest_version() {
     mapfile -t versions < <(_github_get_versions "${version}" "${upstream/github.com\//}" "${name}")
   elif [[ "${upstream}" == "git.drupalcode.org"* ]]; then
     mapfile -t versions < <(_gitlab_get_versions "${version}" "${upstream}")
+  elif [[ "${upstream}" == "code.vinyl-cache.org"* ]]; then
+    mapfile -t versions < <(_git_get_versions "${version}" "${upstream}" "${name}" "${tag_prefixes}")
   # From docker hub, only patch updates.
   else
     local makefilePath
@@ -473,6 +586,28 @@ _install_composer() {
   rm -rf "${tmp_dir}"
 }
 
+_get_latest_go_version() {
+  local response
+  local version
+
+  response=$(curl -fsSL --connect-timeout 10 --max-time 30 --retry 3 "https://go.dev/dl/?mode=json") || {
+    echo >&2 "Failed to fetch Go downloads metadata"
+    exit 1
+  }
+
+  version=$(jq -r '[.[] | select(.stable == true)][0].version // ""' <<<"${response}" | sed -E 's/^go//') || {
+    echo >&2 "Failed to parse Go downloads metadata"
+    exit 1
+  }
+
+  if [[ -z "${version}" ]]; then
+    echo >&2 "Failed to find latest stable Go version"
+    exit 1
+  fi
+
+  echo "${version}"
+}
+
 _assert_all_entries_copied() {
   local source_dir="${1}"
   local target_dir="${2}"
@@ -534,6 +669,7 @@ _update_versions() {
   local name="${3}"
   local branch="${4}"
   local release_source="${5:-}"
+  local tag_prefixes="${6:-}"
 
   local updated=()
   local latest_ver
@@ -590,7 +726,7 @@ _update_versions() {
       fi
     fi
 
-    latest_ver=$(_get_latest_version "${upstream}" "${version}" "${name}" "${release_source}")
+    latest_ver=$(_get_latest_version "${upstream}" "${version}" "${name}" "${release_source}" "${tag_prefixes:-}")
     latest_series=$(_get_minor_series "${latest_ver}")
     cur_series=$(_get_minor_series "${cur_ver}")
 
@@ -725,7 +861,7 @@ _update_timestamps() {
   done
 
   if [[ -n "${updated}" ]]; then
-    _git_commit ./ "Rebuild against updated base image"
+    _git_commit ./ "Rebuild against updated base image" "0"
 
     branch_name=$(git rev-parse --abbrev-ref HEAD)
     had_local_commits=""
@@ -740,6 +876,7 @@ _update_timestamps() {
       if [[ -z "${had_local_commits}" ]]; then
         _ensure_git_identity
         git commit --allow-empty -m "Rebuild against updated Alpine"
+        _report_event "commit" "$(_current_repo_slug)" "Rebuild against updated Alpine"
         git push origin
       fi
       ver_list=$(_join_ws ", " "${ver_with_updated_alpine[@]}")
@@ -798,6 +935,7 @@ _update_base_alpine_image() {
     if [[ -z "${had_local_commits}" ]]; then
       _ensure_git_identity
       git commit --allow-empty -m "Rebuild against updated Alpine"
+      _report_event "commit" "$(_current_repo_slug)" "Rebuild against updated Alpine"
       git push origin
     fi
     if [[ "$(_get_minor_series "${current}")" != "$(_get_minor_series "${latest}")" ]]; then
@@ -931,10 +1069,11 @@ update_from_upstream() {
   local upstream="${3%:*}"
   local branch="${4}"
   local release_source="${5:-}"
+  local tag_prefixes="${6:-}"
 
   _git_clone "${image}"
 
-  _update_versions "${version_list}" "${upstream}" "${image#*/}" "${branch}" "${release_source}"
+  _update_versions "${version_list}" "${upstream}" "${image#*/}" "${branch}" "${release_source}" "${tag_prefixes}"
 }
 
 update_docker4x() {
@@ -1012,6 +1151,32 @@ update_docker4x() {
       echo "${name}: stability tag ${current} is already latest"
     fi
   done
+}
+
+update_gotpl_go() {
+  local latest
+  local current
+
+  _git_clone "wodby/gotpl"
+
+  latest=$(_get_latest_go_version)
+  current=$(grep -oPm1 "(?<=go-version: )[0-9.]+" .github/workflows/workflow.yml || true)
+
+  if [[ -z "${current}" ]]; then
+    echo >&2 "Failed to acquire current Go version from gotpl workflow"
+    exit 1
+  fi
+
+  if [[ "${current}" == "${latest}" ]]; then
+    echo "Go ${current} is already the latest stable version"
+    return 0
+  fi
+
+  sed -i -E "s/(go-version: )[0-9.]+/\1${latest}/" .github/workflows/workflow.yml
+
+  _git_commit ./ "Update Go to ${latest}"
+  git push origin
+  _release_tag "Go updated from ${current} to ${latest}" ""
 }
 
 update_drupal_vanilla() {

@@ -69,6 +69,7 @@
 | [wodby/matomo]        | [matomo-org/matomo]     | `5`                                      |                  |
 | [wodby/nginx]         | [nginx]                 | `1.31`, `1.30`                           |                  |
 | [wodby/prometheus]    | [prometheus/prometheus] | `3.13`                                   |                  |
+| [wodby/vinyl]         | [vinyl-cache/vinyl-cache] | `8.0`, `6.0`                             |                  |
 | [wodby/webgrind]      | [jokkedk/webgrind]      | `1`                                      |                  |
 | [wodby/wordpress]     | [wordpress]             | `7`                                      | `4.x`            |
 | [wodby/xhprof]        | [longxinH/xhprof]       | `2`                                      |                  |
@@ -97,6 +98,14 @@ Update images stability tags
 | [wodby/wordpress-vanilla]   |          |
 | [wodby/drupal-cms-template] | 2        |
 
+### Tooling projects
+
+Update runtime versions.
+
+| Project       | Runtime |
+|---------------|---------|
+| [wodby/gotpl] | Go      |
+
 Not automated:
 
 - Adding new minor/major version
@@ -105,7 +114,6 @@ Not automated:
 - New stability branches for major stability tags updates
 - [wodby/opensmtpd] (installed from Alpine repository package)
 - [wodby/adminer] not auto-updates for the base image (php:8.4-apache)
-- [wodby/vinul] upstream is outside of github (https://code.vinyl-cache.org/vinyl-cache/vinyl-cache)
 
 [adoptium/containers]: https://github.com/adoptium/containers
 
@@ -117,13 +125,13 @@ Not automated:
 
 [drupal-cms]: https://git.drupalcode.org/project/cms
 
-[httpd]: https://github.com/docker-library/httpd
+[_/httpd]: https://hub.docker.com/_/httpd
 
 [jokkedk/webgrind]: https://github.com/jokkedk/webgrind
 
 [mariadb]: https://github.com/MariaDB/server
 
-[openclaw]: https://github.com/openclaw/openclaw
+[openclaw/openclaw]: https://github.com/openclaw/openclaw
 
 [prometheus/prometheus]: https://github.com/prometheus/prometheus
 
@@ -177,6 +185,8 @@ Not automated:
 
 [valkey/valkey]: https://hub.docker.com/r/valkey/valkey
 
+[vinyl-cache/vinyl-cache]: https://code.vinyl-cache.org/vinyl-cache/vinyl-cache
+
 [wodby/cachet]: https://github.com/wodby/cachet
 
 [wodby/docker4drupal]: https://github.com/wodby/docker4drupal
@@ -190,6 +200,8 @@ Not automated:
 [wodby/docker4wordpress]: https://github.com/wodby/docker4wordpress
 
 [wodby/docker4laravel]: https://github.com/wodby/docker4laravel
+
+[wodby/gotpl]: https://github.com/wodby/gotpl
 
 [wodby/drupal-php]: https://github.com/wodby/drupal-php
 
@@ -236,6 +248,8 @@ Not automated:
 [wodby/redis]: https://github.com/wodby/redis
 
 [wodby/ruby]: https://github.com/wodby/ruby
+
+[wodby/rabbitmq]: https://github.com/wodby/rabbitmq
 
 [wodby/vinyl]: https://github.com/wodby/vinyl
 

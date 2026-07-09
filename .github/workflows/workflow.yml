@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        script: [ wordpress-vanilla,drupal-vanilla,drupal-cms-template ]
+        script: [ wordpress-vanilla,drupal-vanilla,drupal-cms-template,gotpl ]
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions
@@ -68,7 +68,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        script: [ adminer,cachet,drupal,mariadb,matomo,nginx,webgrind,wordpress,xhprof,drupal-cms,solr,zookeeper,openclaw,prometheus ]
+        script: [ adminer,cachet,drupal,mariadb,matomo,nginx,webgrind,wordpress,xhprof,drupal-cms,solr,zookeeper,openclaw,prometheus,vinyl ]
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions
@@ -86,3 +86,57 @@ jobs:
         with:
           dir: docker4x
           script: ${{ matrix.script }}
+  notify:
+    name: Notify Report Events
+    needs:
+      - repos
+      - alpine
+      - images
+      - stability-tags
+      - upstream
+      - docker4x
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Download Report Artifacts
+        id: download-reports
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          path: reports
+
+      - name: Generate Image Update Report
+        run: |
+          python scripts/image_update_report.py \
+            --readme README.md \
+            --events-dir reports \
+            --output-dir image-update-report
+
+      - name: Upload Consolidated Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: image-update-report
+          path: image-update-report
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Send Email Digest
+        env:
+          REPORT_EMAIL_TO: ${{ secrets.REPORT_EMAIL_TO }}
+          REPORT_EMAIL_FROM: ${{ secrets.REPORT_EMAIL_FROM }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          SMTP_SSL: ${{ secrets.SMTP_SSL }}
+          SMTP_STARTTLS: ${{ secrets.SMTP_STARTTLS }}
+        run: |
+          python scripts/image_report_email.py image-update-report \
+            --run-url "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+            --event "${{ github.event_name }}" \
+            --sha "${{ github.sha }}" \
+            --workflow-result "repos=${{ needs.repos.result }}, alpine=${{ needs.alpine.result }}, images=${{ needs.images.result }}, stability-tags=${{ needs['stability-tags'].result }}, upstream=${{ needs.upstream.result }}, docker4x=${{ needs.docker4x.result }}" \
+            --artifact-result "${{ steps.download-reports.outcome }}"
