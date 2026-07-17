@@ -4,4 +4,4 @@ set -e
 
 . ../update.sh
 
-update_from_base_image "wodby/rabbitmq" "4.2"
+update_from_base_image "wodby/rabbitmq" "4.3 4.2"

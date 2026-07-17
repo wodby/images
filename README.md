@@ -34,7 +34,7 @@
 | [wodby/valkey]    | [valkey/valkey]       | `9.0`, `8.1`, `8.0`, `7.2`             |
 | [wodby/redis]     | [redis]               | `8.6`, `8.4`, `8.2`, `7.4`             |
 | [wodby/ruby]      | [ruby]                | `4.0`, `3.4`, `3.3`                    |
-| [wodby/rabbitmq]  | [rabbitmq]            | `4.2`                                  |
+| [wodby/rabbitmq]  | [rabbitmq]            | `4.3`, `4.2`                           |
 
 ### Descendant images
 
