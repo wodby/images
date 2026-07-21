@@ -26,7 +26,7 @@
 | [wodby/alpine]    | [alpine]              | `3.24`, `3.23`, `3.22`, `3.21` |
 | [wodby/apache]    | [_/httpd]             | `2.4`                                  |
 | [wodby/memcached] | [_/memcached]         | `1`                                    |
-| [wodby/node]      | [node]                | `24`, `22`, `20`                       |
+| [wodby/node]      | [node]                | `26`, `24`, `22`                       |
 | [wodby/php]       | [_/php]               | `8.5`, `8.4`, `8.3`, `8.2`             |
 | [wodby/postgres]  | [_/postgres]          | `18`, `17`, `16`, `15`, `14`           |
 | [wodby/python]    | [python]              | `3.14`, `3.13`, `3.12`, `3.11`, `3.10` |

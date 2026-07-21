@@ -4,4 +4,4 @@ set -e
 
 . ../update.sh
 
-update_from_base_image "wodby/node" "24 22 20"
+update_from_base_image "wodby/node" "26 24 22"
