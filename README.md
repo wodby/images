@@ -92,11 +92,27 @@ Update images stability tags
 
 ### Build templates
 
-| Project                     | Versions |
-|-----------------------------|----------|
-| [wodby/drupal-vanilla]      | 11 10 7  |
-| [wodby/wordpress-vanilla]   |          |
-| [wodby/drupal-cms-template] | 2        |
+Upstream-derived templates retain their specialized synchronization logic.
+Application boilerplates receive compatible lockfile updates only after their
+tests and builds pass against the oldest and newest supported Wodby runtimes.
+Dependency manifest constraints remain manual. The boilerplate job matrix and
+runtime validation profiles are generated from [`boilerplates.json`](boilerplates.json).
+
+| Project                           | Update source                 |
+|-----------------------------------|-------------------------------|
+| [wodby/drupal-vanilla]            | Drupal 11, 10, and 7 upstream |
+| [wodby/wordpress-vanilla]         | Composer lockfile             |
+| [wodby/drupal-cms-template]       | Drupal CMS 2 upstream         |
+| [wodby/python-boilerplate]        | uv lockfile                   |
+| [wodby/django-boilerplate]        | uv lockfile                   |
+| [wodby/fastapi-boilerplate]       | uv lockfile                   |
+| [wodby/flask-boilerplate]         | uv lockfile                   |
+| [wodby/ruby-boilerplate]          | Bundler lockfile              |
+| [wodby/rails-boilerplate]         | Bundler lockfile              |
+| [wodby/expressjs-boilerplate]     | npm lockfile                  |
+| [wodby/nextjs-boilerplate]        | npm lockfile                  |
+| [wodby/react-boilerplate]         | npm lockfile                  |
+| [wodby/php-package-boilerplate]   | Composer lockfile             |
 
 ### Tooling projects
 
@@ -208,6 +224,26 @@ Not automated:
 [wodby/drupal-cms-template]: https://github.com/wodby/drupal-cms-template
 
 [wodby/drupal-vanilla]: https://github.com/wodby/drupal-vanilla
+
+[wodby/django-boilerplate]: https://github.com/wodby/django-boilerplate
+
+[wodby/expressjs-boilerplate]: https://github.com/wodby/expressjs-boilerplate
+
+[wodby/fastapi-boilerplate]: https://github.com/wodby/fastapi-boilerplate
+
+[wodby/flask-boilerplate]: https://github.com/wodby/flask-boilerplate
+
+[wodby/nextjs-boilerplate]: https://github.com/wodby/nextjs-boilerplate
+
+[wodby/php-package-boilerplate]: https://github.com/wodby/php-package-boilerplate
+
+[wodby/python-boilerplate]: https://github.com/wodby/python-boilerplate
+
+[wodby/rails-boilerplate]: https://github.com/wodby/rails-boilerplate
+
+[wodby/react-boilerplate]: https://github.com/wodby/react-boilerplate
+
+[wodby/ruby-boilerplate]: https://github.com/wodby/ruby-boilerplate
 
 [wodby/wordpress-vanilla]: https://github.com/wodby/wordpress-vanilla
 

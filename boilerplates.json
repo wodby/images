@@ -1,0 +1,95 @@
+{
+  "version": 1,
+  "boilerplates": [
+    {
+      "name": "python-boilerplate",
+      "repo": "wodby/python-boilerplate",
+      "ecosystem": "uv",
+      "profile": "python",
+      "update_image": "wodby/python:3.14",
+      "validation_images": ["wodby/python:3.10", "wodby/python:3.14"],
+      "allowed_changes": ["uv.lock"]
+    },
+    {
+      "name": "django-boilerplate",
+      "repo": "wodby/django-boilerplate",
+      "ecosystem": "uv",
+      "profile": "django",
+      "update_image": "wodby/python:3.14",
+      "validation_images": ["wodby/python:3.10", "wodby/python:3.14"],
+      "allowed_changes": ["uv.lock"]
+    },
+    {
+      "name": "fastapi-boilerplate",
+      "repo": "wodby/fastapi-boilerplate",
+      "ecosystem": "uv",
+      "profile": "pytest",
+      "update_image": "wodby/python:3.14",
+      "validation_images": ["wodby/python:3.10", "wodby/python:3.14"],
+      "allowed_changes": ["uv.lock"]
+    },
+    {
+      "name": "flask-boilerplate",
+      "repo": "wodby/flask-boilerplate",
+      "ecosystem": "uv",
+      "profile": "pytest",
+      "update_image": "wodby/python:3.14",
+      "validation_images": ["wodby/python:3.10", "wodby/python:3.14"],
+      "allowed_changes": ["uv.lock"]
+    },
+    {
+      "name": "ruby-boilerplate",
+      "repo": "wodby/ruby-boilerplate",
+      "ecosystem": "bundler",
+      "profile": "ruby",
+      "update_image": "wodby/ruby:4.0",
+      "validation_images": ["wodby/ruby:3.3", "wodby/ruby:4.0"],
+      "allowed_changes": ["Gemfile.lock"]
+    },
+    {
+      "name": "rails-boilerplate",
+      "repo": "wodby/rails-boilerplate",
+      "ecosystem": "bundler",
+      "profile": "rails",
+      "update_image": "wodby/ruby:4.0",
+      "validation_images": ["wodby/ruby:3.3", "wodby/ruby:4.0"],
+      "allowed_changes": ["Gemfile.lock"]
+    },
+    {
+      "name": "expressjs-boilerplate",
+      "repo": "wodby/expressjs-boilerplate",
+      "ecosystem": "npm",
+      "profile": "expressjs",
+      "update_image": "wodby/node:26",
+      "validation_images": ["wodby/node:22", "wodby/node:26"],
+      "allowed_changes": ["package-lock.json"]
+    },
+    {
+      "name": "nextjs-boilerplate",
+      "repo": "wodby/nextjs-boilerplate",
+      "ecosystem": "npm",
+      "profile": "npm-build",
+      "update_image": "wodby/node:26",
+      "validation_images": ["wodby/node:22", "wodby/node:26"],
+      "allowed_changes": ["package-lock.json"]
+    },
+    {
+      "name": "react-boilerplate",
+      "repo": "wodby/react-boilerplate",
+      "ecosystem": "npm",
+      "profile": "npm-build",
+      "update_image": "wodby/node:26",
+      "validation_images": ["wodby/node:22", "wodby/node:26"],
+      "allowed_changes": ["package-lock.json"]
+    },
+    {
+      "name": "php-package-boilerplate",
+      "repo": "wodby/php-package-boilerplate",
+      "ecosystem": "composer",
+      "profile": "phpunit",
+      "update_image": "wodby/php:8.5",
+      "validation_images": ["wodby/php:8.3", "wodby/php:8.5"],
+      "allowed_changes": ["composer.lock"]
+    }
+  ]
+}
