@@ -38,6 +38,15 @@
       "allowed_changes": ["uv.lock"]
     },
     {
+      "name": "go-boilerplate",
+      "repo": "wodby/go-boilerplate",
+      "ecosystem": "go",
+      "profile": "go",
+      "update_image": "wodby/go:1.26",
+      "validation_images": ["wodby/go:1.25", "wodby/go:1.26"],
+      "allowed_changes": ["go.mod", "go.sum"]
+    },
+    {
       "name": "ruby-boilerplate",
       "repo": "wodby/ruby-boilerplate",
       "ecosystem": "bundler",

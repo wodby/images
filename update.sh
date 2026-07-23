@@ -783,6 +783,30 @@ _validate_composer_boilerplate() {
   done < <(jq -r '.[]' <<<"${validation_images}")
 }
 
+_update_go_boilerplate() {
+  local update_image="${1}"
+  local host_repo_dir="${2}"
+
+  _boilerplate_run "${update_image}" "${host_repo_dir}" go get -u ./...
+  _boilerplate_run "${update_image}" "${host_repo_dir}" go mod tidy
+}
+
+_validate_go_boilerplate() {
+  local name="${1}"
+  local profile="${2}"
+  local repo_dir="${3}"
+  local host_repo_dir="${4}"
+  local validation_images="${5}"
+  local image
+
+  while IFS= read -r image; do
+    _boilerplate_run "${image}" "${host_repo_dir}" go mod verify
+    _boilerplate_run "${image}" "${host_repo_dir}" go test ./...
+    _boilerplate_run "${image}" "${host_repo_dir}" go vet ./...
+    _boilerplate_build "${name}" "${profile}" "${image}" "${repo_dir}"
+  done < <(jq -r '.[]' <<<"${validation_images}")
+}
+
 _set_boilerplate_push_origin() {
   local repo_dir="${1}"
   local slug="${2}"
@@ -858,6 +882,9 @@ update_boilerplate_dependencies() (
     composer)
       _update_composer_boilerplate "${update_image}" "${host_repo_dir}"
       ;;
+    go)
+      _update_go_boilerplate "${update_image}" "${host_repo_dir}"
+      ;;
     *)
       echo >&2 "Unsupported boilerplate ecosystem: ${ecosystem}"
       return 1
@@ -887,6 +914,10 @@ update_boilerplate_dependencies() (
       ;;
     composer)
       _validate_composer_boilerplate "${host_repo_dir}" "${validation_images}"
+      ;;
+    go)
+      _validate_go_boilerplate "${name}" "${profile}" "${repo_dir}" \
+        "${host_repo_dir}" "${validation_images}"
       ;;
   esac
 

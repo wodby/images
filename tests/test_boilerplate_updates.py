@@ -15,6 +15,7 @@ EXPECTED_BOILERPLATES = {
     "expressjs-boilerplate",
     "fastapi-boilerplate",
     "flask-boilerplate",
+    "go-boilerplate",
     "nextjs-boilerplate",
     "php-package-boilerplate",
     "python-boilerplate",
@@ -23,9 +24,10 @@ EXPECTED_BOILERPLATES = {
     "ruby-boilerplate",
 }
 
-EXPECTED_LOCKFILES = {
+EXPECTED_DEPENDENCY_FILES = {
     "bundler": ["Gemfile.lock"],
     "composer": ["composer.lock"],
+    "go": ["go.mod", "go.sum"],
     "npm": ["package-lock.json"],
     "uv": ["uv.lock"],
 }
@@ -33,6 +35,7 @@ EXPECTED_LOCKFILES = {
 EXPECTED_PROFILES = {
     "django",
     "expressjs",
+    "go",
     "npm-build",
     "phpunit",
     "pytest",
@@ -55,15 +58,15 @@ class BoilerplateConfigTest(unittest.TestCase):
         self.assertEqual(len(names), len(set(names)))
         self.assertEqual(set(names), EXPECTED_BOILERPLATES)
 
-    def test_entries_use_supported_profiles_and_lockfiles(self):
+    def test_entries_use_supported_profiles_and_dependency_files(self):
         for entry in self.entries:
             with self.subTest(boilerplate=entry["name"]):
                 self.assertEqual(entry["repo"], f"wodby/{entry['name']}")
-                self.assertIn(entry["ecosystem"], EXPECTED_LOCKFILES)
+                self.assertIn(entry["ecosystem"], EXPECTED_DEPENDENCY_FILES)
                 self.assertIn(entry["profile"], EXPECTED_PROFILES)
                 self.assertEqual(
                     entry["allowed_changes"],
-                    EXPECTED_LOCKFILES[entry["ecosystem"]],
+                    EXPECTED_DEPENDENCY_FILES[entry["ecosystem"]],
                 )
                 self.assertTrue(entry["update_image"].startswith("wodby/"))
                 self.assertGreaterEqual(len(entry["validation_images"]), 2)
@@ -114,7 +117,7 @@ class AllowedChangesTest(unittest.TestCase):
         subprocess.run(["git", "-C", str(temp_dir), "commit", "-qm", "Initial"], check=True)
         return temp_dir
 
-    def test_allows_configured_lockfile(self):
+    def test_allows_configured_dependency_file(self):
         repo = self.make_repo()
         (repo / "uv.lock").write_text("new\n")
 

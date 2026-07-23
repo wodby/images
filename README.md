@@ -93,10 +93,12 @@ Update images stability tags
 ### Build templates
 
 Upstream-derived templates retain their specialized synchronization logic.
-Application boilerplates receive compatible lockfile updates only after their
-tests and builds pass against the oldest and newest supported Wodby runtimes.
-Dependency manifest constraints remain manual. The boilerplate job matrix and
-runtime validation profiles are generated from [`boilerplates.json`](boilerplates.json).
+Application boilerplates receive compatible dependency updates only after
+their tests and builds pass against the oldest and newest supported Wodby
+runtimes. Lockfile-based projects keep dependency manifest constraints manual;
+Go modules are updated within their current major module paths. The boilerplate
+job matrix and runtime validation profiles are generated from
+[`boilerplates.json`](boilerplates.json).
 
 | Project                           | Update source                 |
 |-----------------------------------|-------------------------------|
@@ -107,6 +109,7 @@ runtime validation profiles are generated from [`boilerplates.json`](boilerplate
 | [wodby/django-boilerplate]        | uv lockfile                   |
 | [wodby/fastapi-boilerplate]       | uv lockfile                   |
 | [wodby/flask-boilerplate]         | uv lockfile                   |
+| [wodby/go-boilerplate]            | Go modules                    |
 | [wodby/ruby-boilerplate]          | Bundler lockfile              |
 | [wodby/rails-boilerplate]         | Bundler lockfile              |
 | [wodby/expressjs-boilerplate]     | npm lockfile                  |
@@ -232,6 +235,8 @@ Not automated:
 [wodby/fastapi-boilerplate]: https://github.com/wodby/fastapi-boilerplate
 
 [wodby/flask-boilerplate]: https://github.com/wodby/flask-boilerplate
+
+[wodby/go-boilerplate]: https://github.com/wodby/go-boilerplate
 
 [wodby/nextjs-boilerplate]: https://github.com/wodby/nextjs-boilerplate
 
