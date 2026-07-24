@@ -90,19 +90,6 @@ Update images stability tags
 | [wodby/docker4wordpress] |
 | [wodby/docker4laravel]   |
 
-### Build templates
-
-Generic application boilerplate dependency updates, runtime validation
-profiles, and the boilerplate catalog are maintained in
-[wodby/boilerplates]. This repository retains only the specialized
-upstream-synchronization jobs.
-
-| Project                     | Update source                 |
-|-----------------------------|-------------------------------|
-| [wodby/drupal-vanilla]      | Drupal 11, 10, and 7 upstream |
-| [wodby/wordpress-vanilla]   | Composer lockfile             |
-| [wodby/drupal-cms-template] | Drupal CMS 2 upstream         |
-
 ### Tooling projects
 
 Update runtime versions.
@@ -209,14 +196,6 @@ Not automated:
 [wodby/gotpl]: https://github.com/wodby/gotpl
 
 [wodby/drupal-php]: https://github.com/wodby/drupal-php
-
-[wodby/drupal-cms-template]: https://github.com/wodby/drupal-cms-template
-
-[wodby/drupal-vanilla]: https://github.com/wodby/drupal-vanilla
-
-[wodby/boilerplates]: https://github.com/wodby/boilerplates
-
-[wodby/wordpress-vanilla]: https://github.com/wodby/wordpress-vanilla
 
 [wodby/laravel-php]: https://github.com/wodby/laravel-php
 

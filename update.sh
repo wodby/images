@@ -548,47 +548,6 @@ _git_clone() {
   cd "/tmp/${slug#*/}"
 }
 
-_install_composer() {
-  local tmp_dir
-  local expected_checksum
-  local actual_checksum
-
-  apk add --no-cache php-cli php-openssl php-phar php-mbstring ca-certificates
-
-  tmp_dir=$(mktemp -d)
-
-  if ! (
-    cd "${tmp_dir}"
-
-    expected_checksum=$(php -r 'copy("https://composer.github.io/installer.sig", "php://stdout");') || {
-      echo >&2 "Failed to fetch Composer installer signature"
-      exit 1
-    }
-
-    php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" || {
-      echo >&2 "Failed to download Composer installer"
-      exit 1
-    }
-
-    actual_checksum=$(php -r "echo hash_file('sha384', 'composer-setup.php');") || {
-      echo >&2 "Failed to calculate Composer installer checksum"
-      exit 1
-    }
-
-    if [[ "${expected_checksum}" != "${actual_checksum}" ]]; then
-      echo >&2 "Composer installer checksum verification failed"
-      exit 1
-    fi
-
-    php composer-setup.php --install-dir=/usr/local/bin --filename=composer
-  ); then
-    rm -rf "${tmp_dir}"
-    return 1
-  fi
-
-  rm -rf "${tmp_dir}"
-}
-
 _get_latest_go_version() {
   local response
   local version
@@ -609,31 +568,6 @@ _get_latest_go_version() {
   fi
 
   echo "${version}"
-}
-
-_assert_all_entries_copied() {
-  local source_dir="${1}"
-  local target_dir="${2}"
-  local -a missing_entries=()
-  local entry
-  local name
-
-  while IFS= read -r entry; do
-    name="${entry##*/}"
-
-    if [[ "${name}" == .* ]] || [[ "${name}" == *.md ]] || [[ "${name}" == *.txt ]]; then
-      continue
-    fi
-
-    if [[ ! -e "${target_dir}/${name}" ]]; then
-      missing_entries+=("${name}")
-    fi
-  done < <(find "${source_dir}" -mindepth 1 -maxdepth 1 | sort)
-
-  if [[ "${#missing_entries[@]}" -gt 0 ]]; then
-    echo >&2 "Failed to copy upstream entries: ${missing_entries[*]}"
-    exit 1
-  fi
 }
 
 _get_base_image() {
@@ -1180,82 +1114,4 @@ update_gotpl_go() {
   _git_commit ./ "Update Go to ${latest}"
   git push origin
   _release_tag "Go updated from ${current} to ${latest}" ""
-}
-
-update_drupal_vanilla() {
-  echo "Updating Drupal 11"
-  _git_clone "wodby/drupal-vanilla"
-  _git_clone "drupal/recommended-project"
-  _install_composer
-  latest_ver=$(git show-ref --tags | grep -P -o '(?<=refs/tags/)11\.[0-9]+\.[0-9]+$' | sort -rV | head -n1 || true)
-  if [[ -z "${latest_ver}" ]]; then
-    echo >&2 "Failed to detect latest Drupal 11 version"
-    exit 1
-  fi
-  git checkout "${latest_ver}"
-  cp composer.json composer.lock /tmp/drupal-vanilla
-  cd /tmp/drupal-vanilla
-  # Upstream Drupal releases can temporarily pin packages that Composer 2.9
-  # blocks during lock refresh. Allow adding the downstream Drush dependency
-  # and lockfile refresh in one step.
-  composer require --dev drush/drush --no-install --ignore-platform-reqs --no-security-blocking
-  _git_commit /tmp/drupal-vanilla "Update Drupal 11"
-  git push origin
-
-  echo "Updating Drupal 10"
-  cd /tmp/drupal-vanilla
-  git checkout 10.x
-  cd /tmp/recommended-project
-  latest_ver=$(git show-ref --tags | grep -P -o '(?<=refs/tags/)10\.[0-9]+\.[0-9]+$' | sort -rV | head -n1 || true)
-  if [[ -z "${latest_ver}" ]]; then
-    echo >&2 "Failed to detect latest Drupal 10 version"
-    exit 1
-  fi
-  git checkout "${latest_ver}"
-  cp composer.json composer.lock /tmp/drupal-vanilla
-  cd /tmp/drupal-vanilla
-  composer require --dev drush/drush --no-install --ignore-platform-reqs --no-security-blocking
-  _git_commit /tmp/drupal-vanilla "Update Drupal 10"
-  git push origin
-
-  echo "Updating Drupal 7"
-  cd /tmp/drupal-vanilla
-  git checkout 7.x
-  _git_clone "drupal-composer/drupal-project"
-  git checkout 7.x
-  cp -R composer.json drush scripts phpunit.xml.dist /tmp/drupal-vanilla
-  _git_commit /tmp/drupal-vanilla "Update Drupal 7"
-  git push origin
-}
-
-update_wordpress_vanilla() {
-  echo "Updating WordPress"
-  # Drupal CMS source has no composer.lock file by default.
-  _git_clone "wodby/wordpress-vanilla"
-  _install_composer
-  composer update --no-install --ignore-platform-reqs
-  _git_commit /tmp/wordpress-vanilla "Update WordPress"
-  git push origin
-}
-
-update_drupal_cms_template() {
-  echo "Updating Drupal CMS 2.x template"
-  _git_clone "wodby/drupal-cms-template"
-  git clone "https://git.drupalcode.org/project/cms.git" /tmp/cms
-  cd /tmp/cms
-  latest_ver=$(git show-ref --tags | grep -P -o '(?<=refs/tags/)2\.[0-9]+\.[0-9]+$' | sort -rV | head -n1 || true)
-  if [[ -z "${latest_ver}" ]]; then
-    echo >&2 "Failed to detect latest Drupal CMS 2 version"
-    exit 1
-  fi
-  git checkout "${latest_ver}"
-  cp -R assets config composer.json /tmp/drupal-cms-template
-  _assert_all_entries_copied /tmp/cms /tmp/drupal-cms-template
-  cd /tmp/drupal-cms-template
-  # Drupal CMS source has no composer.lock file by default, but this template
-  # repo does and it must be refreshed after copying upstream composer.json.
-  _install_composer
-  composer update --no-install --ignore-platform-reqs --no-security-blocking
-  _git_commit /tmp/drupal-cms-template "Update Drupal CMS 2.x"
-  git push origin
 }

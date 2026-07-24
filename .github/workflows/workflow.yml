@@ -20,13 +20,13 @@ env:
   GIT_USER_NAME: ${{ secrets.GIT_USER_NAME }}
 
 jobs:
-  repos:
+  tooling:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        script: [ wordpress-vanilla,drupal-vanilla,drupal-cms-template,gotpl ]
+        script: [ gotpl ]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: ./.github/actions
         with:
           dir: repos
@@ -37,7 +37,7 @@ jobs:
       matrix:
         script: [ mariadb,nginx,opensmtpd,vinyl,squid ]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: ./.github/actions
         with:
           dir: alpine
@@ -48,7 +48,7 @@ jobs:
       matrix:
         script: [ alpine,apache,memcached,node,php,postgres,python,go,redis,valkey,ruby,rabbitmq ]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: ./.github/actions
         with:
           dir: images
@@ -59,7 +59,7 @@ jobs:
       matrix:
         script: [ drupal-php,wordpress-php,matomo-php,webgrind-php,laravel-php,drupal,wordpress,xhprof,drupal-cms ]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: ./.github/actions
         with:
           dir: stability-tags
@@ -70,7 +70,7 @@ jobs:
       matrix:
         script: [ adminer,cachet,drupal,mariadb,matomo,nginx,webgrind,wordpress,xhprof,drupal-cms,solr,zookeeper,openclaw,prometheus,vinyl ]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: ./.github/actions
         with:
           dir: upstream
@@ -81,7 +81,7 @@ jobs:
       matrix:
         script: [ drupal,php,python,ruby,wordpress,laravel ]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: ./.github/actions
         with:
           dir: docker4x
@@ -89,7 +89,7 @@ jobs:
   notify:
     name: Notify Report Events
     needs:
-      - repos
+      - tooling
       - alpine
       - images
       - stability-tags
@@ -98,11 +98,11 @@ jobs:
     if: always()
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Download Report Artifacts
         id: download-reports
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         continue-on-error: true
         with:
           path: reports
@@ -116,7 +116,7 @@ jobs:
 
       - name: Upload Consolidated Report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: image-update-report
           path: image-update-report
@@ -138,5 +138,5 @@ jobs:
             --run-url "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
             --event "${{ github.event_name }}" \
             --sha "${{ github.sha }}" \
-            --workflow-result "repos=${{ needs.repos.result }}, alpine=${{ needs.alpine.result }}, images=${{ needs.images.result }}, stability-tags=${{ needs['stability-tags'].result }}, upstream=${{ needs.upstream.result }}, docker4x=${{ needs.docker4x.result }}" \
+            --workflow-result "tooling=${{ needs.tooling.result }}, alpine=${{ needs.alpine.result }}, images=${{ needs.images.result }}, stability-tags=${{ needs['stability-tags'].result }}, upstream=${{ needs.upstream.result }}, docker4x=${{ needs.docker4x.result }}" \
             --artifact-result "${{ steps.download-reports.outcome }}"

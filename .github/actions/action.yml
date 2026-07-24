@@ -38,7 +38,7 @@ runs:
     shell: bash
   - name: Upload update report
     if: always()
-    uses: actions/upload-artifact@v4
+    uses: actions/upload-artifact@v7
     with:
       name: image-update-report-${{ inputs.dir }}-${{ inputs.script }}
       path: image-update-reports/${{ inputs.dir }}-${{ inputs.script }}
