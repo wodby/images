@@ -28,7 +28,7 @@ runs:
       if [[ -n "${DOCKER_USERNAME}" && -n "${DOCKER_PASSWORD}" ]]; then
         docker login -u "${DOCKER_USERNAME}" --password-stdin <<<"${DOCKER_PASSWORD}"
       fi
-      docker run -e GITHUB_MACHINE_USER_API_TOKEN -e GITHUB_MACHINE_USER -e GIT_USER_EMAIL -e GIT_USER_NAME -e DEBUG \
+      docker run -e WODBOT_GITHUB_PAT -e WODBOT_GITHUB_USERNAME -e WODBOT_GIT_EMAIL -e WODBOT_GIT_NAME -e DEBUG \
         -e IMAGES_UPDATE_REPORT_FILE="/images/${report_file}" \
         -e IMAGES_UPDATE_DIR="${dir}" \
         -e IMAGES_UPDATE_SCRIPT="${script}" \

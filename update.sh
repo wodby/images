@@ -32,12 +32,12 @@ _ensure_git_identity() {
   email=$(git config --get user.email || true)
   name=$(git config --get user.name || true)
 
-  if [[ -z "${email}" && -n "${GIT_USER_EMAIL:-}" ]]; then
-    git config --local user.email "${GIT_USER_EMAIL}"
+  if [[ -z "${email}" && -n "${WODBOT_GIT_EMAIL:-}" ]]; then
+    git config --local user.email "${WODBOT_GIT_EMAIL}"
   fi
 
-  if [[ -z "${name}" && -n "${GIT_USER_NAME:-}" ]]; then
-    git config --local user.name "${GIT_USER_NAME}"
+  if [[ -z "${name}" && -n "${WODBOT_GIT_NAME:-}" ]]; then
+    git config --local user.name "${WODBOT_GIT_NAME}"
   fi
 }
 
@@ -273,7 +273,7 @@ _github_get_versions() {
   local refs
 
   local url="https://api.github.com/repos/${slug}/git/refs/tags"
-  local user="${GITHUB_MACHINE_USER_API_TOKEN}:x-oauth-basic"
+  local user="${WODBOT_GITHUB_USERNAME}:${WODBOT_GITHUB_PAT}"
   local expr=".[] | select ( .ref | ltrimstr(\"refs/tags/\") | ltrimstr(\"releases/${name}/\") | ltrimstr(\"${name}-\") | ltrimstr(\"v\") | ltrimstr(\"release-\") | startswith(\"${version}\")).ref"
 
   local -a versions
@@ -544,7 +544,7 @@ _get_latest_version() {
 _git_clone() {
   local slug="${1}"
 
-  git clone "https://${GITHUB_MACHINE_USER}:${GITHUB_MACHINE_USER_API_TOKEN}@github.com/${slug}" "/tmp/${slug#*/}"
+  git clone "https://${WODBOT_GITHUB_USERNAME}:${WODBOT_GITHUB_PAT}@github.com/${slug}" "/tmp/${slug#*/}"
   cd "/tmp/${slug#*/}"
 }
 
@@ -938,7 +938,7 @@ _update_stability_tag() {
 }
 
 sync_solr_fork() {
-  git clone "https://${GITHUB_MACHINE_USER}:${GITHUB_MACHINE_USER_API_TOKEN}@github.com/wodby/base-solr" /tmp/base-solr
+  git clone "https://${WODBOT_GITHUB_USERNAME}:${WODBOT_GITHUB_PAT}@github.com/wodby/base-solr" /tmp/base-solr
   cd /tmp/base-solr
   git remote add upstream "https://github.com/docker-solr/docker-solr"
   git fetch upstream
