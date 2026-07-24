@@ -20,19 +20,6 @@ env:
   GIT_USER_NAME: ${{ secrets.GIT_USER_NAME }}
 
 jobs:
-  checks:
-    runs-on: ubuntu-latest
-    outputs:
-      boilerplates: ${{ steps.boilerplates.outputs.matrix }}
-    steps:
-      - uses: actions/checkout@v6
-      - name: Validate updater scripts and inventory
-        run: |
-          bash -n update.sh repos/*.sh
-          python -m unittest discover -s tests
-      - name: Build boilerplate matrix
-        id: boilerplates
-        run: echo "matrix=$(jq -c '[.boilerplates[].name]' boilerplates.json)" >> "${GITHUB_OUTPUT}"
   repos:
     runs-on: ubuntu-latest
     strategy:
@@ -44,22 +31,6 @@ jobs:
         with:
           dir: repos
           script: ${{ matrix.script }}
-  boilerplates:
-    needs: checks
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        boilerplate: ${{ fromJSON(needs.checks.outputs.boilerplates) }}
-    steps:
-      - uses: actions/checkout@v6
-      - uses: ./.github/actions
-        with:
-          dir: repos
-          script: boilerplate-dependencies
-          argument: ${{ matrix.boilerplate }}
-          report-suffix: -${{ matrix.boilerplate }}
-          push: ${{ github.event_name == 'pull_request' && '0' || '1' }}
   alpine:
     runs-on: ubuntu-latest
     strategy:
@@ -119,8 +90,6 @@ jobs:
     name: Notify Report Events
     needs:
       - repos
-      - boilerplates
-      - checks
       - alpine
       - images
       - stability-tags
@@ -169,5 +138,5 @@ jobs:
             --run-url "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
             --event "${{ github.event_name }}" \
             --sha "${{ github.sha }}" \
-            --workflow-result "checks=${{ needs.checks.result }}, repos=${{ needs.repos.result }}, boilerplates=${{ needs.boilerplates.result }}, alpine=${{ needs.alpine.result }}, images=${{ needs.images.result }}, stability-tags=${{ needs['stability-tags'].result }}, upstream=${{ needs.upstream.result }}, docker4x=${{ needs.docker4x.result }}" \
+            --workflow-result "repos=${{ needs.repos.result }}, alpine=${{ needs.alpine.result }}, images=${{ needs.images.result }}, stability-tags=${{ needs['stability-tags'].result }}, upstream=${{ needs.upstream.result }}, docker4x=${{ needs.docker4x.result }}" \
             --artifact-result "${{ steps.download-reports.outcome }}"

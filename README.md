@@ -92,30 +92,16 @@ Update images stability tags
 
 ### Build templates
 
-Upstream-derived templates retain their specialized synchronization logic.
-Application boilerplates receive compatible dependency updates only after
-their tests and builds pass against the oldest and newest supported Wodby
-runtimes. Lockfile-based projects keep dependency manifest constraints manual;
-Go modules are updated within their current major module paths. The boilerplate
-job matrix and runtime validation profiles are generated from
-[`boilerplates.json`](boilerplates.json).
+Generic application boilerplate dependency updates, runtime validation
+profiles, and the boilerplate catalog are maintained in
+[wodby/boilerplates]. This repository retains only the specialized
+upstream-synchronization jobs.
 
-| Project                           | Update source                 |
-|-----------------------------------|-------------------------------|
-| [wodby/drupal-vanilla]            | Drupal 11, 10, and 7 upstream |
-| [wodby/wordpress-vanilla]         | Composer lockfile             |
-| [wodby/drupal-cms-template]       | Drupal CMS 2 upstream         |
-| [wodby/python-boilerplate]        | uv lockfile                   |
-| [wodby/django-boilerplate]        | uv lockfile                   |
-| [wodby/fastapi-boilerplate]       | uv lockfile                   |
-| [wodby/flask-boilerplate]         | uv lockfile                   |
-| [wodby/go-boilerplate]            | Go modules                    |
-| [wodby/ruby-boilerplate]          | Bundler lockfile              |
-| [wodby/rails-boilerplate]         | Bundler lockfile              |
-| [wodby/expressjs-boilerplate]     | npm lockfile                  |
-| [wodby/nextjs-boilerplate]        | npm lockfile                  |
-| [wodby/react-boilerplate]         | npm lockfile                  |
-| [wodby/php-package-boilerplate]   | Composer lockfile             |
+| Project                     | Update source                 |
+|-----------------------------|-------------------------------|
+| [wodby/drupal-vanilla]      | Drupal 11, 10, and 7 upstream |
+| [wodby/wordpress-vanilla]   | Composer lockfile             |
+| [wodby/drupal-cms-template] | Drupal CMS 2 upstream         |
 
 ### Tooling projects
 
@@ -228,27 +214,7 @@ Not automated:
 
 [wodby/drupal-vanilla]: https://github.com/wodby/drupal-vanilla
 
-[wodby/django-boilerplate]: https://github.com/wodby/django-boilerplate
-
-[wodby/expressjs-boilerplate]: https://github.com/wodby/expressjs-boilerplate
-
-[wodby/fastapi-boilerplate]: https://github.com/wodby/fastapi-boilerplate
-
-[wodby/flask-boilerplate]: https://github.com/wodby/flask-boilerplate
-
-[wodby/go-boilerplate]: https://github.com/wodby/go-boilerplate
-
-[wodby/nextjs-boilerplate]: https://github.com/wodby/nextjs-boilerplate
-
-[wodby/php-package-boilerplate]: https://github.com/wodby/php-package-boilerplate
-
-[wodby/python-boilerplate]: https://github.com/wodby/python-boilerplate
-
-[wodby/rails-boilerplate]: https://github.com/wodby/rails-boilerplate
-
-[wodby/react-boilerplate]: https://github.com/wodby/react-boilerplate
-
-[wodby/ruby-boilerplate]: https://github.com/wodby/ruby-boilerplate
+[wodby/boilerplates]: https://github.com/wodby/boilerplates
 
 [wodby/wordpress-vanilla]: https://github.com/wodby/wordpress-vanilla
 

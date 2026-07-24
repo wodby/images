@@ -7,24 +7,12 @@ inputs:
   script:
     description: script name
     required: true
-  argument:
-    description: optional script argument
-    required: false
-    default: ''
-  report-suffix:
-    description: optional suffix that keeps matrix report artifacts unique
-    required: false
-    default: ''
-  push:
-    description: whether repository updaters may push validated changes
-    required: false
-    default: '1'
 runs:
   using: "composite"
   steps:
   - name: Prepare update report
     env:
-      report_file: image-update-reports/${{ inputs.dir }}-${{ inputs.script }}${{ inputs.report-suffix }}/events.jsonl
+      report_file: image-update-reports/${{ inputs.dir }}-${{ inputs.script }}/events.jsonl
     run: |
       mkdir -p "$(dirname "${report_file}")"
       : > "${report_file}"
@@ -34,9 +22,7 @@ runs:
       DEBUG: '1'
       dir: ${{ inputs.dir }}
       script: ${{ inputs.script }}
-      argument: ${{ inputs.argument }}
-      push: ${{ inputs.push }}
-      report_file: image-update-reports/${{ inputs.dir }}-${{ inputs.script }}${{ inputs.report-suffix }}/events.jsonl
+      report_file: image-update-reports/${{ inputs.dir }}-${{ inputs.script }}/events.jsonl
     run: |
       set -ex
       if [[ -n "${DOCKER_USERNAME}" && -n "${DOCKER_PASSWORD}" ]]; then
@@ -46,17 +32,15 @@ runs:
         -e IMAGES_UPDATE_REPORT_FILE="/images/${report_file}" \
         -e IMAGES_UPDATE_DIR="${dir}" \
         -e IMAGES_UPDATE_SCRIPT="${script}" \
-        -e IMAGES_UPDATE_ARGUMENT="${argument}" \
         -e IMAGES_HOST_ROOT="${PWD}" \
-        -e BOILERPLATE_UPDATE_PUSH="${push}" \
         --rm -v "${PWD}:/images" -v /var/run/docker.sock:/var/run/docker.sock wodby/docker:dev \
-        bash -c 'cd "/images/${IMAGES_UPDATE_DIR}" && "./${IMAGES_UPDATE_SCRIPT}.sh" "${IMAGES_UPDATE_ARGUMENT}"'
+        bash -c 'cd "/images/${IMAGES_UPDATE_DIR}" && "./${IMAGES_UPDATE_SCRIPT}.sh"'
     shell: bash
   - name: Upload update report
     if: always()
     uses: actions/upload-artifact@v4
     with:
-      name: image-update-report-${{ inputs.dir }}-${{ inputs.script }}${{ inputs.report-suffix }}
-      path: image-update-reports/${{ inputs.dir }}-${{ inputs.script }}${{ inputs.report-suffix }}
+      name: image-update-report-${{ inputs.dir }}-${{ inputs.script }}
+      path: image-update-reports/${{ inputs.dir }}-${{ inputs.script }}
       if-no-files-found: warn
       retention-days: 14
