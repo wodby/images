@@ -73,7 +73,7 @@
 | [wodby/webgrind]      | [jokkedk/webgrind]      | `1`                                      |                  |
 | [wodby/wordpress]     | [wordpress]             | `7`                                      | `4.x`            |
 | [wodby/xhprof]        | [longxinH/xhprof]       | `2`                                      |                  |
-| [wodby/solr]          | [apache/solr]           | `9`                                      |                  |
+| [wodby/solr]          | [apache/solr]           | `10`, `9`                                |                  |
 | [wodby/zookeeper]     | [apache/zookeeper]      | `3.9`                                    |                  |
 | [wodby/openclaw]      | [openclaw/openclaw]     | `2026`                                   |                  |
 
