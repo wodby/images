@@ -61,7 +61,7 @@
 
 | Image                 | Upstream                | Versions                                 | Stability branch |
 |-----------------------|-------------------------|------------------------------------------|------------------|
-| [wodby/adminer]       | [vrana/adminer]         | `5`                                      |                  |
+| [wodby/adminer]       | [vrana/adminer]         | `6`                                      |                  |
 | [wodby/cachet]        | [CachetHQ/Cachet]       | `2`                                      |                  |
 | [wodby/drupal]        | [drupal]                | `11`, `10`                               | `4.x`            |
 | [wodby/drupal-cms]    | [drupal-cms]            | `2`                                      |                  |
