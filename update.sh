@@ -182,6 +182,34 @@ _get_timestamp() {
   }
 }
 
+_get_image_digest() {
+  local repo="${1}"
+  local tag="${2}"
+  local namespace
+  local name
+  local url
+  local response
+
+  if [[ "${repo}" =~ / ]]; then
+    namespace="${repo%/*}"
+    name="${repo#*/}"
+  else
+    namespace="library"
+    name="${repo}"
+  fi
+
+  url="https://hub.docker.com/v2/namespaces/${namespace}/repositories/${name}/tags/${tag}"
+  response=$(curl -fsSL --connect-timeout 10 --max-time 30 --retry 3 "${url}") || {
+    echo >&2 "Failed to fetch Docker Hub tag metadata for ${namespace}/${name}:${tag}"
+    exit 1
+  }
+
+  jq -er '.digest | select(type == "string" and startswith("sha256:"))' <<<"${response}" || {
+    echo >&2 "Failed to parse Docker Hub digest for ${namespace}/${name}:${tag}"
+    exit 1
+  }
+}
+
 _find_timestamp_file() {
   local base_image="${1%:*}"
   local fallback="${2:-}"
@@ -295,6 +323,77 @@ _github_get_versions() {
   fi
 
   printf '%s\n' "${versions[@]}"
+}
+
+_github_api() {
+  local path="${1}"
+
+  if [[ -z "${WODBOT_GITHUB_PAT:-}" ]]; then
+    echo >&2 "WODBOT_GITHUB_PAT is required for GitHub API requests"
+    return 1
+  fi
+
+  curl -fsSL \
+    --connect-timeout 10 \
+    --max-time 30 \
+    --retry 3 \
+    -H "Accept: application/vnd.github+json" \
+    -H "Authorization: Bearer ${WODBOT_GITHUB_PAT}" \
+    -H "X-GitHub-Api-Version: 2022-11-28" \
+    "https://api.github.com/${path}"
+}
+
+_wait_for_github_workflow() {
+  local repo="${1}"
+  local sha="${2}"
+  local branch="${3}"
+  local workflow="${4}"
+  local timeout="${EDGE_ALPINE_WORKFLOW_TIMEOUT:-1800}"
+  local poll_interval="${EDGE_ALPINE_WORKFLOW_POLL_INTERVAL:-15}"
+  local deadline=$((SECONDS + timeout))
+  local response
+  local run
+  local status
+  local conclusion
+  local url
+
+  echo "Waiting for ${repo} workflow '${workflow}' at ${sha}"
+
+  while (( SECONDS < deadline )); do
+    response=$(_github_api "repos/${repo}/actions/runs?head_sha=${sha}&event=push&per_page=20") || return 1
+    run=$(jq -c \
+      --arg sha "${sha}" \
+      --arg branch "${branch}" \
+      --arg workflow "${workflow}" \
+      '[.workflow_runs[] | select(.head_sha == $sha and .head_branch == $branch and .name == $workflow)] | sort_by(.created_at) | last // empty' \
+      <<<"${response}") || {
+      echo >&2 "Failed to parse workflow runs for ${repo}"
+      return 1
+    }
+
+    if [[ -n "${run}" ]]; then
+      status=$(jq -r '.status' <<<"${run}")
+      conclusion=$(jq -r '.conclusion // ""' <<<"${run}")
+      url=$(jq -r '.html_url' <<<"${run}")
+      echo "Workflow status: ${status}${conclusion:+/${conclusion}} (${url})"
+
+      if [[ "${status}" == "completed" ]]; then
+        if [[ "${conclusion}" == "success" ]]; then
+          return 0
+        fi
+
+        echo >&2 "Workflow '${workflow}' failed with conclusion '${conclusion}'"
+        return 1
+      fi
+    else
+      echo "Workflow run has not appeared yet"
+    fi
+
+    sleep "${poll_interval}"
+  done
+
+  echo >&2 "Timed out waiting for ${repo} workflow '${workflow}' at ${sha}"
+  return 1
 }
 
 _gitlab_get_versions() {
@@ -935,6 +1034,206 @@ _update_stability_tag() {
   if [[ -n "${branch}" ]] && _head_has_unpushed_commits "${branch}"; then
     git push origin
   fi
+}
+
+_version_is_newer() {
+  local latest="${1}"
+  local current="${2}"
+
+  [[ "${latest}" != "${current}" ]] \
+    && [[ "$(printf '%s\n%s\n' "${current}" "${latest}" | sort -V | tail -n1)" == "${latest}" ]]
+}
+
+_image_ref_tag() {
+  local ref_without_digest="${1%@*}"
+
+  echo "${ref_without_digest##*:}"
+}
+
+_edge_require_current_or_newer() {
+  local dependency="${1}"
+  local candidate="${2}"
+  local current="${3}"
+
+  if [[ "${candidate}" == "${current}" ]] || _version_is_newer "${candidate}" "${current}"; then
+    return 0
+  fi
+
+  echo >&2 "Refusing to downgrade ${dependency} from ${current} to ${candidate}"
+  return 1
+}
+
+_dockerfile_arg_value() {
+  local name="${1}"
+  local dockerfile="${2:-Dockerfile}"
+  local value
+
+  value=$(sed -n -E "s/^ARG ${name}=(.+)$/\\1/p" "${dockerfile}" | head -n1)
+  if [[ -z "${value}" ]]; then
+    echo >&2 "Failed to find ARG ${name} in ${dockerfile}"
+    return 1
+  fi
+
+  echo "${value}"
+}
+
+_update_dockerfile_arg_image() {
+  local name="${1}"
+  local image="${2}"
+  local digest="${3}"
+  local dockerfile="${4:-Dockerfile}"
+  local current
+  local expected
+
+  current=$(_dockerfile_arg_value "${name}" "${dockerfile}") || return 2
+  expected="${image}@${digest}"
+
+  if [[ "${current}" == "${expected}" ]]; then
+    echo "${name} is already pinned to ${expected}"
+    return 1
+  fi
+
+  sed -i -E "s|^ARG ${name}=.*$|ARG ${name}=${expected}|" "${dockerfile}"
+  echo "Updated ${name} from ${current} to ${expected}"
+}
+
+_report_edge_dependency_drift() {
+  local dependency="${1}"
+  local current="${2}"
+  local latest="${3}"
+
+  if _version_is_newer "${latest}" "${current}"; then
+    echo "${dependency} ${latest} is available; ${current} remains pinned for manual review"
+    _report_event \
+      "manual_review" \
+      "wodby/edge-alpine" \
+      "${dependency} update available: ${current} -> ${latest}" \
+      "${latest}" \
+      "${current}"
+  else
+    echo "${dependency} ${current} is current within its tracked major line"
+  fi
+}
+
+_prepare_edge_alpine_update() {
+  local dockerfile="${1:-Dockerfile}"
+  local nginx_stability_tag
+  local nginx_tag
+  local nginx_digest
+  local current_nginx_image
+  local current_nginx_tag
+  local current_nginx_stability_tag
+  local go_tag
+  local go_digest
+  local current_go_image
+  local current_go_tag
+  local current_go_version
+  local candidate_go_version
+  local current_s6
+  local latest_s6
+  local current_lego
+  local latest_lego
+  local update_status
+  local updated=""
+
+  nginx_stability_tag=$(_get_image_tags "wodby/nginx" '(?<=1\.31-)[0-9]+(?:\.[0-9]+)+$') || return 2
+  nginx_tag="1.31-${nginx_stability_tag}"
+  nginx_digest=$(_get_image_digest "wodby/nginx" "${nginx_tag}") || return 2
+
+  current_nginx_image=$(_dockerfile_arg_value "NGINX_IMAGE" "${dockerfile}") || return 2
+  current_nginx_tag=$(_image_ref_tag "${current_nginx_image}")
+  if [[ "${current_nginx_tag}" != 1.31-* ]]; then
+    echo >&2 "Expected NGINX_IMAGE to remain on the 1.31 compatibility line"
+    return 2
+  fi
+  current_nginx_stability_tag="${current_nginx_tag#1.31-}"
+  _edge_require_current_or_newer \
+    "wodby/nginx stability tag" \
+    "${nginx_stability_tag}" \
+    "${current_nginx_stability_tag}" || return 2
+
+  go_tag=$(_get_image_tags "golang" '^1\.26\.[0-9]+-alpine3\.23$') || return 2
+  go_digest=$(_get_image_digest "golang" "${go_tag}") || return 2
+
+  current_go_image=$(_dockerfile_arg_value "GO_IMAGE" "${dockerfile}") || return 2
+  current_go_tag=$(_image_ref_tag "${current_go_image}")
+  if [[ ! "${current_go_tag}" =~ ^1\.26\.[0-9]+-alpine3\.23$ ]]; then
+    echo >&2 "Expected GO_IMAGE to remain on the Go 1.26 / Alpine 3.23 compatibility line"
+    return 2
+  fi
+  current_go_version="${current_go_tag%-alpine3.23}"
+  candidate_go_version="${go_tag%-alpine3.23}"
+  _edge_require_current_or_newer \
+    "Go image" \
+    "${candidate_go_version}" \
+    "${current_go_version}" || return 2
+
+  if _update_dockerfile_arg_image \
+    "NGINX_IMAGE" \
+    "wodby/nginx:${nginx_tag}" \
+    "${nginx_digest}" \
+    "${dockerfile}"; then
+    updated=1
+  else
+    update_status=$?
+    [[ "${update_status}" -eq 1 ]] || return 2
+  fi
+
+  if _update_dockerfile_arg_image \
+    "GO_IMAGE" \
+    "golang:${go_tag}" \
+    "${go_digest}" \
+    "${dockerfile}"; then
+    updated=1
+  else
+    update_status=$?
+    [[ "${update_status}" -eq 1 ]] || return 2
+  fi
+
+  current_s6=$(_dockerfile_arg_value "S6_OVERLAY_VERSION" "${dockerfile}") || return 2
+  # Source dependency changes can affect init and certificate behavior, so
+  # report updates within the pinned major lines instead of applying them.
+  latest_s6=$(_get_latest_version "github.com/just-containers/s6-overlay" "3" "s6-overlay") || return 2
+  _report_edge_dependency_drift "s6-overlay" "${current_s6}" "${latest_s6}"
+
+  current_lego=$(_dockerfile_arg_value "LEGO_VERSION" "${dockerfile}") || return 2
+  current_lego="${current_lego#v}"
+  latest_lego=$(_get_latest_version "github.com/go-acme/lego" "4" "lego") || return 2
+  _report_edge_dependency_drift "lego" "${current_lego}" "${latest_lego}"
+
+  [[ -n "${updated}" ]]
+}
+
+update_edge_alpine() {
+  local repo="wodby/edge-alpine"
+  local sha
+  local prepare_status
+
+  _git_clone "${repo}" || return 1
+
+  if _prepare_edge_alpine_update Dockerfile; then
+    :
+  else
+    prepare_status=$?
+    if [[ "${prepare_status}" -eq 1 ]]; then
+      echo "Edge Alpine image pins are already current"
+      return 0
+    fi
+
+    echo >&2 "Failed to prepare Edge Alpine dependency updates"
+    return "${prepare_status}"
+  fi
+
+  _git_commit ./ "Update nginx and Go image pins" || return 1
+  git push origin || return 1
+
+  sha=$(git rev-parse HEAD) || return 1
+  _wait_for_github_workflow "${repo}" "${sha}" "master" "Build docker image" || return 1
+
+  # The target workflow builds, tests, and scans the image before this patch
+  # release is created. A failed workflow leaves the update visible on master
+  # for investigation but never creates a public release tag.
+  _release_tag "Update pinned nginx and Go images" "" || return 1
 }
 
 sync_solr_fork() {

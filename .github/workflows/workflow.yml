@@ -20,6 +20,12 @@ env:
   WODBOT_GIT_NAME: ${{ secrets.WODBOT_GIT_NAME }}
 
 jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Test edge image updater
+        run: ./tests/test_edge_alpine_updater.sh
   tooling:
     runs-on: ubuntu-latest
     strategy:
@@ -54,10 +60,11 @@ jobs:
           dir: images
           script: ${{ matrix.script }}
   stability-tags:
+    needs: tests
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        script: [ drupal-php,wordpress-php,matomo-php,webgrind-php,laravel-php,drupal,wordpress,xhprof,drupal-cms ]
+        script: [ drupal-php,wordpress-php,matomo-php,webgrind-php,laravel-php,drupal,wordpress,xhprof,drupal-cms,edge-alpine ]
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions
@@ -89,6 +96,7 @@ jobs:
   notify:
     name: Notify Report Events
     needs:
+      - tests
       - tooling
       - alpine
       - images
@@ -138,5 +146,5 @@ jobs:
             --run-url "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
             --event "${{ github.event_name }}" \
             --sha "${{ github.sha }}" \
-            --workflow-result "tooling=${{ needs.tooling.result }}, alpine=${{ needs.alpine.result }}, images=${{ needs.images.result }}, stability-tags=${{ needs['stability-tags'].result }}, upstream=${{ needs.upstream.result }}, docker4x=${{ needs.docker4x.result }}" \
+            --workflow-result "tests=${{ needs.tests.result }}, tooling=${{ needs.tooling.result }}, alpine=${{ needs.alpine.result }}, images=${{ needs.images.result }}, stability-tags=${{ needs['stability-tags'].result }}, upstream=${{ needs.upstream.result }}, docker4x=${{ needs.docker4x.result }}" \
             --artifact-result "${{ steps.download-reports.outcome }}"

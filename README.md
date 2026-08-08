@@ -44,6 +44,7 @@
 
 | Image                 | Upstream (base image) | Versions                   | Stability branch |
 |-----------------------|-----------------------|----------------------------|------------------|
+| [wodby/edge-alpine]   | [wodby/nginx]         | `1.31`                     |                  |
 | [wodby/drupal-php]    | [wodby/php]           | `8.5`, `8.4`, `8.3`, `8.2` | `4.x`            |
 | [wodby/drupal]        | [wodby/drupal-php]    | `8.5`, `8.4`, `8.3`, `8.2` | `4.x`            |
 | [wodby/drupal-cms]    | [wodby/drupal-php]    | `8.4`                      |                  |
@@ -106,6 +107,7 @@ Not automated:
 - New stability branches for major stability tags updates
 - [wodby/opensmtpd] (installed from Alpine repository package)
 - [wodby/adminer] not auto-updates for the base image (php:8.4-apache)
+- [wodby/edge-alpine] nginx and Go image pins are updated only within their configured compatibility lines; s6-overlay v3 and lego v4 updates are reported for manual review, while new major lines remain manual
 
 [adoptium/containers]: https://github.com/adoptium/containers
 
@@ -196,6 +198,8 @@ Not automated:
 [wodby/gotpl]: https://github.com/wodby/gotpl
 
 [wodby/drupal-php]: https://github.com/wodby/drupal-php
+
+[wodby/edge-alpine]: https://github.com/wodby/edge-alpine
 
 [wodby/laravel-php]: https://github.com/wodby/laravel-php
 
