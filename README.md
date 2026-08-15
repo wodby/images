@@ -18,6 +18,7 @@
 
 - Minor/patch version update
 - Rebuild against updated base image
+- Rebuild `wodby/alpine` against complete new gotpl releases
 - New stability tag released on version update
 - New stability tag released on Alpine Linux update
 
@@ -93,15 +94,16 @@ Update images stability tags
 
 ### Tooling projects
 
-Update runtime versions.
+Update runtime versions within the configured compatibility line.
 
-| Project       | Runtime |
-|---------------|---------|
-| [wodby/gotpl] | Go      |
+| Project       | Runtime | Policy |
+|---------------|---------|--------|
+| [wodby/gotpl] | Go      | Patch updates only; EOL lines are reported for manual migration |
 
 Not automated:
 
 - Adding new minor/major version
+- Moving gotpl to a new Go minor line
 - Rebase to a new major Alpine version
 - Switching the latest version
 - New stability branches for major stability tags updates
