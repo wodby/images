@@ -647,23 +647,61 @@ _git_clone() {
   cd "/tmp/${slug#*/}"
 }
 
-_get_latest_go_version() {
+_get_go_downloads_metadata() {
   local response
-  local version
 
   response=$(curl -fsSL --connect-timeout 10 --max-time 30 --retry 3 "https://go.dev/dl/?mode=json") || {
     echo >&2 "Failed to fetch Go downloads metadata"
     exit 1
   }
 
-  version=$(jq -r '[.[] | select(.stable == true)][0].version // ""' <<<"${response}" | sed -E 's/^go//') || {
-    echo >&2 "Failed to parse Go downloads metadata"
-    exit 1
+  jq -e 'type == "array" and any(.[]; .stable == true and (.version | type == "string"))' \
+    <<<"${response}" >/dev/null || {
+      echo >&2 "Failed to parse Go downloads metadata"
+      exit 1
+    }
+
+  echo "${response}"
+}
+
+_get_latest_go_patch_version() {
+  local current="${1}"
+  local response="${2}"
+  local series
+
+  series=$(_get_minor_series "${current}")
+
+  jq -r '.[] | select(.stable == true) | .version | ltrimstr("go")' <<<"${response}" \
+    | grep -E "^${series//./\\.}\\.[0-9]+$" \
+    | sort -rV \
+    | head -n1 \
+    || true
+}
+
+_get_latest_complete_gotpl_release() {
+  local response
+  local version
+
+  response=$(_github_api "repos/wodby/gotpl/releases?per_page=20") || return 1
+  version=$(jq -r '
+    [
+      .[]
+      | select(.draft == false and .prerelease == false)
+      | select(
+          ([.assets[]?.name] | index("gotpl-linux-amd64.tar.gz")) != null
+          and ([.assets[]?.name] | index("gotpl-linux-arm64.tar.gz")) != null
+        )
+      | .tag_name
+    ][0] // ""
+  ' <<<"${response}") || {
+    echo >&2 "Failed to parse gotpl releases"
+    return 1
   }
 
-  if [[ -z "${version}" ]]; then
-    echo >&2 "Failed to find latest stable Go version"
-    exit 1
+  version="${version#v}"
+  if [[ ! "${version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    echo >&2 "Failed to find a stable gotpl release with amd64 and arm64 artifacts"
+    return 1
   fi
 
   echo "${version}"
@@ -1389,22 +1427,100 @@ update_docker4x() {
   done
 }
 
+_prepare_alpine_gotpl_update() {
+  local dockerfile="${1:-Dockerfile}"
+  local latest="${2}"
+  local current
+
+  current=$(_dockerfile_arg_value "GOTPL_VERSION" "${dockerfile}") || return 2
+
+  if [[ "${current}" == "${latest}" ]]; then
+    echo "Alpine is already pinned to gotpl ${current}"
+    return 1
+  fi
+
+  if ! _version_is_newer "${latest}" "${current}"; then
+    echo >&2 "Refusing to downgrade Alpine gotpl from ${current} to ${latest}"
+    return 2
+  fi
+
+  sed -i -E "s/^ARG GOTPL_VERSION=.*/ARG GOTPL_VERSION=${latest}/" "${dockerfile}"
+  echo "Updated Alpine gotpl from ${current} to ${latest}"
+}
+
+update_alpine_gotpl() {
+  local repo="wodby/alpine"
+  local current
+  local latest
+  local prepare_status
+  local sha
+
+  current=$(_dockerfile_arg_value "GOTPL_VERSION" Dockerfile) || return 1
+  latest=$(_get_latest_complete_gotpl_release) || return 1
+
+  if _prepare_alpine_gotpl_update Dockerfile "${latest}"; then
+    :
+  else
+    prepare_status=$?
+    if [[ "${prepare_status}" -eq 1 ]]; then
+      return 0
+    fi
+    return "${prepare_status}"
+  fi
+
+  _git_commit ./ "Update gotpl to ${latest}" || return 1
+  git push origin || return 1
+
+  sha=$(git rev-parse HEAD) || return 1
+  _wait_for_github_workflow "${repo}" "${sha}" "master" "Build docker image" || return 1
+  _release_tag "gotpl updated from ${current} to ${latest}" "" || return 1
+}
+
 update_gotpl_go() {
   local latest
   local current
+  local metadata
+  local series
 
   _git_clone "wodby/gotpl"
 
-  latest=$(_get_latest_go_version)
-  current=$(grep -oPm1 "(?<=go-version: )[0-9.]+" .github/workflows/workflow.yml || true)
+  current=$(sed -n -E 's/.*go-version: ([0-9.]+).*/\1/p' .github/workflows/workflow.yml | head -n1)
 
   if [[ -z "${current}" ]]; then
     echo >&2 "Failed to acquire current Go version from gotpl workflow"
     exit 1
   fi
 
+  metadata=$(_get_go_downloads_metadata)
+  latest=$(_get_latest_go_patch_version "${current}" "${metadata}")
+  series=$(_get_minor_series "${current}")
+
+  # The default Go downloads feed contains the supported release lines. If the
+  # configured line is absent, patch-only automation cannot safely move gotpl
+  # to a new minor line and must make that visible to operators.
+  if [[ -z "${latest}" ]]; then
+    echo "Go ${series} used by gotpl is EOL and requires a manual minor-line update"
+    _report_event \
+      "eol_warning" \
+      "wodby/gotpl" \
+      "gotpl uses EOL Go ${series}; automatic updates are limited to patches and a supported minor line must be selected manually" \
+      "${current}"
+    return 0
+  fi
+
   if [[ "${current}" == "${latest}" ]]; then
-    echo "Go ${current} is already the latest stable version"
+    echo "Go ${current} is already the latest patch in supported line ${series}"
+    return 0
+  fi
+
+  if ! _version_is_newer "${latest}" "${current}"; then
+    echo "Go downloads metadata reports ${latest} behind configured ${current}; refusing to downgrade"
+    _report_event \
+      "manual_review" \
+      "wodby/gotpl" \
+      "Go downloads metadata reports ${latest} behind configured ${current}; automatic downgrade skipped" \
+      "${current}" \
+      "${latest}"
     return 0
   fi
 
