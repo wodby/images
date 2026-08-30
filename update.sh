@@ -251,7 +251,25 @@ _head_has_unpushed_commits() {
   [[ $(git rev-list --count "origin/${branch_name}..HEAD") -gt 0 ]]
 }
 
+_publishing_enabled() {
+  [[ "${IMAGES_UPDATE_PUSH:-0}" == "1" ]]
+}
+
+_git_push() {
+  if ! _publishing_enabled; then
+    echo "Publishing is disabled for this validation run"
+    return 0
+  fi
+
+  git push "$@"
+}
+
 _release_tag() {
+  if ! _publishing_enabled; then
+    echo "Skipping release tag because publishing is disabled"
+    return 0
+  fi
+
   local message="${1}"
   local minor_update="${2}"
   local tag
@@ -271,7 +289,7 @@ _release_tag() {
 
   _ensure_git_identity
   git tag -m "${message}" "${tag}"
-  git push origin "${tag}"
+  _git_push origin "${tag}"
   _report_event "release_tag" "$(_current_repo_slug)" "${message}" "${tag}"
 }
 
@@ -344,6 +362,11 @@ _github_api() {
 }
 
 _wait_for_github_workflow() {
+  if ! _publishing_enabled; then
+    echo "Skipping workflow wait because publishing is disabled"
+    return 0
+  fi
+
   local repo="${1}"
   local sha="${2}"
   local branch="${3}"
@@ -842,13 +865,13 @@ _update_versions() {
   done
 
   if [[ "${#updated[@]}" != 0 ]]; then
-    git push origin
+    _git_push origin
 
     if [[ -n "${branch}" ]]; then
       git checkout "${branch}"
       _ensure_git_identity
       git merge --no-edit master
-      git push origin
+      _git_push origin
     fi
 
     local ver
@@ -942,7 +965,7 @@ _update_timestamps() {
     if _head_has_unpushed_commits "${branch_name}"; then
       had_local_commits=1
     fi
-    git push origin
+    _git_push origin
 
     # Release tags on alpine updates.
     if [[ "${#ver_with_updated_alpine[@]}" != 0 ]]; then
@@ -951,7 +974,7 @@ _update_timestamps() {
         _ensure_git_identity
         git commit --allow-empty -m "Rebuild against updated Alpine"
         _report_event "commit" "$(_current_repo_slug)" "Rebuild against updated Alpine"
-        git push origin
+        _git_push origin
       fi
       ver_list=$(_join_ws ", " "${ver_with_updated_alpine[@]}")
       _release_tag "Alpine Linux updated to ${latest_alpine_ver} for versions: ${ver_list}" "${minor_update}"
@@ -1002,7 +1025,7 @@ _update_base_alpine_image() {
   if _head_has_unpushed_commits "${branch_name}"; then
     had_local_commits=1
   fi
-  git push origin
+  _git_push origin
 
   if [[ -n "${release_tag}" ]]; then
     # In case there were no new commits but the base image was updated we want to force rebuild latest images.
@@ -1010,7 +1033,7 @@ _update_base_alpine_image() {
       _ensure_git_identity
       git commit --allow-empty -m "Rebuild against updated Alpine"
       _report_event "commit" "$(_current_repo_slug)" "Rebuild against updated Alpine"
-      git push origin
+      _git_push origin
     fi
     if [[ "$(_get_minor_series "${current}")" != "$(_get_minor_series "${latest}")" ]]; then
       minor_update=1
@@ -1055,7 +1078,7 @@ _update_stability_tag() {
   if [[ $(compare_semver "${latest}" "${current}") == 0 ]]; then
     sed -i -E "s/(BASE_IMAGE_STABILITY_TAG: )${current}/\1${latest}/" .github/workflows/workflow.yml
     _git_commit ./ "Update base image stability tag to ${latest}"
-    git push origin
+    _git_push origin
     tag=1
   else
     echo "Base image stability tag ${current} is already the latest"
@@ -1070,7 +1093,7 @@ _update_stability_tag() {
   fi
 
   if [[ -n "${branch}" ]] && _head_has_unpushed_commits "${branch}"; then
-    git push origin
+    _git_push origin
   fi
 }
 
@@ -1263,7 +1286,7 @@ update_edge_alpine() {
   fi
 
   _git_commit ./ "Update nginx and Go image pins" || return 1
-  git push origin || return 1
+  _git_push origin || return 1
 
   sha=$(git rev-parse HEAD) || return 1
   _wait_for_github_workflow "${repo}" "${sha}" "master" "Build docker image" || return 1
@@ -1285,7 +1308,7 @@ sync_solr_fork() {
   ./tools/update.sh
 
   _git_commit ./ "Update from upstream"
-  git push origin
+  _git_push origin
 }
 
 update_from_base_image() {
@@ -1420,7 +1443,7 @@ update_docker4x() {
       fi
 
       _git_commit ./ "Update ${name} stability tag to ${latest}"
-      git push origin
+      _git_push origin
     else
       echo "${name}: stability tag ${current} is already latest"
     fi
@@ -1469,7 +1492,7 @@ update_alpine_gotpl() {
   fi
 
   _git_commit ./ "Update gotpl to ${latest}" || return 1
-  git push origin || return 1
+  _git_push origin || return 1
 
   sha=$(git rev-parse HEAD) || return 1
   _wait_for_github_workflow "${repo}" "${sha}" "master" "Build docker image" || return 1
@@ -1527,6 +1550,6 @@ update_gotpl_go() {
   sed -i -E "s/(go-version: )[0-9.]+/\1${latest}/" .github/workflows/workflow.yml
 
   _git_commit ./ "Update Go to ${latest}"
-  git push origin
+  _git_push origin
   _release_tag "Go updated from ${current} to ${latest}" ""
 }

@@ -47,6 +47,7 @@ runs:
       WODBOT_GITHUB_USERNAME: ${{ inputs.wodbot_github_username }}
       WODBOT_GIT_EMAIL: ${{ inputs.wodbot_git_email }}
       WODBOT_GIT_NAME: ${{ inputs.wodbot_git_name }}
+      IMAGES_UPDATE_PUSH: ${{ github.event_name != 'pull_request' && '1' || '0' }}
     run: |
       set -ex
       logged_in=0
