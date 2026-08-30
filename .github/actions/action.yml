@@ -7,6 +7,24 @@ inputs:
   script:
     description: script name
     required: true
+  docker_username:
+    description: Docker registry username
+    required: false
+  docker_password:
+    description: Docker registry password
+    required: false
+  wodbot_github_pat:
+    description: GitHub token used by update jobs
+    required: false
+  wodbot_github_username:
+    description: GitHub username used by update jobs
+    required: false
+  wodbot_git_email:
+    description: Git email used by update jobs
+    required: false
+  wodbot_git_name:
+    description: Git name used by update jobs
+    required: false
 runs:
   using: "composite"
   steps:
@@ -23,17 +41,32 @@ runs:
       dir: ${{ inputs.dir }}
       script: ${{ inputs.script }}
       report_file: image-update-reports/${{ inputs.dir }}-${{ inputs.script }}/events.jsonl
+      DOCKER_USERNAME: ${{ inputs.docker_username }}
+      DOCKER_PASSWORD: ${{ inputs.docker_password }}
+      WODBOT_GITHUB_PAT: ${{ inputs.wodbot_github_pat }}
+      WODBOT_GITHUB_USERNAME: ${{ inputs.wodbot_github_username }}
+      WODBOT_GIT_EMAIL: ${{ inputs.wodbot_git_email }}
+      WODBOT_GIT_NAME: ${{ inputs.wodbot_git_name }}
     run: |
       set -ex
+      logged_in=0
+      cleanup() {
+        if [[ "${logged_in}" == "1" ]]; then
+          docker logout || true
+        fi
+      }
+      trap cleanup EXIT
       if [[ -n "${DOCKER_USERNAME}" && -n "${DOCKER_PASSWORD}" ]]; then
         docker login -u "${DOCKER_USERNAME}" --password-stdin <<<"${DOCKER_PASSWORD}"
+        logged_in=1
       fi
       docker run -e WODBOT_GITHUB_PAT -e WODBOT_GITHUB_USERNAME -e WODBOT_GIT_EMAIL -e WODBOT_GIT_NAME -e DEBUG \
         -e IMAGES_UPDATE_REPORT_FILE="/images/${report_file}" \
         -e IMAGES_UPDATE_DIR="${dir}" \
         -e IMAGES_UPDATE_SCRIPT="${script}" \
         -e IMAGES_HOST_ROOT="${PWD}" \
-        --rm -v "${PWD}:/images" -v /var/run/docker.sock:/var/run/docker.sock wodby/docker:dev \
+        --rm -v "${PWD}:/images" -v /var/run/docker.sock:/var/run/docker.sock \
+        wodby/docker:dev@sha256:733230bc461c3a4173fea8fe835bc58bf9698fc58c701510d10edc6b9c1af09b \
         bash -c 'cd "/images/${IMAGES_UPDATE_DIR}" && "./${IMAGES_UPDATE_SCRIPT}.sh"'
     shell: bash
   - name: Upload update report
