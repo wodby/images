@@ -35,8 +35,8 @@ jobs:
           docker_password: ${{ github.event_name != 'pull_request' && secrets.DOCKER_PASSWORD || '' }}
           wodbot_github_pat: ${{ github.event_name != 'pull_request' && secrets.WODBOT_GITHUB_PAT || '' }}
           wodbot_github_username: ${{ github.event_name != 'pull_request' && secrets.WODBOT_GITHUB_USERNAME || '' }}
-          wodbot_git_email: ${{ github.event_name != 'pull_request' && secrets.WODBOT_GIT_EMAIL || '' }}
-          wodbot_git_name: ${{ github.event_name != 'pull_request' && secrets.WODBOT_GIT_NAME || '' }}
+          wodbot_git_email: ${{ github.event_name == 'pull_request' && 'ci@wodby.invalid' || secrets.WODBOT_GIT_EMAIL }}
+          wodbot_git_name: ${{ github.event_name == 'pull_request' && 'Wodby CI' || secrets.WODBOT_GIT_NAME }}
   alpine:
     runs-on: ubuntu-latest
     strategy:
@@ -52,8 +52,8 @@ jobs:
           docker_password: ${{ github.event_name != 'pull_request' && secrets.DOCKER_PASSWORD || '' }}
           wodbot_github_pat: ${{ github.event_name != 'pull_request' && secrets.WODBOT_GITHUB_PAT || '' }}
           wodbot_github_username: ${{ github.event_name != 'pull_request' && secrets.WODBOT_GITHUB_USERNAME || '' }}
-          wodbot_git_email: ${{ github.event_name != 'pull_request' && secrets.WODBOT_GIT_EMAIL || '' }}
-          wodbot_git_name: ${{ github.event_name != 'pull_request' && secrets.WODBOT_GIT_NAME || '' }}
+          wodbot_git_email: ${{ github.event_name == 'pull_request' && 'ci@wodby.invalid' || secrets.WODBOT_GIT_EMAIL }}
+          wodbot_git_name: ${{ github.event_name == 'pull_request' && 'Wodby CI' || secrets.WODBOT_GIT_NAME }}
   images:
     runs-on: ubuntu-latest
     strategy:
@@ -69,8 +69,8 @@ jobs:
           docker_password: ${{ github.event_name != 'pull_request' && secrets.DOCKER_PASSWORD || '' }}
           wodbot_github_pat: ${{ github.event_name != 'pull_request' && secrets.WODBOT_GITHUB_PAT || '' }}
           wodbot_github_username: ${{ github.event_name != 'pull_request' && secrets.WODBOT_GITHUB_USERNAME || '' }}
-          wodbot_git_email: ${{ github.event_name != 'pull_request' && secrets.WODBOT_GIT_EMAIL || '' }}
-          wodbot_git_name: ${{ github.event_name != 'pull_request' && secrets.WODBOT_GIT_NAME || '' }}
+          wodbot_git_email: ${{ github.event_name == 'pull_request' && 'ci@wodby.invalid' || secrets.WODBOT_GIT_EMAIL }}
+          wodbot_git_name: ${{ github.event_name == 'pull_request' && 'Wodby CI' || secrets.WODBOT_GIT_NAME }}
   stability-tags:
     needs: tests
     runs-on: ubuntu-latest
@@ -87,8 +87,8 @@ jobs:
           docker_password: ${{ github.event_name != 'pull_request' && secrets.DOCKER_PASSWORD || '' }}
           wodbot_github_pat: ${{ github.event_name != 'pull_request' && secrets.WODBOT_GITHUB_PAT || '' }}
           wodbot_github_username: ${{ github.event_name != 'pull_request' && secrets.WODBOT_GITHUB_USERNAME || '' }}
-          wodbot_git_email: ${{ github.event_name != 'pull_request' && secrets.WODBOT_GIT_EMAIL || '' }}
-          wodbot_git_name: ${{ github.event_name != 'pull_request' && secrets.WODBOT_GIT_NAME || '' }}
+          wodbot_git_email: ${{ github.event_name == 'pull_request' && 'ci@wodby.invalid' || secrets.WODBOT_GIT_EMAIL }}
+          wodbot_git_name: ${{ github.event_name == 'pull_request' && 'Wodby CI' || secrets.WODBOT_GIT_NAME }}
   upstream:
     runs-on: ubuntu-latest
     strategy:
@@ -104,8 +104,8 @@ jobs:
           docker_password: ${{ github.event_name != 'pull_request' && secrets.DOCKER_PASSWORD || '' }}
           wodbot_github_pat: ${{ github.event_name != 'pull_request' && secrets.WODBOT_GITHUB_PAT || '' }}
           wodbot_github_username: ${{ github.event_name != 'pull_request' && secrets.WODBOT_GITHUB_USERNAME || '' }}
-          wodbot_git_email: ${{ github.event_name != 'pull_request' && secrets.WODBOT_GIT_EMAIL || '' }}
-          wodbot_git_name: ${{ github.event_name != 'pull_request' && secrets.WODBOT_GIT_NAME || '' }}
+          wodbot_git_email: ${{ github.event_name == 'pull_request' && 'ci@wodby.invalid' || secrets.WODBOT_GIT_EMAIL }}
+          wodbot_git_name: ${{ github.event_name == 'pull_request' && 'Wodby CI' || secrets.WODBOT_GIT_NAME }}
   docker4x:
     runs-on: ubuntu-latest
     strategy:
@@ -121,8 +121,8 @@ jobs:
           docker_password: ${{ github.event_name != 'pull_request' && secrets.DOCKER_PASSWORD || '' }}
           wodbot_github_pat: ${{ github.event_name != 'pull_request' && secrets.WODBOT_GITHUB_PAT || '' }}
           wodbot_github_username: ${{ github.event_name != 'pull_request' && secrets.WODBOT_GITHUB_USERNAME || '' }}
-          wodbot_git_email: ${{ github.event_name != 'pull_request' && secrets.WODBOT_GIT_EMAIL || '' }}
-          wodbot_git_name: ${{ github.event_name != 'pull_request' && secrets.WODBOT_GIT_NAME || '' }}
+          wodbot_git_email: ${{ github.event_name == 'pull_request' && 'ci@wodby.invalid' || secrets.WODBOT_GIT_EMAIL }}
+          wodbot_git_name: ${{ github.event_name == 'pull_request' && 'Wodby CI' || secrets.WODBOT_GIT_NAME }}
   notify:
     name: Notify Report Events
     needs:
