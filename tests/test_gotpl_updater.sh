@@ -72,6 +72,16 @@ git() {
     *) fail "unexpected git command: $*" ;;
   esac
 }
+
+export IMAGES_UPDATE_PUSH=0
+: >"${trace}"
+_git_push origin
+assert_eq "" "$(cat "${trace}")"
+if _publishing_enabled; then
+  fail "publishing unexpectedly enabled for a validation run"
+fi
+export IMAGES_UPDATE_PUSH=1
+
 _release_tag() {
   echo "release:${1}" >>"${trace}"
 }

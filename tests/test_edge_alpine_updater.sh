@@ -11,6 +11,7 @@ cleanup() {
 trap cleanup EXIT
 
 . "${repo_root}/update.sh"
+export IMAGES_UPDATE_PUSH=1
 
 fail() {
   echo "FAIL: $*" >&2
