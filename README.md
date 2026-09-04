@@ -27,6 +27,7 @@
 | [wodby/alpine]    | [alpine]              | `3.24`, `3.23`, `3.22`, `3.21` |
 | [wodby/apache]    | [_/httpd]             | `2.4`                                  |
 | [wodby/memcached] | [_/memcached]         | `1`                                    |
+| [wodby/mysql]     | [_/mysql]             | `8.0`                                  |
 | [wodby/node]      | [node]                | `26`, `24`, `22`                       |
 | [wodby/php]       | [_/php]               | `8.5`, `8.4`, `8.3`, `8.2`             |
 | [wodby/postgres]  | [_/postgres]          | `18`, `17`, `16`, `15`, `14`           |
@@ -173,6 +174,8 @@ Not automated:
 
 [_/memcached]: https://hub.docker.com/_/memcached
 
+[_/mysql]: https://hub.docker.com/_/mysql
+
 [_/postgres]: https://hub.docker.com/_/postgres
 
 [_/php]: https://hub.docker.com/_/php
@@ -214,6 +217,8 @@ Not automated:
 [wodby/matomo]: https://github.com/wodby/matomo
 
 [wodby/memcached]: https://github.com/wodby/memcached
+
+[wodby/mysql]: https://github.com/wodby/mysql
 
 [wodby/nginx]: https://github.com/wodby/nginx
 
