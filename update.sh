@@ -264,17 +264,45 @@ _git_push() {
   git push "$@"
 }
 
-_release_tag() {
-  if ! _publishing_enabled; then
-    echo "Skipping release tag because publishing is disabled"
-    return 0
-  fi
-
-  local message="${1}"
-  local minor_update="${2}"
+_latest_release_tag() {
+  local described_tag
+  local major
   local tag
 
-  IFS="." read -r -a sem_ver <<<"$(git describe --abbrev=0 --tags)"
+  described_tag=$(git describe --abbrev=0 --tags) || {
+    echo >&2 "Failed to find the current release tag"
+    return 1
+  }
+
+  if [[ ! "${described_tag}" =~ ^([0-9]+)\.[0-9]+\.[0-9]+$ ]]; then
+    echo >&2 "Current release tag is not semantic: ${described_tag}"
+    return 1
+  fi
+  major="${BASH_REMATCH[1]}"
+
+  # git describe returns the closest tag in the commit graph, which can be an
+  # older release after branches have been merged. Release tag names are
+  # repository-wide, so select the greatest semantic tag in the same major
+  # release line before calculating the next version.
+  while IFS= read -r tag; do
+    if [[ "${tag}" =~ ^${major}\.[0-9]+\.[0-9]+$ ]]; then
+      echo "${tag}"
+      return 0
+    fi
+  done < <(git tag --list "${major}.*" --sort=-version:refname)
+
+  echo >&2 "Failed to find a semantic release tag in major line ${major}"
+  return 1
+}
+
+_next_release_tag() {
+  local minor_update="${1}"
+  local current_tag
+  local tag
+  local -a sem_ver
+
+  current_tag=$(_latest_release_tag) || return 1
+  IFS="." read -r -a sem_ver <<<"${current_tag}"
 
   # Minor version changed.
   if [[ -n "${minor_update}" ]]; then
@@ -286,6 +314,25 @@ _release_tag() {
   fi
 
   tag=$(_join_ws "." "${sem_ver[@]}")
+  if git show-ref --verify --quiet "refs/tags/${tag}"; then
+    echo >&2 "Refusing to overwrite existing release tag ${tag}"
+    return 1
+  fi
+
+  echo "${tag}"
+}
+
+_release_tag() {
+  if ! _publishing_enabled; then
+    echo "Skipping release tag because publishing is disabled"
+    return 0
+  fi
+
+  local message="${1}"
+  local minor_update="${2}"
+  local tag
+
+  tag=$(_next_release_tag "${minor_update}") || return 1
 
   _ensure_git_identity
   git tag -m "${message}" "${tag}"

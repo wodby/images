@@ -61,7 +61,7 @@ runs:
         docker login -u "${DOCKER_USERNAME}" --password-stdin <<<"${DOCKER_PASSWORD}"
         logged_in=1
       fi
-      docker run -e WODBOT_GITHUB_PAT -e WODBOT_GITHUB_USERNAME -e WODBOT_GIT_EMAIL -e WODBOT_GIT_NAME -e DEBUG \
+      docker run -e WODBOT_GITHUB_PAT -e WODBOT_GITHUB_USERNAME -e WODBOT_GIT_EMAIL -e WODBOT_GIT_NAME -e DEBUG -e IMAGES_UPDATE_PUSH \
         -e IMAGES_UPDATE_REPORT_FILE="/images/${report_file}" \
         -e IMAGES_UPDATE_DIR="${dir}" \
         -e IMAGES_UPDATE_SCRIPT="${script}" \

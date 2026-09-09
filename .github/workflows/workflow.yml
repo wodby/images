@@ -21,6 +21,7 @@ jobs:
           ./tests/test_edge_alpine_updater.sh
           ./tests/test_gotpl_updater.sh
           ./tests/test_mysql_updater.sh
+          ./tests/test_release_updater.sh
   tooling:
     runs-on: ubuntu-latest
     strategy:
