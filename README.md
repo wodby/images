@@ -31,12 +31,15 @@
 | [wodby/node]      | [node]                | `26`, `24`, `22`                       |
 | [wodby/php]       | [_/php]               | `8.5`, `8.4`, `8.3`, `8.2`             |
 | [wodby/postgres]  | [_/postgres]          | `18`, `17`, `16`, `15`, `14`           |
+| [wodby/supabase-postgres] | [supabase/postgres] | `17` |
 | [wodby/python]    | [python]              | `3.14`, `3.13`, `3.12`, `3.11`, `3.10` |
 | [wodby/go]        | [_/golang]            | `1.26`, `1.25`                         |
 | [wodby/valkey]    | [valkey/valkey]       | `9.0`, `8.1`, `8.0`, `7.2`             |
 | [wodby/redis]     | [redis]               | `8.6`, `8.4`, `8.2`, `7.4`             |
 | [wodby/ruby]      | [ruby]                | `4.0`, `3.4`, `3.3`                    |
 | [wodby/rabbitmq]  | [rabbitmq]            | `4.3`, `4.2`                           |
+
+Supabase PostgreSQL is monitored for newer bundles within its pinned major version and for changes to the pinned tag digest. Updates produce manual-review report events; they do not automatically change the image or create releases because initialization SQL and backup compatibility must be validated together.
 
 ### Descendant images
 
@@ -261,3 +264,7 @@ Not automated:
 [wodby/squid]: https://github.com/wodby/squid
 
 [wordpress]: https://github.com/WordPress/WordPress
+
+[wodby/supabase-postgres]: https://github.com/wodby/supabase-postgres
+
+[supabase/postgres]: https://github.com/supabase/postgres

@@ -22,6 +22,7 @@ jobs:
           ./tests/test_gotpl_updater.sh
           ./tests/test_mysql_updater.sh
           ./tests/test_release_updater.sh
+          ./tests/test_supabase_postgres_updater.sh
   tooling:
     runs-on: ubuntu-latest
     strategy:
@@ -60,7 +61,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        script: [ alpine,apache,memcached,mysql,node,php,postgres,python,go,redis,valkey,ruby,rabbitmq ]
+        script: [ alpine,apache,memcached,mysql,node,php,postgres,supabase-postgres,python,go,redis,valkey,ruby,rabbitmq ]
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions
