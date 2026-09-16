@@ -43,6 +43,12 @@ _update_squid_package() {
 
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
   _git_clone wodby/squid
+  # The image migration and updater can be reviewed together without modifying
+  # an older Squid checkout during the scheduled or pull-request dry run.
+  if [[ ! -f .squid-package ]] || ! grep -q '^ALPINE_VER ?= 3.24$' Makefile; then
+    _report_event manual_review wodby/squid 'Waiting for the Squid 7 / Alpine 3.24 image migration before enabling automatic updates'
+    exit 0
+  fi
   _update_squid_package
   _update_timestamps "3.24" "wodby/alpine"
   _update_base_alpine_image "3.24" "wodby/alpine" "true"
