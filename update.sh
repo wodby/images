@@ -1205,22 +1205,71 @@ _update_dockerfile_arg_image() {
   echo "Updated ${name} from ${current} to ${expected}"
 }
 
-_report_edge_dependency_drift() {
-  local dependency="${1}"
-  local current="${2}"
-  local latest="${3}"
+# Keep runtime source updates on their reviewed compatibility lines. A release
+# commit must descend from a pinned commit before replacing that source pin.
+_edge_runtime_updates() {
+  local dockerfile="${1}"
+  local name arg repo line current latest commit_arg commit comparison sha old_sha
+  local changed=1
+  while read -r name arg repo line commit_arg; do
+    current=$(_dockerfile_arg_value "${arg}" "${dockerfile}") || return 2
+    current="${current#v}"
+    latest=$(_get_latest_version "github.com/${repo}" "${line}" "${name}") || return 2
+    [[ "${latest}" =~ ^[0-9]+(\.[0-9]+)+$ && "${latest}" == "${line}."* ]] || {
+      echo >&2 "Refusing ${name} release outside compatibility line ${line}: ${latest}"
+      return 2
+    }
+    _edge_require_current_or_newer "${name}" "${latest}" "${current}" || return 2
+    [[ "${current}" != "${latest}" ]] || continue
+    if [[ "${commit_arg}" != - ]]; then
+      _dockerfile_arg_value "${commit_arg}" "${dockerfile}" >/dev/null || return 2
+      commit=$(_github_api "repos/${repo}/commits/v${latest}") || return 2
+      sha=$(jq -er '.sha | select(test("^[0-9a-f]{40}$"))' <<<"${commit}") || return 2
+      sed -i -E "s/^ARG ${commit_arg}=.*/ARG ${commit_arg}=${sha}/" "${dockerfile}"
+    fi
+    case "${arg}" in
+      S6_OVERLAY_VERSION) sed -i -E "s/^ARG ${arg}=.*/ARG ${arg}=${latest}/" "${dockerfile}" ;;
+      *) sed -i -E "s/^ARG ${arg}=.*/ARG ${arg}=v${latest}/" "${dockerfile}" ;;
+    esac
+    _report_event dependency_update wodby/edge-alpine "${name}: ${current} -> ${latest}" "${latest}" "${current}"
+    changed=0
+  done <<'DEPENDENCIES'
+lego LEGO_VERSION go-acme/lego 4 LEGO_COMMIT
+s6-overlay S6_OVERLAY_VERSION just-containers/s6-overlay 3 -
+etcd-client ETCD_CLIENT_VERSION etcd-io/etcd 3.6 -
+DEPENDENCIES
 
-  if _version_is_newer "${latest}" "${current}"; then
-    echo "${dependency} ${latest} is available; ${current} remains pinned for manual review"
-    _report_event \
-      "manual_review" \
-      "wodby/edge-alpine" \
-      "${dependency} update available: ${current} -> ${latest}" \
-      "${latest}" \
-      "${current}"
-  else
-    echo "${dependency} ${current} is current within its tracked major line"
-  fi
+  while read -r name arg repo line; do
+    old_sha=$(_dockerfile_arg_value "${arg}" "${dockerfile}") || return 2
+    latest=$(_get_latest_version "github.com/${repo}" "${line}" "${name}") || return 2
+    [[ "${latest}" =~ ^[0-9]+(\.[0-9]+)+$ && "${latest}" == "${line}."* ]] || {
+      echo >&2 "Refusing ${name} release outside compatibility line ${line}: ${latest}"
+      return 2
+    }
+    case "${name}" in
+      gotpl) commit=$(_github_api "repos/${repo}/commits/${latest}") || return 2 ;;
+      confd) commit=$(_github_api "repos/${repo}/commits/v${latest}") || return 2 ;;
+    esac
+    sha=$(jq -er '.sha | select(test("^[0-9a-f]{40}$"))' <<<"${commit}") || return 2
+    [[ "${sha}" != "${old_sha}" ]] || continue
+    comparison=$(_github_api "repos/${repo}/compare/${old_sha}...${sha}") || return 2
+    comparison=$(jq -er '.status' <<<"${comparison}") || return 2
+    case "${comparison}" in
+      ahead)
+        sed -i -E "s/^ARG ${arg}=.*/ARG ${arg}=${sha}/" "${dockerfile}"
+        _report_event dependency_update wodby/edge-alpine "${name}: update to release ${latest}" "${latest}" "${old_sha}"
+        changed=0 ;;
+      behind)
+        echo "${name}: pinned source is newer than release ${latest}; keeping current source" ;;
+      diverged)
+        _report_event manual_review wodby/edge-alpine "${name} release ${latest} diverges from pinned source; review required" "${latest}" "${old_sha}" ;;
+      *) echo >&2 "Unexpected ${name} comparison: ${comparison}"; return 2 ;;
+    esac
+  done <<'SOURCES'
+gotpl GOTPL_COMMIT wodby/gotpl 0.6
+confd CONFD_COMMIT kelseyhightower/confd 0
+SOURCES
+  return "${changed}"
 }
 
 _prepare_edge_alpine_update() {
@@ -1237,10 +1286,6 @@ _prepare_edge_alpine_update() {
   local current_go_tag
   local current_go_version
   local candidate_go_version
-  local current_s6
-  local latest_s6
-  local current_lego
-  local latest_lego
   local update_status
   local updated=""
 
@@ -1298,24 +1343,81 @@ _prepare_edge_alpine_update() {
     [[ "${update_status}" -eq 1 ]] || return 2
   fi
 
-  current_s6=$(_dockerfile_arg_value "S6_OVERLAY_VERSION" "${dockerfile}") || return 2
-  # Source dependency changes can affect init and certificate behavior, so
-  # report updates within the pinned major lines instead of applying them.
-  latest_s6=$(_get_latest_version "github.com/just-containers/s6-overlay" "3" "s6-overlay") || return 2
-  _report_edge_dependency_drift "s6-overlay" "${current_s6}" "${latest_s6}"
-
-  current_lego=$(_dockerfile_arg_value "LEGO_VERSION" "${dockerfile}") || return 2
-  current_lego="${current_lego#v}"
-  latest_lego=$(_get_latest_version "github.com/go-acme/lego" "4" "lego") || return 2
-  _report_edge_dependency_drift "lego" "${current_lego}" "${latest_lego}"
+  if _edge_runtime_updates "${dockerfile}"; then
+    updated=1
+  else
+    update_status=$?
+    [[ "${update_status}" -eq 1 ]] || return 2
+  fi
 
   [[ -n "${updated}" ]]
+}
+
+# Resolve the NGINX patch version from the build definition of the pinned
+# Wodby image release; its Docker tag only exposes the 1.31 compatibility line.
+_edge_nginx_version() {
+  local tag
+  local release
+  local workflow
+  local version
+
+  tag=$(_image_ref_tag "${1}")
+  release="${tag#1.31-}"
+  [[ "${tag}" =~ ^1\.31-[0-9]+\.[0-9]+\.[0-9]+$ ]] || return 1
+  workflow=$(_github_api "repos/wodby/nginx/contents/.github/workflows/workflow.yml?ref=${release}") || return 1
+  workflow=$(jq -er '.content' <<<"${workflow}" | base64 -d) || return 1
+  version=$(sed -n -E "s/^[[:space:]]*NGINX131: ['\"]?([0-9.]+).*$/\\1/p" <<<"${workflow}")
+  [[ "${version}" =~ ^1\.31\.[0-9]+$ ]] || return 1
+  echo "${version}"
+}
+
+# Compare with the last release, not just the last commit: earlier successful
+# pin changes may be waiting on master after a failed release build.
+_edge_release_notes() {
+  local previous="${1}"
+  local old_dockerfile
+  local next_release
+  local old_nginx new_nginx old_version new_version
+
+  next_release=$(_next_release_tag "") || return 1
+  old_dockerfile=$(git show "${previous}:Dockerfile") || return 1
+  old_nginx=$(_dockerfile_arg_value NGINX_IMAGE <(printf '%s\n' "${old_dockerfile}")) || return 1
+  new_nginx=$(_dockerfile_arg_value NGINX_IMAGE Dockerfile) || return 1
+  old_version=$(_edge_nginx_version "${old_nginx}") || return 1
+  new_version=$(_edge_nginx_version "${new_nginx}") || return 1
+
+  printf 'Edge changes since %s\n\n' "${previous}"
+  if [[ "${old_version}" != "${new_version}" ]]; then
+    printf -- '- NGINX: %s -> %s.\n' "${old_version}" "${new_version}"
+  else
+    printf -- '- NGINX remains %s.\n' "${new_version}"
+  fi
+  local arg label old_value new_value
+  while read -r arg label; do
+    old_value=$(_dockerfile_arg_value "${arg}" <(printf '%s\n' "${old_dockerfile}")) || return 1
+    new_value=$(_dockerfile_arg_value "${arg}" Dockerfile) || return 1
+    if [[ "${old_value}" != "${new_value}" ]]; then
+      case "${arg}" in
+        *_COMMIT) printf -- '- Updated %s.\n' "${label}" ;;
+        *) printf -- '- %s: %s -> %s.\n' "${label}" "${old_value#v}" "${new_value#v}" ;;
+      esac
+    fi
+  done <<'RUNTIME_NOTES'
+LEGO_VERSION lego (certificate issuance and renewal)
+S6_OVERLAY_VERSION s6-overlay (service supervision)
+ETCD_CLIENT_VERSION etcd client (configuration updates)
+GOTPL_COMMIT gotpl (configuration templates)
+CONFD_COMMIT confd (configuration generation)
+RUNTIME_NOTES
+  printf '\nFull changes: https://github.com/wodby/edge-alpine/compare/%s...%s\n' "${previous}" "${next_release}"
 }
 
 update_edge_alpine() {
   local repo="wodby/edge-alpine"
   local sha
   local prepare_status
+  local previous_release
+  local release_notes
 
   _git_clone "${repo}" || return 1
 
@@ -1332,7 +1434,9 @@ update_edge_alpine() {
     return "${prepare_status}"
   fi
 
-  _git_commit ./ "Update nginx and Go image pins" || return 1
+  previous_release=$(_latest_release_tag) || return 1
+  release_notes=$(_edge_release_notes "${previous_release}") || return 1
+  _git_commit ./ "${release_notes}" || return 1
   _git_push origin || return 1
 
   sha=$(git rev-parse HEAD) || return 1
@@ -1341,7 +1445,7 @@ update_edge_alpine() {
   # The target workflow builds, tests, and scans the image before this patch
   # release is created. A failed workflow leaves the update visible on master
   # for investigation but never creates a public release tag.
-  _release_tag "Update pinned nginx and Go images" "" || return 1
+  _release_tag "${release_notes}" "" || return 1
 }
 
 sync_solr_fork() {
