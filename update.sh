@@ -1336,37 +1336,20 @@ _edge_release_notes() {
   local previous="${1}"
   local old_dockerfile
   local next_release
-  local old_nginx new_nginx old_go new_go old_version new_version
-  local old_go_tag new_go_tag
+  local old_nginx new_nginx old_version new_version
 
   next_release=$(_next_release_tag "") || return 1
   old_dockerfile=$(git show "${previous}:Dockerfile") || return 1
   old_nginx=$(_dockerfile_arg_value NGINX_IMAGE <(printf '%s\n' "${old_dockerfile}")) || return 1
-  old_go=$(_dockerfile_arg_value GO_IMAGE <(printf '%s\n' "${old_dockerfile}")) || return 1
   new_nginx=$(_dockerfile_arg_value NGINX_IMAGE Dockerfile) || return 1
-  new_go=$(_dockerfile_arg_value GO_IMAGE Dockerfile) || return 1
   old_version=$(_edge_nginx_version "${old_nginx}") || return 1
   new_version=$(_edge_nginx_version "${new_nginx}") || return 1
 
-  printf 'Update Edge dependencies since %s\n\n' "${previous}"
+  printf 'Edge changes since %s\n\n' "${previous}"
   if [[ "${old_version}" != "${new_version}" ]]; then
     printf -- '- NGINX: %s -> %s.\n' "${old_version}" "${new_version}"
   else
     printf -- '- NGINX remains %s.\n' "${new_version}"
-  fi
-  old_go_tag=$(_image_ref_tag "${old_go}")
-  new_go_tag=$(_image_ref_tag "${new_go}")
-  if [[ "${old_go_tag}" != "${new_go_tag}" ]]; then
-    printf -- '- Go build image: %s -> %s.\n' "${old_go_tag}" "${new_go_tag}"
-  else
-    printf -- '- Go build image remains %s.\n' "${new_go_tag}"
-  fi
-  # Full references distinguish a digest refresh from a component version bump.
-  if [[ "${old_nginx}" != "${new_nginx}" ]]; then
-    printf -- '- NGINX image: %s -> %s.\n' "${old_nginx}" "${new_nginx}"
-  fi
-  if [[ "${old_go}" != "${new_go}" ]]; then
-    printf -- '- Go image: %s -> %s.\n' "${old_go}" "${new_go}"
   fi
   printf '\nFull changes: https://github.com/wodby/edge-alpine/compare/%s...%s\n' "${previous}" "${next_release}"
 }

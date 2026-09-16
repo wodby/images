@@ -169,7 +169,7 @@ mkdir -p "${notes_dir}"
   }
   notes=$(_edge_release_notes 3.0.6)
   [[ "${notes}" == *'NGINX: 1.31.3 -> 1.31.6.'* ]] || fail 'missing NGINX upgrade'
-  [[ "${notes}" == *'1.26.7-alpine3.23 -> 1.26.8-alpine3.23'* ]] || fail 'missing Go upgrade'
+  [[ "${notes}" != *'Go'* && "${notes}" != *'sha256:'* ]] || fail 'build details leaked into release notes'
   [[ "${notes}" == *'compare/3.0.6...3.0.7'* ]] || fail 'wrong release comparison'
   _edge_nginx_version() { echo 1.31.6; }
   notes=$(_edge_release_notes 3.0.6)
