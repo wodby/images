@@ -64,4 +64,4 @@ if _update_squid_package; then echo 'Ignored lookup failure' >&2; exit 1; fi
   [[ $(cat timestamps) == '3.24#new' ]]
   [[ $(cat events) == $'commit\npush' ]]
 )
-echo 'Squid updater tests passed.' 
+echo 'Squid updater tests passed.'
