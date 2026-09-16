@@ -46,6 +46,10 @@ printf '%s\n' \
   'ARG NGINX_IMAGE=wodby/nginx:1.31-5.48.4@sha256:old-nginx' \
   'FROM --platform=$BUILDPLATFORM ${GO_IMAGE} AS lego-build' \
   'ARG LEGO_VERSION=v4.35.2' \
+  'ARG LEGO_COMMIT=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' \
+  'ARG ETCD_CLIENT_VERSION=v3.6.14' \
+  'ARG GOTPL_COMMIT=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' \
+  'ARG CONFD_COMMIT=cccccccccccccccccccccccccccccccccccccccc' \
   'FROM ${NGINX_IMAGE}' \
   'ARG S6_OVERLAY_VERSION=3.2.3.2' >"${dockerfile}"
 
@@ -68,7 +72,19 @@ _get_image_digest() {
 _get_latest_version() {
   case "${1}" in
     github.com/just-containers/s6-overlay) echo '3.2.4.0' ;;
-    github.com/go-acme/lego) echo '4.35.2' ;;
+    github.com/go-acme/lego) echo '4.35.3' ;;
+    github.com/etcd-io/etcd) echo '3.6.15' ;;
+    github.com/wodby/gotpl) echo '0.6.9' ;;
+    github.com/kelseyhightower/confd) echo '0.16.0' ;;
+    *) return 1 ;;
+  esac
+}
+_github_api() {
+  case "${1}" in
+    repos/go-acme/lego/commits/v4.35.3|repos/wodby/gotpl/commits/0.6.9) echo '{"sha":"dddddddddddddddddddddddddddddddddddddddd"}' ;;
+    repos/kelseyhightower/confd/commits/v0.16.0) echo '{"sha":"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"}' ;;
+    repos/wodby/gotpl/compare/*) echo '{"status":"ahead"}' ;;
+    repos/kelseyhightower/confd/compare/*) echo '{"status":"behind"}' ;;
     *) return 1 ;;
   esac
 }
@@ -82,17 +98,52 @@ assert_file_line 'ARG GO_IMAGE=golang:1.26.5-alpine3.23@sha256:new-go' "${docker
 assert_file_line 'ARG NGINX_IMAGE=wodby/nginx:1.31-5.48.5@sha256:new-nginx' "${dockerfile}"
 jq -e '
   select(
-    .type == "manual_review"
+    .type == "dependency_update"
     and .repo == "wodby/edge-alpine"
-    and .message == "s6-overlay update available: 3.2.3.2 -> 3.2.4.0"
+    and .message == "s6-overlay: 3.2.3.2 -> 3.2.4.0"
   )
-' "${test_root}/events.jsonl" >/dev/null || fail "missing s6 manual-review event"
+' "${test_root}/events.jsonl" >/dev/null || fail "missing s6 update event"
+
+assert_file_line 'ARG LEGO_VERSION=v4.35.3' "${dockerfile}"
+assert_file_line 'ARG LEGO_COMMIT=dddddddddddddddddddddddddddddddddddddddd' "${dockerfile}"
+assert_file_line 'ARG S6_OVERLAY_VERSION=3.2.4.0' "${dockerfile}"
+assert_file_line 'ARG ETCD_CLIENT_VERSION=v3.6.15' "${dockerfile}"
+assert_file_line 'ARG GOTPL_COMMIT=dddddddddddddddddddddddddddddddddddddddd' "${dockerfile}"
+assert_file_line 'ARG CONFD_COMMIT=cccccccccccccccccccccccccccccccccccccccc' "${dockerfile}"
 
 if _prepare_edge_alpine_update "${dockerfile}"; then
   fail "current image pins were reported as changed"
 else
   assert_eq "1" "$?"
 fi
+
+# Runtime-only releases still trigger an Edge rebuild when image pins are current.
+sed -i 's/LEGO_VERSION=v4.35.3/LEGO_VERSION=v4.35.2/' "${dockerfile}"
+_prepare_edge_alpine_update "${dockerfile}" || fail 'runtime-only update was skipped'
+assert_file_line 'ARG LEGO_VERSION=v4.35.3' "${dockerfile}"
+(
+  _get_latest_version() { echo 5.0.0; }
+  if _edge_runtime_updates "${dockerfile}"; then
+    fail 'major migration was accepted'
+  else
+    assert_eq 2 "$?"
+  fi
+)
+(
+  _github_api() {
+    case "${1}" in
+      */commits/*) echo '{"sha":"ffffffffffffffffffffffffffffffffffffffff"}' ;;
+      */compare/*) echo '{"status":"diverged"}' ;;
+    esac
+  }
+  if _edge_runtime_updates "${dockerfile}"; then
+    fail 'divergent source was updated'
+  else
+    assert_eq 1 "$?"
+  fi
+  assert_file_line 'ARG GOTPL_COMMIT=dddddddddddddddddddddddddddddddddddddddd' "${dockerfile}"
+)
+jq -e 'select(.type == "manual_review" and (.message | contains("diverges")))' "${IMAGES_UPDATE_REPORT_FILE}" >/dev/null || fail 'missing divergent source report'
 
 _get_image_tags() {
   case "${1}" in
@@ -118,6 +169,10 @@ invalid_dockerfile="${test_root}/Dockerfile.invalid"
 printf '%s\n' \
   'ARG GO_IMAGE=golang:1.26.4-alpine3.23@sha256:old-go' \
   'ARG LEGO_VERSION=v4.35.2' \
+  'ARG LEGO_COMMIT=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' \
+  'ARG ETCD_CLIENT_VERSION=v3.6.14' \
+  'ARG GOTPL_COMMIT=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' \
+  'ARG CONFD_COMMIT=cccccccccccccccccccccccccccccccccccccccc' \
   'ARG S6_OVERLAY_VERSION=3.2.3.2' >"${invalid_dockerfile}"
 if _prepare_edge_alpine_update "${invalid_dockerfile}"; then
   fail "invalid Dockerfile unexpectedly succeeded"
@@ -156,7 +211,13 @@ mkdir -p "${notes_dir}"
 (
   cd "${notes_dir}"
   printf '%s\n' 'ARG NGINX_IMAGE=wodby/nginx:1.31-5.48.13@sha256:new' 'ARG GO_IMAGE=golang:1.26.8-alpine3.23@sha256:new' > Dockerfile
+  runtime_pins() {
+    printf '%s\n' 'ARG LEGO_VERSION=v4.35.2' 'ARG S6_OVERLAY_VERSION=3.2.3.2' 'ARG ETCD_CLIENT_VERSION=v3.6.14' 'ARG GOTPL_COMMIT=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' 'ARG CONFD_COMMIT=cccccccccccccccccccccccccccccccccccccccc'
+  }
+  runtime_pins >> Dockerfile
+  sed -i 's/LEGO_VERSION=v4.35.2/LEGO_VERSION=v4.35.3/' Dockerfile
   git() {
+    runtime_pins
     assert_eq 'show 3.0.6:Dockerfile' "$*"
     printf '%s\n' 'ARG NGINX_IMAGE=wodby/nginx:1.31-5.48.7@sha256:old' 'ARG GO_IMAGE=golang:1.26.7-alpine3.23@sha256:old'
   }
@@ -169,6 +230,7 @@ mkdir -p "${notes_dir}"
   }
   notes=$(_edge_release_notes 3.0.6)
   [[ "${notes}" == *'NGINX: 1.31.3 -> 1.31.6.'* ]] || fail 'missing NGINX upgrade'
+  [[ "${notes}" == *'lego (certificate issuance and renewal): 4.35.2 -> 4.35.3.'* ]] || fail 'missing runtime update note'
   [[ "${notes}" != *'Go'* && "${notes}" != *'sha256:'* ]] || fail 'build details leaked into release notes'
   [[ "${notes}" == *'compare/3.0.6...3.0.7'* ]] || fail 'wrong release comparison'
   _edge_nginx_version() { echo 1.31.6; }
