@@ -6,10 +6,27 @@ set -euo pipefail
 # Follow packages available on the image's Alpine branch, rather than an
 # upstream Squid release that apk cannot install yet.
 _squid_package_version() {
-  local index version
-  index=$(curl -fsSL --connect-timeout 10 --max-time 60 --retry 3 \
-    https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/APKINDEX.tar.gz | tar -xzO APKINDEX) || return 1
-  version=$(awk -F: '$0 == "P:squid" { found=1; next } found && /^V:/ { print $2; exit }' <<<"$index")
+  local work version
+  work=$(mktemp -d) || return 1
+  # Keep the large package index out of shell variables and DEBUG traces.
+  # Download first so extraction cannot close curl's pipe prematurely.
+  if ! curl -fsSL --connect-timeout 10 --max-time 60 --retry 3 \
+    -o "$work/index.tar.gz" \
+    https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/APKINDEX.tar.gz; then
+    echo >&2 "Failed to download the Alpine 3.24 Squid package index"
+    rm -rf "$work"
+    return 1
+  fi
+  if ! tar -xzOf "$work/index.tar.gz" APKINDEX > "$work/APKINDEX"; then
+    echo >&2 "Failed to extract the Alpine 3.24 Squid package index"
+    rm -rf "$work"
+    return 1
+  fi
+  if ! version=$(awk -F: '$0 == "P:squid" { found=1; next } found && /^V:/ { print $2; exit }' "$work/APKINDEX"); then
+    rm -rf "$work"
+    return 1
+  fi
+  rm -rf "$work"
   [[ "$version" =~ ^7\.[0-9]+(\.[0-9]+)?-r[0-9]+$ ]] || {
     echo >&2 "Expected a stable Squid 7 package, got: $version"
     return 1
