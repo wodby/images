@@ -113,7 +113,7 @@ Not automated:
 - New stability branches for major stability tags updates
 - [wodby/opensmtpd] (installed from Alpine repository package)
 - [wodby/adminer] not auto-updates for the base image (php:8.4-apache)
-- [wodby/edge-alpine] nginx and Go image pins are updated only within their configured compatibility lines; s6-overlay v3 and lego v4 updates are reported for manual review, while new major lines remain manual
+- [wodby/edge-alpine] release tag descriptions record NGINX patch versions, Go build image versions, changed image digests, and a comparison with the previous release. Its nginx and Go image pins are updated only within their configured compatibility lines; s6-overlay v3 and lego v4 updates are reported for manual review, while new major lines remain manual
 
 [adoptium/containers]: https://github.com/adoptium/containers
 

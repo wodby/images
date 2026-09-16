@@ -139,6 +139,47 @@ if EDGE_ALPINE_WORKFLOW_TIMEOUT=1 EDGE_ALPINE_WORKFLOW_POLL_INTERVAL=0 \
   fail "failed target workflow was accepted"
 fi
 
+# Resolve the real patch version rather than reporting the 1.31 image line.
+_github_api() {
+  assert_eq 'repos/wodby/nginx/contents/.github/workflows/workflow.yml?ref=5.48.13' "${1}"
+  jq -nc --arg content "$(printf "env:\n  NGINX131: '1.31.6'\n" | base64)" '{content: $content}'
+}
+assert_eq 1.31.6 "$(_edge_nginx_version wodby/nginx:1.31-5.48.13@sha256:test)"
+_github_api() { echo '{"content":""}'; }
+if _edge_nginx_version wodby/nginx:1.31-5.48.13; then
+  fail 'missing NGINX version was accepted'
+fi
+
+# Release comparisons must include changes accumulated since the previous tag.
+notes_dir="${test_root}/notes"
+mkdir -p "${notes_dir}"
+(
+  cd "${notes_dir}"
+  printf '%s\n' 'ARG NGINX_IMAGE=wodby/nginx:1.31-5.48.13@sha256:new' 'ARG GO_IMAGE=golang:1.26.8-alpine3.23@sha256:new' > Dockerfile
+  git() {
+    assert_eq 'show 3.0.6:Dockerfile' "$*"
+    printf '%s\n' 'ARG NGINX_IMAGE=wodby/nginx:1.31-5.48.7@sha256:old' 'ARG GO_IMAGE=golang:1.26.7-alpine3.23@sha256:old'
+  }
+  _next_release_tag() { echo 3.0.7; }
+  _edge_nginx_version() {
+    case "${1}" in
+      *5.48.7*) echo 1.31.3 ;;
+      *) echo 1.31.6 ;;
+    esac
+  }
+  notes=$(_edge_release_notes 3.0.6)
+  [[ "${notes}" == *'NGINX: 1.31.3 -> 1.31.6.'* ]] || fail 'missing NGINX upgrade'
+  [[ "${notes}" == *'1.26.7-alpine3.23 -> 1.26.8-alpine3.23'* ]] || fail 'missing Go upgrade'
+  [[ "${notes}" == *'compare/3.0.6...3.0.7'* ]] || fail 'wrong release comparison'
+  _edge_nginx_version() { echo 1.31.6; }
+  notes=$(_edge_release_notes 3.0.6)
+  [[ "${notes}" == *'NGINX remains 1.31.6.'* ]] || fail 'unchanged NGINX reported as upgrade'
+  _edge_nginx_version() { return 1; }
+  if _edge_release_notes 3.0.6; then
+    fail 'release notes accepted an unknown NGINX version'
+  fi
+)
+
 trace="${test_root}/trace"
 orchestration_dir="${test_root}/orchestration"
 mkdir -p "${orchestration_dir}"
@@ -150,7 +191,10 @@ _git_clone() {
 _prepare_edge_alpine_update() {
   echo prepare >>"${trace}"
 }
+_latest_release_tag() { echo 3.0.6; }
+_edge_release_notes() { echo "NGINX: 1.31.3 -> 1.31.6"; }
 _git_commit() {
+  assert_eq "NGINX: 1.31.3 -> 1.31.6" "${2}"
   echo commit >>"${trace}"
 }
 git() {
@@ -167,6 +211,7 @@ _wait_for_github_workflow() {
   echo wait >>"${trace}"
 }
 _release_tag() {
+  assert_eq "NGINX: 1.31.3 -> 1.31.6" "${1}"
   echo release >>"${trace}"
 }
 

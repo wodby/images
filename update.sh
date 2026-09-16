@@ -1312,10 +1312,71 @@ _prepare_edge_alpine_update() {
   [[ -n "${updated}" ]]
 }
 
+# Resolve the NGINX patch version from the build definition of the pinned
+# Wodby image release; its Docker tag only exposes the 1.31 compatibility line.
+_edge_nginx_version() {
+  local tag
+  local release
+  local workflow
+  local version
+
+  tag=$(_image_ref_tag "${1}")
+  release="${tag#1.31-}"
+  [[ "${tag}" =~ ^1\.31-[0-9]+\.[0-9]+\.[0-9]+$ ]] || return 1
+  workflow=$(_github_api "repos/wodby/nginx/contents/.github/workflows/workflow.yml?ref=${release}") || return 1
+  workflow=$(jq -er '.content' <<<"${workflow}" | base64 -d) || return 1
+  version=$(sed -n -E "s/^[[:space:]]*NGINX131: ['\"]?([0-9.]+).*$/\\1/p" <<<"${workflow}")
+  [[ "${version}" =~ ^1\.31\.[0-9]+$ ]] || return 1
+  echo "${version}"
+}
+
+# Compare with the last release, not just the last commit: earlier successful
+# pin changes may be waiting on master after a failed release build.
+_edge_release_notes() {
+  local previous="${1}"
+  local old_dockerfile
+  local next_release
+  local old_nginx new_nginx old_go new_go old_version new_version
+  local old_go_tag new_go_tag
+
+  next_release=$(_next_release_tag "") || return 1
+  old_dockerfile=$(git show "${previous}:Dockerfile") || return 1
+  old_nginx=$(_dockerfile_arg_value NGINX_IMAGE <(printf '%s\n' "${old_dockerfile}")) || return 1
+  old_go=$(_dockerfile_arg_value GO_IMAGE <(printf '%s\n' "${old_dockerfile}")) || return 1
+  new_nginx=$(_dockerfile_arg_value NGINX_IMAGE Dockerfile) || return 1
+  new_go=$(_dockerfile_arg_value GO_IMAGE Dockerfile) || return 1
+  old_version=$(_edge_nginx_version "${old_nginx}") || return 1
+  new_version=$(_edge_nginx_version "${new_nginx}") || return 1
+
+  printf 'Update Edge dependencies since %s\n\n' "${previous}"
+  if [[ "${old_version}" != "${new_version}" ]]; then
+    printf -- '- NGINX: %s -> %s.\n' "${old_version}" "${new_version}"
+  else
+    printf -- '- NGINX remains %s.\n' "${new_version}"
+  fi
+  old_go_tag=$(_image_ref_tag "${old_go}")
+  new_go_tag=$(_image_ref_tag "${new_go}")
+  if [[ "${old_go_tag}" != "${new_go_tag}" ]]; then
+    printf -- '- Go build image: %s -> %s.\n' "${old_go_tag}" "${new_go_tag}"
+  else
+    printf -- '- Go build image remains %s.\n' "${new_go_tag}"
+  fi
+  # Full references distinguish a digest refresh from a component version bump.
+  if [[ "${old_nginx}" != "${new_nginx}" ]]; then
+    printf -- '- NGINX image: %s -> %s.\n' "${old_nginx}" "${new_nginx}"
+  fi
+  if [[ "${old_go}" != "${new_go}" ]]; then
+    printf -- '- Go image: %s -> %s.\n' "${old_go}" "${new_go}"
+  fi
+  printf '\nFull changes: https://github.com/wodby/edge-alpine/compare/%s...%s\n' "${previous}" "${next_release}"
+}
+
 update_edge_alpine() {
   local repo="wodby/edge-alpine"
   local sha
   local prepare_status
+  local previous_release
+  local release_notes
 
   _git_clone "${repo}" || return 1
 
@@ -1332,7 +1393,9 @@ update_edge_alpine() {
     return "${prepare_status}"
   fi
 
-  _git_commit ./ "Update nginx and Go image pins" || return 1
+  previous_release=$(_latest_release_tag) || return 1
+  release_notes=$(_edge_release_notes "${previous_release}") || return 1
+  _git_commit ./ "${release_notes}" || return 1
   _git_push origin || return 1
 
   sha=$(git rev-parse HEAD) || return 1
@@ -1341,7 +1404,7 @@ update_edge_alpine() {
   # The target workflow builds, tests, and scans the image before this patch
   # release is created. A failed workflow leaves the update visible on master
   # for investigation but never creates a public release tag.
-  _release_tag "Update pinned nginx and Go images" "" || return 1
+  _release_tag "${release_notes}" "" || return 1
 }
 
 sync_solr_fork() {
