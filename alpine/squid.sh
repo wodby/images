@@ -1,7 +1,55 @@
 #!/usr/bin/env bash
+set -euo pipefail
 
-set -e
+. "$(dirname "${BASH_SOURCE[0]}")/../update.sh"
 
-. ../update.sh
+# Follow packages available on the image's Alpine branch, rather than an
+# upstream Squid release that apk cannot install yet.
+_squid_package_version() {
+  local index version
+  index=$(curl -fsSL --connect-timeout 10 --max-time 60 --retry 3 \
+    https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/APKINDEX.tar.gz | tar -xzO APKINDEX) || return 1
+  version=$(awk -F: '$0 == "P:squid" { found=1; next } found && /^V:/ { print $2; exit }' <<<"$index")
+  [[ "$version" =~ ^7\.[0-9]+(\.[0-9]+)?-r[0-9]+$ ]] || {
+    echo >&2 "Expected a stable Squid 7 package, got: $version"
+    return 1
+  }
+  printf '%s\n' "$version"
+}
 
-update_base_alpine "wodby/squid" "3.17" "true"
+_update_squid_package() {
+  local candidate current version previous
+  candidate=$(_squid_package_version) || return 1
+  current=$(cat .squid-package) || return 1
+  [[ "$current" =~ ^7\.[0-9]+(\.[0-9]+)?-r[0-9]+$ ]] || return 1
+  [[ "$candidate" != "$current" ]] || return 0
+  version=${candidate%-r*}
+  previous=${current%-r*}
+  if [[ "$version" == "$previous" ]]; then
+    (( ${candidate##*-r} > ${current##*-r} )) || return 0
+  elif ! _version_is_newer "$version" "$previous"; then
+    return 0
+  fi
+
+  # Keep versioned tags, the local build default and package revision aligned.
+  sed -i -E "s/(SQUID7: )'[^']+'/\1'$version'/" .github/workflows/workflow.yml
+  sed -i -E "s/(SQUID_VER \?= ).*/\1$version/" Makefile
+  sed -i "s/\`$previous\`/\`$version\`/g" README.md
+  printf '%s\n' "$candidate" > .squid-package
+  _git_commit ./ "Update Squid package to $candidate"
+  _git_push origin
+  _release_tag "Squid package update: $candidate" ""
+}
+
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+  _git_clone wodby/squid
+  # The image migration and updater can be reviewed together without modifying
+  # an older Squid checkout during the scheduled or pull-request dry run.
+  if [[ ! -f .squid-package ]] || ! grep -q '^ALPINE_VER ?= 3.24$' Makefile; then
+    _report_event manual_review wodby/squid 'Waiting for the Squid 7 / Alpine 3.24 image migration before enabling automatic updates'
+    exit 0
+  fi
+  _update_squid_package
+  _update_timestamps "3.24" "wodby/alpine"
+  _update_base_alpine_image "3.24" "wodby/alpine" "true"
+fi
