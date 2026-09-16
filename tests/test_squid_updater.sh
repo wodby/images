@@ -49,4 +49,19 @@ grep -q 'SQUID_VER ?= 7.7' Makefile
 grep -q '`7.7`' README.md
 _squid_package_version() { return 1; }
 if _update_squid_package; then echo 'Ignored lookup failure' >&2; exit 1; fi
-echo 'Squid updater tests passed.'
+# Squid enables nounset for the shared timestamp updater as well.
+(
+  _find_timestamp_file() { echo timestamps; }
+  _get_timestamp() { echo new; }
+  git() { echo master; }
+  _head_has_unpushed_commits() { return 1; }
+  echo '3.24#new' > timestamps
+  : > events
+  _update_timestamps 3.24 wodby/alpine
+  [[ ! -s events ]]
+  echo '3.24#old' > timestamps
+  _update_timestamps 3.24 wodby/alpine
+  [[ $(cat timestamps) == '3.24#new' ]]
+  [[ $(cat events) == $'commit\npush' ]]
+)
+echo 'Squid updater tests passed.' 

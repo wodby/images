@@ -934,7 +934,7 @@ _update_timestamps() {
 
   # When passed we also check for Alpine update and release versions.
   local image="${3:-}"
-  local updated
+  local updated=""
 
   local latest_timestamp
   local cur_timestamp
@@ -948,7 +948,7 @@ _update_timestamps() {
   local ver_list
   local timestamp_file
 
-  local -a ver_with_updated_alpine
+  local -a ver_with_updated_alpine=()
 
   IFS=' ' read -r -a arr_versions <<<"${version_list}"
   timestamp_file=$(_find_timestamp_file "${base_image}" "${image#*/}" || true)
