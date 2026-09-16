@@ -12,7 +12,7 @@
 | [wodby/nginx]     | `3.23`         |
 | [wodby/opensmtpd] | `3.23`         |
 | [wodby/vinyl]     | `3.22`, `3.23` |
-| [wodby/squid]     | `3.17`         |
+| [wodby/squid]     | `3.24`         |
 
 ### Images based on official images (or forks)
 
