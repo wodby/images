@@ -55,7 +55,7 @@ _update_squid_package() {
   printf '%s\n' "$candidate" > .squid-package
   _git_commit ./ "Update Squid package to $candidate"
   _git_push origin
-  _release_tag "Squid package update: $candidate" ""
+  _release_tag "Squid package: $current -> $candidate" ""
 }
 
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then

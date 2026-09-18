@@ -217,15 +217,46 @@ mkdir -p "${notes_dir}"
   notes=$(_edge_release_notes 3.0.6)
   [[ "${notes}" == *'NGINX: 1.31.3 -> 1.31.6.'* ]] || fail 'missing NGINX upgrade'
   [[ "${notes}" == *'lego (certificate issuance and renewal): 4.35.2 -> 4.35.3.'* ]] || fail 'missing runtime update note'
-  [[ "${notes}" != *'Go'* && "${notes}" != *'sha256:'* ]] || fail 'build details leaked into release notes'
+  [[ "${notes}" == *'Go builder image: 1.26.7-alpine3.23 -> 1.26.8-alpine3.23.'* ]] || fail 'missing builder upgrade'
+  [[ "${notes}" != *'sha256:'* ]] || fail 'raw digests leaked into release notes'
   [[ "${notes}" == *'compare/3.0.6...3.0.7'* ]] || fail 'wrong release comparison'
   _edge_nginx_version() { echo 1.31.6; }
   notes=$(_edge_release_notes 3.0.6)
-  [[ "${notes}" == *'NGINX remains 1.31.6.'* ]] || fail 'unchanged NGINX reported as upgrade'
+  [[ "${notes}" != *'NGINX remains'* && "${notes}" != *'- NGINX:'* ]] || fail 'unchanged NGINX reported'
+  [[ "${notes}" == *'NGINX base image: wodby/nginx:1.31-5.48.7 -> wodby/nginx:1.31-5.48.13.'* ]] || fail 'missing base image upgrade'
   _edge_nginx_version() { return 1; }
   if _edge_release_notes 3.0.6; then
     fail 'release notes accepted an unknown NGINX version'
   fi
+
+  # Reproduce a release whose only change is the Go builder digest.
+  cp Dockerfile previous.Dockerfile
+  git() { cat previous.Dockerfile; }
+  sed -i 's/GO_IMAGE=.*$/GO_IMAGE=golang:1.26.8-alpine3.23@sha256:refreshed/' Dockerfile
+  if _edge_update_requires_release; then fail 'Go digest refresh requires a release'; fi
+  notes=$(_edge_release_notes 3.0.6)
+  [[ "${notes}" == *'Refresh Go builder image 1.26.8-alpine3.23 (image digest changed).'* ]] || fail 'missing builder refresh'
+  [[ "${notes}" != *'NGINX'* && "${notes}" != *'lego'* ]] || fail 'unchanged components reported'
+
+  cp previous.Dockerfile Dockerfile
+  sed -i 's/NGINX_IMAGE=.*$/NGINX_IMAGE=wodby\/nginx:1.31-5.48.13@sha256:refreshed/' Dockerfile
+  _edge_nginx_version() { echo 1.31.6; }
+  notes=$(_edge_release_notes 3.0.6)
+  [[ "${notes}" == *'Refresh NGINX base image wodby/nginx:1.31-5.48.13 (image digest changed).'* ]] || fail 'missing NGINX digest refresh'
+  [[ "${notes}" != *'Go builder'* && "${notes}" != *'- NGINX:'* ]] || fail 'unchanged versions reported'
+  if _edge_update_requires_release; then fail 'NGINX digest refresh requires a release'; fi
+  sed -i 's/1.26.8/1.26.9/' Dockerfile
+  _edge_update_requires_release || fail 'version update did not require a release'
+  cp previous.Dockerfile Dockerfile
+  sed -i 's/LEGO_VERSION=v4.35.3/LEGO_VERSION=v4.35.4/' Dockerfile
+  _edge_update_requires_release || fail 'runtime update did not require a release'
+  git() { return 1; }
+  if _edge_update_requires_release; then
+    fail 'missing previous Dockerfile accepted'
+  else
+    assert_eq 2 "$?"
+  fi
+
 )
 
 trace="${test_root}/trace"
@@ -239,6 +270,7 @@ _git_clone() {
 _prepare_edge_alpine_update() {
   echo prepare >>"${trace}"
 }
+_edge_update_requires_release() { return 0; }
 _latest_release_tag() { echo 3.0.6; }
 _edge_release_notes() { echo "NGINX: 1.31.3 -> 1.31.6"; }
 _git_commit() {
@@ -262,6 +294,24 @@ _release_tag() {
 
 update_edge_alpine
 assert_eq $'clone\nprepare\ncommit\npush\nrelease' "$(cat "${trace}")"
+
+# Digest-only updates commit and push without generating notes or releasing.
+(
+  : >"${trace}"
+  _edge_update_requires_release() { return 1; }
+  _latest_release_tag() { fail "digest refresh looked up release tags"; }
+  _edge_release_notes() { fail "digest refresh generated release notes"; }
+  _git_commit() {
+    assert_eq "Refresh pinned image digests" "${2}"
+    echo commit >>"${trace}"
+  }
+  update_edge_alpine
+  assert_eq $'clone\nprepare\ncommit\npush' "$(cat "${trace}")"
+  : >"${trace}"
+  _edge_update_requires_release() { return 2; }
+  if update_edge_alpine; then fail 'release classification failure ignored'; fi
+  assert_eq $'clone\nprepare' "$(cat "${trace}")"
+)
 
 # Update failures must still fail the job and prevent release publication.
 : >"${trace}"

@@ -9,7 +9,7 @@ mkdir -p .github/workflows
 # Mock publication; tests never access or mutate a remote repository.
 _git_commit() { printf 'commit\n' >> events; }
 _git_push() { [[ "$*" == 'origin' ]]; printf 'push\n' >> events; }
-_release_tag() { printf 'release\n' >> events; }
+_release_tag() { printf 'release\n' >> events; printf '%s\n' "$1" > release-notes; }
 reset_fixture() {
   echo '7.6-r0' > .squid-package
   echo "  SQUID7: '7.6'" > .github/workflows/workflow.yml
@@ -40,9 +40,11 @@ reset_fixture
 fixture_candidate=7.6-r0; _update_squid_package; [[ ! -s events ]]
 fixture_candidate=7.5-r9; _update_squid_package; [[ ! -s events ]]
 fixture_candidate=7.6-r1; _update_squid_package
+[[ $(cat release-notes) == 'Squid package: 7.6-r0 -> 7.6-r1' ]]
 [[ $(cat .squid-package) == 7.6-r1 && $(wc -l < events) -eq 3 ]]
 reset_fixture
 fixture_candidate=7.7-r0; _update_squid_package
+[[ $(cat release-notes) == 'Squid package: 7.6-r0 -> 7.7-r0' ]]
 [[ $(cat .squid-package) == 7.7-r0 && $(wc -l < events) -eq 3 ]]
 grep -q "SQUID7: '7.7'" .github/workflows/workflow.yml
 grep -q 'SQUID_VER ?= 7.7' Makefile
