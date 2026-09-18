@@ -1373,6 +1373,16 @@ RUNTIME_NOTES
   printf '\nFull changes: https://github.com/wodby/edge-alpine/compare/%s...%s\n' "${previous}" "${next_release}"
 }
 
+# Image digest refreshes should rebuild master without creating a release tag.
+# Preserve every other Dockerfile change when deciding whether to release.
+_edge_update_requires_release() {
+  local previous current
+  previous=$(git show HEAD:Dockerfile) || return 2
+  previous=$(sed -E '/^ARG (NGINX_IMAGE|GO_IMAGE)=/s/@sha256:[^[:space:]]+//' <<<"${previous}") || return 2
+  current=$(sed -E '/^ARG (NGINX_IMAGE|GO_IMAGE)=/s/@sha256:[^[:space:]]+//' Dockerfile) || return 2
+  [[ "${previous}" != "${current}" ]]
+}
+
 update_edge_alpine() {
   local repo="wodby/edge-alpine"
   local prepare_status
@@ -1392,6 +1402,16 @@ update_edge_alpine() {
 
     echo >&2 "Failed to prepare Edge Alpine dependency updates"
     return "${prepare_status}"
+  fi
+
+  if _edge_update_requires_release; then
+    :
+  else
+    prepare_status=$?
+    [[ "${prepare_status}" -eq 1 ]] || return "${prepare_status}"
+    _git_commit ./ "Refresh pinned image digests" || return 1
+    _git_push origin || return 1
+    return 0
   fi
 
   previous_release=$(_latest_release_tag) || return 1
