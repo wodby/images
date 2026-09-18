@@ -65,10 +65,6 @@ _git_commit() {
 git() {
   case "${1}" in
     push) echo push >>"${trace}" ;;
-    rev-parse)
-      echo rev-parse >>"${trace}"
-      echo abc123
-      ;;
     *) fail "unexpected git command: $*" ;;
   esac
 }
@@ -116,13 +112,13 @@ cd "${alpine_dir}"
 _get_latest_complete_gotpl_release() {
   echo 0.6.8
 }
-_wait_for_github_workflow() {
-  echo "wait:${1}:${3}:${4}" >>"${trace}"
-}
+# Build status must never be queried by the updater.
+_github_api() { fail "unexpected GitHub API request: $*"; }
+_wait_for_github_workflow() { fail "unexpected build workflow check"; }
 
 update_alpine_gotpl
 assert_file_line 'ARG GOTPL_VERSION=0.6.8' "${alpine_dir}/Dockerfile"
-assert_eq $'commit:Update gotpl to 0.6.8\npush\nrev-parse\nwait:wodby/alpine:master:Build docker image\nrelease:gotpl updated from 0.6.7 to 0.6.8' "$(cat "${trace}")"
+assert_eq $'commit:Update gotpl to 0.6.8\npush\nrelease:gotpl updated from 0.6.7 to 0.6.8' "$(cat "${trace}")"
 
 : >"${trace}"
 update_alpine_gotpl
