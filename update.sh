@@ -766,7 +766,7 @@ _update_versions() {
   local has_quotes
   local latest_series
 
-  local minor_update
+  local minor_update=""
   local version_key
   local name_key
   local timestamp_file
@@ -847,7 +847,7 @@ _update_versions() {
       fi
 
       _git_commit ./ "Update ${name} to ${latest_ver}"
-      updated+=("${latest_ver}")
+      updated+=("${cur_ver} -> ${latest_ver}")
     else
       echo "Version ${cur_ver} is already the latest version"
     fi
@@ -940,7 +940,7 @@ _update_timestamps() {
             minor_update=1
           fi
 
-          ver_with_updated_alpine+=("${version}")
+          ver_with_updated_alpine+=("${image}:${version}: ${cur_alpine_ver} -> ${latest_alpine_ver}")
         fi
       fi
     fi
@@ -966,7 +966,7 @@ _update_timestamps() {
         _git_push origin
       fi
       ver_list=$(_join_ws ", " "${ver_with_updated_alpine[@]}")
-      _release_tag "Alpine Linux updated to ${latest_alpine_ver} for versions: ${ver_list}" "${minor_update}"
+      _release_tag "Alpine Linux updates: ${ver_list}" "${minor_update}"
     fi
   else
     echo "Base image hasn't changed"
@@ -1028,7 +1028,7 @@ _update_base_alpine_image() {
       minor_update=1
     fi
 
-    _release_tag "Base image stability tag updated to ${latest}" "${minor_update}"
+    _release_tag "Base image ${base_image}: ${version}-${current} -> ${version}-${latest}" "${minor_update}"
   fi
 }
 
@@ -1078,7 +1078,7 @@ _update_stability_tag() {
       minor_update=1
     fi
 
-    _release_tag "Base image stability tag updated to ${latest}" "${minor_update}"
+    _release_tag "Base image ${base_image}: ${version}-${current} -> ${version}-${latest}" "${minor_update}"
   fi
 
   if [[ -n "${branch}" ]] && _head_has_unpushed_commits "${branch}"; then
@@ -1319,19 +1319,39 @@ _edge_release_notes() {
   local old_dockerfile
   local next_release
   local old_nginx new_nginx old_version new_version
+  local old_go new_go old_tag new_tag
 
   next_release=$(_next_release_tag "") || return 1
   old_dockerfile=$(git show "${previous}:Dockerfile") || return 1
   old_nginx=$(_dockerfile_arg_value NGINX_IMAGE <(printf '%s\n' "${old_dockerfile}")) || return 1
   new_nginx=$(_dockerfile_arg_value NGINX_IMAGE Dockerfile) || return 1
-  old_version=$(_edge_nginx_version "${old_nginx}") || return 1
-  new_version=$(_edge_nginx_version "${new_nginx}") || return 1
+  printf 'Changes since %s\n\n' "${previous}"
+  if [[ "${old_nginx}" != "${new_nginx}" ]]; then
+    old_version=$(_edge_nginx_version "${old_nginx}") || return 1
+    new_version=$(_edge_nginx_version "${new_nginx}") || return 1
+    old_tag=$(_image_ref_tag "${old_nginx}")
+    new_tag=$(_image_ref_tag "${new_nginx}")
+    if [[ "${old_version}" != "${new_version}" ]]; then
+      printf -- '- NGINX: %s -> %s.\n' "${old_version}" "${new_version}"
+    fi
+    if [[ "${old_tag}" != "${new_tag}" ]]; then
+      printf -- '- NGINX base image: wodby/nginx:%s -> wodby/nginx:%s.\n' "${old_tag}" "${new_tag}"
+    else
+      printf -- '- Refresh NGINX base image wodby/nginx:%s (image digest changed).\n' "${new_tag}"
+    fi
+  fi
 
-  printf 'Edge changes since %s\n\n' "${previous}"
-  if [[ "${old_version}" != "${new_version}" ]]; then
-    printf -- '- NGINX: %s -> %s.\n' "${old_version}" "${new_version}"
-  else
-    printf -- '- NGINX remains %s.\n' "${new_version}"
+  # Builder image changes also trigger releases, including digest-only refreshes.
+  old_go=$(_dockerfile_arg_value GO_IMAGE <(printf '%s\n' "${old_dockerfile}")) || return 1
+  new_go=$(_dockerfile_arg_value GO_IMAGE Dockerfile) || return 1
+  if [[ "${old_go}" != "${new_go}" ]]; then
+    old_tag=$(_image_ref_tag "${old_go}")
+    new_tag=$(_image_ref_tag "${new_go}")
+    if [[ "${old_tag}" != "${new_tag}" ]]; then
+      printf -- '- Go builder image: %s -> %s.\n' "${old_tag}" "${new_tag}"
+    else
+      printf -- '- Refresh Go builder image %s (image digest changed).\n' "${new_tag}"
+    fi
   fi
   local arg label old_value new_value
   while read -r arg label; do
