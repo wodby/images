@@ -408,64 +408,6 @@ _github_api() {
     "https://api.github.com/${path}"
 }
 
-_wait_for_github_workflow() {
-  if ! _publishing_enabled; then
-    echo "Skipping workflow wait because publishing is disabled"
-    return 0
-  fi
-
-  local repo="${1}"
-  local sha="${2}"
-  local branch="${3}"
-  local workflow="${4}"
-  local timeout="${EDGE_ALPINE_WORKFLOW_TIMEOUT:-1800}"
-  local poll_interval="${EDGE_ALPINE_WORKFLOW_POLL_INTERVAL:-15}"
-  local deadline=$((SECONDS + timeout))
-  local response
-  local run
-  local status
-  local conclusion
-  local url
-
-  echo "Waiting for ${repo} workflow '${workflow}' at ${sha}"
-
-  while (( SECONDS < deadline )); do
-    response=$(_github_api "repos/${repo}/actions/runs?head_sha=${sha}&event=push&per_page=20") || return 1
-    run=$(jq -c \
-      --arg sha "${sha}" \
-      --arg branch "${branch}" \
-      --arg workflow "${workflow}" \
-      '[.workflow_runs[] | select(.head_sha == $sha and .head_branch == $branch and .name == $workflow)] | sort_by(.created_at) | last // empty' \
-      <<<"${response}") || {
-      echo >&2 "Failed to parse workflow runs for ${repo}"
-      return 1
-    }
-
-    if [[ -n "${run}" ]]; then
-      status=$(jq -r '.status' <<<"${run}")
-      conclusion=$(jq -r '.conclusion // ""' <<<"${run}")
-      url=$(jq -r '.html_url' <<<"${run}")
-      echo "Workflow status: ${status}${conclusion:+/${conclusion}} (${url})"
-
-      if [[ "${status}" == "completed" ]]; then
-        if [[ "${conclusion}" == "success" ]]; then
-          return 0
-        fi
-
-        echo >&2 "Workflow '${workflow}' failed with conclusion '${conclusion}'"
-        return 1
-      fi
-    else
-      echo "Workflow run has not appeared yet"
-    fi
-
-    sleep "${poll_interval}"
-  done
-
-  echo >&2 "Timed out waiting for ${repo} workflow '${workflow}' at ${sha}"
-  return 1
-}
-
 _gitlab_get_versions() {
   local version="${1}"
   local url="${2}"
@@ -1371,8 +1313,7 @@ _edge_nginx_version() {
   echo "${version}"
 }
 
-# Compare with the last release, not just the last commit: earlier successful
-# pin changes may be waiting on master after a failed release build.
+# Compare with the last release so notes include all accumulated pin changes.
 _edge_release_notes() {
   local previous="${1}"
   local old_dockerfile
@@ -1414,7 +1355,6 @@ RUNTIME_NOTES
 
 update_edge_alpine() {
   local repo="wodby/edge-alpine"
-  local sha
   local prepare_status
   local previous_release
   local release_notes
@@ -1439,12 +1379,7 @@ update_edge_alpine() {
   _git_commit ./ "${release_notes}" || return 1
   _git_push origin || return 1
 
-  sha=$(git rev-parse HEAD) || return 1
-  _wait_for_github_workflow "${repo}" "${sha}" "master" "Build docker image" || return 1
-
-  # The target workflow builds, tests, and scans the image before this patch
-  # release is created. A failed workflow leaves the update visible on master
-  # for investigation but never creates a public release tag.
+  # Build outcomes belong to the image repository; updates do not wait for CI.
   _release_tag "${release_notes}" "" || return 1
 }
 
@@ -1623,11 +1558,9 @@ _prepare_alpine_gotpl_update() {
 }
 
 update_alpine_gotpl() {
-  local repo="wodby/alpine"
   local current
   local latest
   local prepare_status
-  local sha
 
   current=$(_dockerfile_arg_value "GOTPL_VERSION" Dockerfile) || return 1
   latest=$(_get_latest_complete_gotpl_release) || return 1
@@ -1645,8 +1578,7 @@ update_alpine_gotpl() {
   _git_commit ./ "Update gotpl to ${latest}" || return 1
   _git_push origin || return 1
 
-  sha=$(git rev-parse HEAD) || return 1
-  _wait_for_github_workflow "${repo}" "${sha}" "master" "Build docker image" || return 1
+  # Build outcomes belong to the image repository; updates do not wait for CI.
   _release_tag "gotpl updated from ${current} to ${latest}" "" || return 1
 }
 

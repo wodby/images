@@ -180,20 +180,6 @@ else
   assert_eq "2" "$?"
 fi
 
-_github_api() {
-  printf '%s\n' '{"workflow_runs":[{"head_sha":"abc123","head_branch":"master","name":"Build docker image","status":"completed","conclusion":"success","created_at":"2026-08-08T00:00:00Z","html_url":"https://example.test/success"}]}'
-}
-EDGE_ALPINE_WORKFLOW_TIMEOUT=1 EDGE_ALPINE_WORKFLOW_POLL_INTERVAL=0 \
-  _wait_for_github_workflow 'wodby/edge-alpine' 'abc123' 'master' 'Build docker image'
-
-_github_api() {
-  printf '%s\n' '{"workflow_runs":[{"head_sha":"abc123","head_branch":"master","name":"Build docker image","status":"completed","conclusion":"failure","created_at":"2026-08-08T00:00:00Z","html_url":"https://example.test/failure"}]}'
-}
-if EDGE_ALPINE_WORKFLOW_TIMEOUT=1 EDGE_ALPINE_WORKFLOW_POLL_INTERVAL=0 \
-  _wait_for_github_workflow 'wodby/edge-alpine' 'abc123' 'master' 'Build docker image'; then
-  fail "failed target workflow was accepted"
-fi
-
 # Resolve the real patch version rather than reporting the 1.31 image line.
 _github_api() {
   assert_eq 'repos/wodby/nginx/contents/.github/workflows/workflow.yml?ref=5.48.13' "${1}"
@@ -262,34 +248,27 @@ _git_commit() {
 git() {
   case "${1}" in
     push) echo push >>"${trace}" ;;
-    rev-parse)
-      echo rev-parse >>"${trace}"
-      echo abc123
-      ;;
     *) fail "unexpected git command: $*" ;;
   esac
 }
-_wait_for_github_workflow() {
-  echo wait >>"${trace}"
-}
+# Any status lookup is an error, even when publishing is enabled.
+_github_api() { fail "unexpected GitHub API request: $*"; }
+_wait_for_github_workflow() { fail "unexpected build workflow check"; }
+export IMAGES_UPDATE_PUSH=1
 _release_tag() {
   assert_eq "NGINX: 1.31.3 -> 1.31.6" "${1}"
   echo release >>"${trace}"
 }
 
 update_edge_alpine
-assert_eq $'clone\nprepare\ncommit\npush\nrev-parse\nwait\nrelease' "$(cat "${trace}")"
+assert_eq $'clone\nprepare\ncommit\npush\nrelease' "$(cat "${trace}")"
 
+# Update failures must still fail the job and prevent release publication.
 : >"${trace}"
-_wait_for_github_workflow() {
-  echo wait >>"${trace}"
-  return 1
-}
+git() { echo push >>"${trace}"; return 1; }
 if update_edge_alpine; then
-  fail "release proceeded after target workflow failure"
+  fail "push failure was ignored"
 fi
-if grep -Fqx release "${trace}"; then
-  fail "release tag was created after target workflow failure"
-fi
+assert_eq $'clone\nprepare\ncommit\npush' "$(cat "${trace}")"
 
 echo "edge-alpine updater tests passed"
