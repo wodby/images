@@ -38,7 +38,7 @@ export TRACE="${test_root}/trace"
   ./mysql.sh
 )
 
-expected=$'clone:wodby/mysql\nversions:8.0:mysql:mysql\ntimestamps:8.0:mysql:2'
+expected=$'clone:wodby/mysql\nversions:8.4:mysql:mysql\ntimestamps:8.4:mysql:2'
 actual="$(cat "${TRACE}")"
 [[ "${actual}" == "${expected}" ]] || fail "unexpected updater calls: ${actual}"
 
