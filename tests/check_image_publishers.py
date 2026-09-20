@@ -70,6 +70,15 @@ def check_make_aliases(repo: Path) -> int:
 def check_repo(repo: Path) -> int:
     """Check revision and legacy releases, variants, and non-publishing refs."""
     name = repo.name
+    if name == 'alpine':
+        # Scheduled scans must select r0 instead of falling back to a legacy tag.
+        workflow = (repo / '.github/workflows/workflow.yml').read_text()
+        selector = re.search(r"tag=\$\(git tag --sort=-version:refname \| sed -nE '([^']*r[^']*)'\)", workflow)
+        assert selector, 'Alpine scheduled revision selector missing'
+        for tags, expected in [('r99-rc1\nr01\nr00\nr0\n99.9.9\n', 'r0'),
+                               ('r10\nr1\nr0\n', 'r10')]:
+            selected = subprocess.check_output(['sed', '-nE', selector[1]], input=tags, text=True).strip()
+            assert selected == expected, (name, 'scheduled revision selection', selected)
     script = repo / '.github/actions/release.sh'
     env = {**os.environ, **VERSIONS, 'DEBUG': '', 'LATEST': '1', 'LATEST_MAJOR': '1',
            'LATEST_PHP': '1', 'LATEST_MAJOR_PHP': '1', 'LATEST_ALIAS': 'latest',
@@ -112,7 +121,7 @@ docker() {
 '''
     count = 0
     for variant in variants:
-        for revision in ('r1', 'r23', '4.83.3'):
+        for revision in ('r0', 'r1', 'r23', '4.83.3'):
             result = subprocess.run(['bash', '-c', wrapper, 'publisher-test', str(script)],
                                     cwd=workdir, env={**env, **variant, 'GITHUB_REF': 'refs/tags/' + revision},
                                     capture_output=True, text=True, check=True)
@@ -144,7 +153,7 @@ docker() {
                             env={**env, 'GITHUB_REF': 'refs/heads/feature/test'}, capture_output=True, text=True, check=True)
     assert not result.stdout.strip(), (name, 'feature ref publishes', result.stdout)
     if (repo / '.image-revision-aliases.json').exists():
-        for ref in ('refs/tags/11-r23', 'refs/tags/11.4-r23', 'refs/tags/11.4.2-r0'):
+        for ref in ('refs/tags/11-r0', 'refs/tags/11.4-r0', 'refs/tags/11.4.2-r0', 'refs/tags/11-r23', 'refs/tags/11.4-r23'):
             result = subprocess.run(['bash', '-c', wrapper, 'publisher-test', str(script)], cwd=workdir,
                                     env={**env, 'GITHUB_REF': ref}, capture_output=True, text=True, check=True)
             assert not result.stdout.strip(), (name, 'alias ref publishes', ref, result.stdout)

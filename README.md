@@ -5,7 +5,9 @@
 ## Image revisions
 
 Image tags separate the upstream software version from the Wodby image revision.
-Choose a major/minor release line or an exact upstream version:
+Choose a major/minor release line or an exact upstream version. The first release
+uses `r0` everywhere: Git tag `r0` and, for example, Docker tags `11-r0`,
+`11.4-r0`, and `11.4.2-r0`. Subsequent releases follow the counters below:
 
 | Example Docker tag | Revision counter | Matching Git tag |
 |--------------------|------------------|------------------|
@@ -19,7 +21,7 @@ Development variants retain their qualifier, such as `wodby/php:8.5-dev-r102`
 and `wodby/php:8.5.10-dev-r0`. Images without an upstream-version prefix use the
 repository release directly, such as `wodby/backup:r102`.
 
-- Git release tags are `r1`, `r2`, and so on. The counter increases per repository
+- Git release tags are `r0`, `r1`, `r2`, and so on. The counter increases per repository
   and is shared by its runtime versions, variants, and architectures.
   Major/minor Docker tags use this counter. It never resets when an upstream
   version changes. Numbers can have gaps.
@@ -54,7 +56,7 @@ version, such as `17.6.1.136-r0`. WordPress initial releases named `7.2` use
 
 Deploy this updater before migrating image repositories. A repository opts in by
 adding `.image-release-format` containing `revision`. Its next release starts at
-`r1`, or advances its highest existing `rN` Git tag across all branches. Repositories
+`r0`, or advances its highest existing `rN` Git tag across all branches. Repositories
 without the marker, including software tools such as `gotpl`, retain their existing
 release numbering. The updater creates annotated Git tags with the release
 description. Build and publishing checks remain in each image repository.

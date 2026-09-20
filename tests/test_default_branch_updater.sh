@@ -81,33 +81,33 @@ for branch in main master; do
   update_from_parent_image wodby/app '8.5 8.4'
   assert_eq "${branch}" "$(git branch --show-current)"
   assert_eq r12 "$(_base_image_release)"
-  assert_eq tag "$(git cat-file -t r1)"
-  assert_eq "$(git rev-parse HEAD)" "$(git rev-parse 'r1^{commit}')"
+  assert_eq tag "$(git cat-file -t r0)"
+  assert_eq "$(git rev-parse HEAD)" "$(git rev-parse 'r0^{commit}')"
   assert_eq "$(git rev-parse HEAD)" "$(git --git-dir="${origin}" rev-parse "${branch}")"
   assert_eq 6 "$(grep -c -- '-r12 :=' base-images.mk)"
   assert_eq "${branch}" "$(git --git-dir="${origin}" for-each-ref --format='%(refname:short)' refs/heads)"
   parent_head=$(git rev-parse HEAD)
   update_from_parent_image wodby/app '8.5 8.4'
   assert_eq "${parent_head}" "$(git rev-parse HEAD)"
-  assert_eq r1 "$(git tag --list)"
+  assert_eq r0 "$(git tag --list)"
 
   # Application updates use the same parent and tag the updated default branch.
   update_from_upstream wodby/app 11.4 github.com/example/app 'https://example.invalid/{{version}}.tgz' 'app-'
   assert_eq "${branch}" "$(git branch --show-current)"
   assert_eq r12 "$(_base_image_release)"
-  assert_eq tag "$(git cat-file -t r2)"
-  assert_eq "$(git rev-parse HEAD)" "$(git rev-parse 'r2^{commit}')"
+  assert_eq tag "$(git cat-file -t r1)"
+  assert_eq "$(git rev-parse HEAD)" "$(git rev-parse 'r1^{commit}')"
   assert_eq 'APP_VER ?= 11.4.2' "$(cat Makefile)"
   app_head=$(git rev-parse HEAD)
   update_from_upstream wodby/app 11.4 github.com/example/app 'https://example.invalid/{{version}}.tgz' 'app-'
   assert_eq "${app_head}" "$(git rev-parse HEAD)"
-  assert_eq $'r1\nr2' "$(git tag --list)"
+  assert_eq $'r0\nr1' "$(git tag --list)"
 
   # Digest-only refresh still commits a rebuild without creating a release tag.
   export TEST_FLOATING_DIGEST="sha256:$(printf '%064d' 3)"
   update_from_parent_image wodby/app '8.5 8.4'
   [[ "${app_head}" != "$(git rev-parse HEAD)" ]] || fail 'digest refresh did not commit'
-  assert_eq $'r1\nr2' "$(git tag --list)"
+  assert_eq $'r0\nr1' "$(git tag --list)"
   export TEST_FLOATING_DIGEST="sha256:$(printf '%064d' 1)"
 
   # During rollout, either entry point must stop before modifying an unpinned default.
@@ -120,7 +120,7 @@ for branch in main master; do
   assert_eq "${unpinned_head}" "$(git rev-parse HEAD)"
   update_from_upstream wodby/app 11.4 github.com/example/app
   assert_eq "${unpinned_head}" "$(git rev-parse HEAD)"
-  assert_eq $'r1\nr2' "$(git tag --list)"
+  assert_eq $'r0\nr1' "$(git tag --list)"
   assert_eq '' "$(git status --porcelain)"
 done
 assert_eq 4 "$(jq -s '[.[] | select(.type == "manual_review")] | length' "$IMAGES_UPDATE_REPORT_FILE")"

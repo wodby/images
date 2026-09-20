@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Exercise revision allocation and publication without contacting a registry."""
 
+import base64
 import importlib.util
 import json
 from pathlib import Path
@@ -76,44 +77,44 @@ class AliasTests(unittest.TestCase):
             aliases.publish(self.repo, plan)
 
     def test_resets_only_for_complete_version(self):
-        first = self.release('r1')
-        self.release('r2')
-        self.release('r3', '11.4.3')
+        first = self.release('r0')
+        self.release('r1')
+        self.release('r2', '11.4.3')
         # A maintenance release need not descend from the current main branch.
-        self.repo.git('checkout', '--detach', '-q', 'r1')
+        self.repo.git('checkout', '--detach', '-q', 'r0')
         later = self.release('r10')
         self.assertEqual([a['tag'] for a in first['aliases']], [
-            '11-dev-r1', '11-r1', '11.4-dev-r1', '11.4-r1', '11.4.2-dev-r0', '11.4.2-r0'])
+            '11-dev-r0', '11-r0', '11.4-dev-r0', '11.4-r0', '11.4.2-dev-r0', '11.4.2-r0'])
         self.assertIn('11.4.2-r2', [a['tag'] for a in later['aliases']])
-        self.assertIn('11.4.3-r0', [a['tag'] for a in self.repo.plan('r3')['aliases']])
+        self.assertIn('11.4.3-r0', [a['tag'] for a in self.repo.plan('r2')['aliases']])
         # Finishing an older release after a newer one never changes its plan.
-        self.assertEqual(self.repo.plan('r1'), first)
+        self.assertEqual(self.repo.plan('r0'), first)
 
     def test_alias_tags_and_legacy_releases_do_not_allocate(self):
-        plan = self.release('r1')
-        for tag in ['11.4-r99', '11.4.2-r88', '4.83.3', 'r01', 'r0', 'rjunk']:
+        plan = self.release('r0')
+        for tag in ['11.4-r99', '11.4.2-r88', '4.83.3', 'r01', 'r00', 'rjunk']:
             self.repo.git('tag', '-a', tag, '-m', 'Unrelated fixture tag')
-        self.assertEqual(plan, self.repo.plan('r1'))
-        for tag in ['11.4-r99', 'r01', 'r0', '4.83.3']:
+        self.assertEqual(plan, self.repo.plan('r0'))
+        for tag in ['11.4-r99', 'r01', 'r00', '4.83.3']:
             with self.assertRaisesRegex(ValueError, 'Only primary'):
                 self.repo.plan(tag)
 
     def test_releases_before_alias_opt_in_are_ignored(self):
-        self.release('r1')
-        self.repo.git('tag', '-d', 'r1')
+        self.release('r0')
+        self.repo.git('tag', '-d', 'r0')
         self.repo.git('rm', aliases.CONFIG)
         self.repo.git('commit', '-qm', 'Fixture before aliases')
-        self.repo.git('tag', '-a', 'r1', '-m', 'Earlier primary release')
-        plan = self.release('r2')
+        self.repo.git('tag', '-a', 'r0', '-m', 'Earlier primary release')
+        plan = self.release('r1')
         self.assertIn('11.4.2-r0', [a['tag'] for a in plan['aliases']])
 
     def test_same_commit_new_primary_counts_as_rebuild(self):
-        self.release('r1')
-        self.repo.git('tag', '-a', 'r2', '-m', 'Rebuild fixture')
-        self.assertIn('11.4.2-r1', [a['tag'] for a in self.repo.plan('r2')['aliases']])
+        self.release('r0')
+        self.repo.git('tag', '-a', 'r1', '-m', 'Rebuild fixture')
+        self.assertIn('11.4.2-r1', [a['tag'] for a in self.repo.plan('r1')['aliases']])
 
     def test_publish_preserves_digest_and_annotates_all_aliases(self):
-        plan = self.release('r1')
+        plan = self.release('r0')
         self.seed_sources(plan)
         self.publish(plan)
         self.assertEqual(len(self.writes), 2)
@@ -123,41 +124,41 @@ class AliasTests(unittest.TestCase):
             self.assertEqual(self.repo.git('rev-parse', ref+'^{commit}').stdout.strip(), plan['commit'])
             self.assertIn(DIGEST, self.repo.git('for-each-ref', '--format=%(contents)', ref).stdout)
             self.assertIn(ref, self.repo.git('ls-remote', 'origin', ref).stdout)
-        self.publish(self.repo.plan('r1'))
+        self.publish(self.repo.plan('r0'))
         self.assertEqual(len(self.writes), 2, 'Retry must not republish any manifest')
 
     def test_partial_docker_publication_resumes(self):
-        plan = self.release('r1')
+        plan = self.release('r0')
         self.seed_sources(plan)
         self.registry['wodby/mariadb:11.4.2-r0'] = DIGEST
         self.publish(plan)
         self.assertEqual(self.writes, ['wodby/mariadb:11.4.2-dev-r0'])
 
     def test_docker_collision_fails_before_any_write(self):
-        plan = self.release('r1')
+        plan = self.release('r0')
         self.seed_sources(plan)
         self.registry['wodby/mariadb:11.4.2-r0'] = OTHER
         with self.assertRaisesRegex(ValueError, 'overwrite Docker'):
             self.publish(plan)
         self.assertEqual(self.writes, [])
-        self.assertEqual(self.repo.git('tag', '--list').stdout.strip(), 'r1')
+        self.assertEqual(self.repo.git('tag', '--list').stdout.strip(), 'r0')
 
     def test_git_collision_fails_before_any_registry_write(self):
-        plan = self.release('r1')
-        self.repo.git('tag', '11.4-r1')  # Lightweight tags are not our aliases.
+        plan = self.release('r0')
+        self.repo.git('tag', '11.4-r0')  # Lightweight tags are not our aliases.
         with self.assertRaisesRegex(ValueError, 'overwrite Git'):
             self.publish(plan)
         self.assertEqual(self.writes, [])
 
     def test_git_alias_on_wrong_commit_is_rejected(self):
-        first = self.release('r1')
-        self.release('r2', '11.4.3')
-        self.repo.git('tag', '-a', '11.4-r1', '-m', 'Conflicting fixture')
+        first = self.release('r0')
+        self.release('r1', '11.4.3')
+        self.repo.git('tag', '-a', '11.4-r0', '-m', 'Conflicting fixture')
         with self.assertRaisesRegex(ValueError, 'overwrite Git'):
             self.publish(first)
 
     def test_unavailable_source_fails_before_any_write(self):
-        plan = self.release('r1')
+        plan = self.release('r0')
         with self.assertRaisesRegex(ValueError, 'Cannot inspect'):
             self.publish(plan)
         self.assertEqual(self.writes, [])
@@ -169,7 +170,7 @@ class AliasTests(unittest.TestCase):
                 aliases.digest('wodby/mariadb:11.4.2-r0', missing_ok=True)
 
     def test_git_push_failure_can_resume(self):
-        plan = self.release('r1')
+        plan = self.release('r0')
         self.seed_sources(plan)
         original = self.repo.git
         def git(*args, **kwargs):
@@ -179,24 +180,24 @@ class AliasTests(unittest.TestCase):
         with patch.object(self.repo, 'git', side_effect=git):
             with self.assertRaisesRegex(ValueError, 'interruption'):
                 self.publish(plan)
-        self.publish(self.repo.plan('r1'))
+        self.publish(self.repo.plan('r0'))
         self.assertEqual(len(self.writes), 2)
 
     def test_overlapping_full_and_short_names_are_rejected(self):
         self.config['versions'][0]['variants'][0]['full'] = '{minor}'
         with self.assertRaisesRegex(ValueError, 'namespaces overlap'):
-            self.release('r1')
+            self.release('r0')
 
     def test_two_part_full_version_uses_major_source(self):
         self.config['versions'][0]['variants'] = [{'short': ['{major}'], 'full': '{version}'}]
-        plan = self.release('r1', '17.11')
-        self.assertEqual([a['tag'] for a in plan['aliases']], ['17-r1', '17.11-r0'])
+        plan = self.release('r0', '17.11')
+        self.assertEqual([a['tag'] for a in plan['aliases']], ['17-r0', '17.11-r0'])
 
     def test_wordpress_initial_version_is_normalized(self):
         self.config['versions'][0]['version']['pad_patch'] = True
-        plan = self.release('r1', '7.2')
+        plan = self.release('r0', '7.2')
         self.assertIn('7.2.0-r0', [a['tag'] for a in plan['aliases']])
-        self.assertIn('7.2-r1', [a['tag'] for a in plan['aliases']])
+        self.assertIn('7.2-r0', [a['tag'] for a in plan['aliases']])
 
     def test_parent_is_resolved_from_pinned_release(self):
         workflow = {'env': {'BASE_IMAGE_STABILITY_TAG': '4.71.5'}}
@@ -206,6 +207,19 @@ class AliasTests(unittest.TestCase):
             parent.assert_called_once_with('wodby/php', '4.71.5')
         with self.assertRaisesRegex(ValueError, 'pinned'):
             self.repo.parent_workflow('wodby/php', 'master')
+
+    def test_first_parent_revision_is_accepted(self):
+        workflow = {'env': {'BASE_IMAGE_REVISION': 'r0'}}
+        selector = {'repository': 'wodby/php', 'parent_env': 'PHP85'}
+        content = base64.b64encode(b"env:\n  PHP85: '8.5.10'\n").decode()
+        response = subprocess.CompletedProcess([], 0, json.dumps({'content': content}), '')
+        with patch.object(aliases, 'command', return_value=response) as fetch:
+            self.assertEqual(self.repo.version('HEAD', selector, workflow), '8.5.10')
+            fetch.assert_called_once_with('gh', 'api',
+                'repos/wodby/php/contents/.github/workflows/workflow.yml?ref=r0')
+        for tag in ['r00', 'r01', 'r0-rc1']:
+            with self.assertRaisesRegex(ValueError, 'pinned'):
+                self.repo.parent_workflow('wodby/php', tag)
 
 
 if __name__ == '__main__':

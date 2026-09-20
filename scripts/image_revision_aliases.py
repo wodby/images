@@ -15,7 +15,7 @@ import yaml
 
 CONFIG = '.image-revision-aliases.json'
 WORKFLOW = '.github/workflows/workflow.yml'
-PRIMARY = re.compile(r'r([1-9][0-9]*)\Z')
+PRIMARY = re.compile(r'r(0|[1-9][0-9]*)\Z')
 VERSION = re.compile(r'[0-9]+(?:\.[0-9]+)+\Z')
 TAG = re.compile(r'[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}\Z')
 
@@ -46,7 +46,7 @@ class Repository:
         """Resolve pinned parent releases through the public GitHub contents API."""
         if not re.fullmatch(r'wodby/[a-z0-9-]+', repository):
             raise ValueError('Parent must be a Wodby image repository')
-        if not re.fullmatch(r'(?:r[1-9][0-9]*|[0-9]+\.[0-9]+\.[0-9]+)', tag):
+        if not re.fullmatch(r'(?:r(?:0|[1-9][0-9]*)|[0-9]+\.[0-9]+\.[0-9]+)', tag):
             raise ValueError('Parent image must be pinned to a release tag')
         response = command('gh', 'api',
                            f'repos/{repository}/contents/{WORKFLOW}?ref={quote(tag)}')

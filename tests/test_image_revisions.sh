@@ -19,10 +19,13 @@ git tag -am 'Initial legacy release' 4.83.3
 assert_eq 4.83.4 "$(_next_release_tag '')"
 assert_eq 4.84.0 "$(_next_release_tag 1)"
 printf 'revision\n' > .image-release-format
+assert_eq r0 "$(_next_release_tag '')"
+assert_eq r0 "$(_next_release_tag 1)"
+assert_eq 4.83.3 "$(_latest_release_tag)"
+git tag -am 'First image revision' r0
+assert_eq r0 "$(_latest_release_tag)"
 assert_eq r1 "$(_next_release_tag '')"
 assert_eq r1 "$(_next_release_tag 1)"
-assert_eq 4.83.3 "$(_latest_release_tag)"
-git tag -am 'First image revision' r1
 git branch maintenance
 git checkout -q maintenance
 git commit --allow-empty -qm maintenance
@@ -31,6 +34,7 @@ git checkout -q master
 git tag -am 'Another revision' r2
 git tag -am 'Unrelated prerelease' r99-rc1
 git tag -am 'Invalid leading zero' r099
+git tag -am 'Invalid zero padding' r00
 git tag -am 'Major version alias' 8-r999
 git tag -am 'Minor version alias' 8.5-r999
 git tag -am 'Full version alias' 8.5.10-r999
@@ -48,7 +52,7 @@ _image_release_is_newer r1 99.9.9 || fail 'legacy transition rejected'
 _image_release_is_newer r0 99.9.9 || fail 'full-version legacy transition rejected'
 _image_release_is_newer r1 r0 || fail 'full-version revision increment rejected'
 _image_release_is_newer r10 r2 || fail 'revisions not ordered numerically'
-for pair in 'r2 r10' 'r1 r1' 'r0 r1' 'r0 r0' '99.9.9 r1' 'r01 4.0.0' 'r1-rc1 4.0.0'; do
+for pair in 'r2 r10' 'r1 r1' 'r0 r1' 'r0 r0' '99.9.9 r1' 'r00 4.0.0' 'r01 4.0.0' 'r1-rc1 4.0.0'; do
  read -r candidate current <<<"$pair"
  if _image_release_is_newer "$candidate" "$current"; then fail "invalid transition: $pair"; fi
 done
@@ -76,18 +80,18 @@ if _get_image_release wodby/php 8.5-; then fail 'registry error ignored'; fi
 mkdir -p .github/workflows
 _git_commit() { :; }
 _git_push() { :; }
-_get_image_release() { echo r12; }
+_get_image_release() { echo r0; }
 _release_tag() { echo "$1" > revision-notes; }
 for key in BASE_IMAGE_STABILITY_TAG BASE_IMAGE_REVISION; do
  echo "  ${key}: 4.71.5" > .github/workflows/workflow.yml
  _update_image_revision 8.5 wodby/php ''
- assert_eq r12 "$(_base_image_release)"
+ assert_eq r0 "$(_base_image_release)"
  (
-   _base_image_pins() { assert_eq 'ref --line 8.5 --stability r12' "$*"; }
+   _base_image_pins() { assert_eq 'ref --line 8.5 --stability r0' "$*"; }
    _base_image_ref_for_line 8.5
  )
- grep -Fq "${key}: r12" .github/workflows/workflow.yml
- grep -Fq '8.5-4.71.5 -> 8.5-r12' revision-notes
+ grep -Fq "${key}: r0" .github/workflows/workflow.yml
+ grep -Fq '8.5-4.71.5 -> 8.5-r0' revision-notes
  rm revision-notes
  _update_image_revision 8.5 wodby/php ''
  [[ ! -f revision-notes ]] || fail 'unchanged parent released again'

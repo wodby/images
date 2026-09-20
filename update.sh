@@ -338,7 +338,11 @@ _next_release_tag() {
 
   if _uses_image_revisions; then
     current_tag=$(_latest_image_revision)
-    tag="r$(( ${current_tag#r} + 1 ))"
+    if [[ -z "${current_tag}" ]]; then
+      tag=r0
+    else
+      tag="r$(( ${current_tag#r} + 1 ))"
+    fi
     echo "${tag}"
     return 0
   fi
@@ -374,7 +378,7 @@ _uses_image_revisions() {
 _latest_image_revision() {
   local tag
   while IFS= read -r tag; do
-    if [[ "${tag}" =~ ^r[1-9][0-9]*$ ]]; then
+    if [[ "${tag}" =~ ^r(0|[1-9][0-9]*)$ ]]; then
       echo "${tag}"
       return 0
     fi
