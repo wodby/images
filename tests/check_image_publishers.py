@@ -116,7 +116,16 @@ docker() {
             # Match publish destinations, excluding source architecture references.
             destinations = re.findall(r'(?:\s-t\s+|docker push\s+)(?:docker.io/)?wodby/' + re.escape(name) + r':([^\s\\]+)', result.stdout)
             assert destinations, (name, revision, 'no published references', result.stdout)
+            # These publishers historically exposed only floating aliases for
+            # legacy Git tags. Preserve that behavior when rerunning old tags.
+            if revision == '4.83.3' and name in ('docker', 'mkdocs', 'sshd'):
+                assert destinations == ['dev' if variant else 'latest'], (name, destinations)
+                count += 1
+                continue
             assert any(t == revision or t.endswith('-' + revision) for t in destinations), (name, revision, destinations)
+            if revision == '4.83.3' and name in ('cachet', 'drupal-cms', 'elasticsearch',
+                                                'kibana', 'matomo', 'slackin', 'squid', 'webgrind', 'xhprof'):
+                assert 'latest' in destinations, (name, 'legacy latest alias changed', destinations)
             # Floating aliases may still be updated by older publishers. Every
             # non-floating revision destination must retain the complete revision.
             assert not any('r-r' in t or t.endswith('-' + revision + '-' + revision) for t in destinations), (name, destinations)
