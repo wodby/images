@@ -816,7 +816,7 @@ _update_versions() {
     latest_series=$(_get_minor_series "${latest_ver}")
     cur_series=$(_get_minor_series "${cur_ver}")
 
-    if [[ $(compare_semver "${latest_ver}" "${cur_ver}") == 0 ]]; then
+    if _version_is_newer "${latest_ver}" "${cur_ver}"; then
       echo "${name^} ${cur_ver} is outdated, updating to ${latest_ver}"
 
       if [[ "${version_key}" == "version" ]]; then
@@ -981,7 +981,7 @@ _update_timestamps() {
           latest_alpine_ver=$(_get_alpine_ver "${base_image%:*}:${version}")
         fi
 
-        if [[ $(compare_semver "${latest_alpine_ver}" "${cur_alpine_ver}") == 0 ]]; then
+        if _version_is_newer "${latest_alpine_ver}" "${cur_alpine_ver}"; then
           if [[ "$(_get_minor_series "${latest_alpine_ver}")" != "$(_get_minor_series "${cur_alpine_ver}")" ]]; then
             minor_update=1
           fi
@@ -1048,7 +1048,7 @@ _update_base_alpine_image() {
     exit 1
   fi
 
-  if [[ $(compare_semver "${latest}" "${current}") == 0 ]]; then
+  if _version_is_newer "${latest}" "${current}"; then
     sed -i -E "s/(BASE_IMAGE_STABILITY_TAG: )${current}/\1${latest}/" .github/workflows/workflow.yml
 
     _git_commit ./ "Update base image stability tag to ${latest}"
@@ -1112,7 +1112,7 @@ _update_stability_tag() {
     exit 1
   fi
 
-  if [[ $(compare_semver "${latest}" "${current}") == 0 ]]; then
+  if _version_is_newer "${latest}" "${current}"; then
     sed -i -E "s/(BASE_IMAGE_STABILITY_TAG: )${current}/\1${latest}/" .github/workflows/workflow.yml
     _git_commit ./ "Update base image stability tag to ${latest}"
     _git_push origin
@@ -1605,7 +1605,7 @@ update_docker4x() {
       exit 1
     fi
 
-    if [[ $(compare_semver "${latest}" "${current}") == 0 ]]; then
+    if _version_is_newer "${latest}" "${current}"; then
       sed -i -E "s/^(${env_var}=[0-9.-]+?)${current}$/\1${latest}/" .env
 
       # Update tests.
