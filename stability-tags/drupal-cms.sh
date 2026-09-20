@@ -4,4 +4,4 @@ set -e
 
 . ../update.sh
 
-rebuild_and_rebase "wodby/drupal-cms" "8.4"
+update_from_parent_image "wodby/drupal-cms" "8.4"

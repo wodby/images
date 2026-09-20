@@ -27,6 +27,7 @@ jobs:
           ./tests/test_squid_updater.sh
           ./tests/test_mysql_updater.sh
           ./tests/test_release_updater.sh
+          ./tests/test_default_branch_updater.sh
           ./tests/test_image_revisions.sh
           ./tests/test_supabase_postgres_updater.sh
           ./tests/test_squid_updater.sh

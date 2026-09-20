@@ -4,4 +4,4 @@ set -e
 
 . ../update.sh
 
-rebuild_and_rebase "wodby/webgrind" "8.2"
+update_from_parent_image "wodby/webgrind" "8.2"

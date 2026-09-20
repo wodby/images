@@ -4,4 +4,4 @@ set -e
 
 . ../update.sh
 
-rebuild_and_rebase "wodby/matomo" "8.2"
+update_from_parent_image "wodby/matomo" "8.2"

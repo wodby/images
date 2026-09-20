@@ -238,12 +238,12 @@ _require_base_image_pins() {
   _base_image_pins repository >/dev/null || exit 1
 }
 
-# Avoid merging a migrated default branch into an unmigrated stability branch.
-_require_digest_branch() {
-  local branch="${1:-}"
-  if [[ -f base-images.mk && -n "${branch}" ]] && ! git cat-file -e "origin/${branch}:base-images.mk" 2>/dev/null; then
-    _report_event manual_review "$(_current_repo_slug)" "Waiting for digest-pinned build inputs on ${branch}"
-    echo "Skipping updates until ${branch} has digest-pinned build inputs"
+# Release descendants only after their default branch has a pinned parent.
+# This also lets the updater deploy before the image repository migrations.
+_require_parent_image_revision() {
+  if [[ -z "$(_base_image_release)" ]]; then
+    _report_event manual_review "$(_current_repo_slug)" "Waiting for a parent image revision on the default branch"
+    echo "Skipping updates until the default branch pins its parent image revision"
     return 1
   fi
 }
@@ -837,9 +837,8 @@ _update_versions() {
   local version_list="${1}"
   local upstream="${2%:*}"
   local name="${3}"
-  local branch="${4:-}"
-  local release_source="${5:-}"
-  local tag_prefixes="${6:-}"
+  local release_source="${4:-}"
+  local tag_prefixes="${5:-}"
 
   local updated=()
   local latest_ver
@@ -934,13 +933,6 @@ _update_versions() {
 
   if [[ "${#updated[@]}" != 0 ]]; then
     _git_push origin
-
-    if [[ -n "${branch}" ]]; then
-      git checkout "${branch}"
-      _ensure_git_identity
-      git merge --no-edit master
-      _git_push origin
-    fi
 
     local ver
     ver=$(_join_ws ", " "${updated[@]}")
@@ -1112,7 +1104,6 @@ _update_base_alpine_image() {
 _update_image_revision() {
   local version="${1}"
   local base_image="${2}"
-  local branch="${3:-}"
   local tag=""
   local minor_update=""
   local latest
@@ -1121,12 +1112,6 @@ _update_image_revision() {
   echo "=================================="
   echo "Checking for image revision updates"
   echo "=================================="
-
-  if [[ -n "${branch}" ]]; then
-    git checkout "${branch}"
-    _ensure_git_identity
-    git merge --no-edit master
-  fi
 
   latest=$(_get_image_release "${base_image}" "${version}-")
 
@@ -1159,10 +1144,6 @@ _update_image_revision() {
     fi
 
     _release_tag "Base image ${base_image}: ${version}-${current} -> ${version}-${latest}" "${minor_update}"
-  fi
-
-  if [[ -n "${branch}" ]] && _head_has_unpushed_commits "${branch}"; then
-    _git_push origin
   fi
 }
 
@@ -1532,26 +1513,22 @@ update_from_base_image() {
   _update_digests "${version_list}" "${base_image}" "${image}"
 }
 
-rebuild_and_rebase() {
+# Refresh and release a descendant from the repository's cloned default branch.
+update_from_parent_image() {
   local image="${1}"
   local version_list="${2}"
-  local branch="${3:-}"
   local base_image=
 
   _git_clone "${image}"
   _require_base_image_pins || return 0
-  _require_digest_branch "${branch}" || return 0
+  _require_parent_image_revision || return 0
 
   base_image=$(_get_base_image)
 
   IFS=' ' read -r -a array <<<"${version_list}"
 
   _update_digests "${version_list}" "${base_image}"
-  _update_image_revision "${array[0]}" "${base_image}" "${branch}"
-  if [[ -n "${branch}" ]]; then
-    # The release branch has its own build inputs after merging the default branch.
-    _update_digests "${version_list}" "${base_image}"
-  fi
+  _update_image_revision "${array[0]}" "${base_image}"
 }
 
 update_base_alpine() {
@@ -1572,14 +1549,19 @@ update_from_upstream() {
   local image="${1}"
   local version_list="${2}"
   local upstream="${3%:*}"
-  local branch="${4:-}"
-  local release_source="${5:-}"
-  local tag_prefixes="${6:-}"
+  local release_source="${4:-}"
+  local tag_prefixes="${5:-}"
+  local base_image
 
   _git_clone "${image}"
-  _require_digest_branch "${branch}" || return 0
+  # Application updates must use the same pinned parent as dependency releases.
+  base_image=$(_get_base_image) || return 1
+  if [[ "${base_image}" == wodby/* ]]; then
+    _require_base_image_pins || return 0
+    _require_parent_image_revision || return 0
+  fi
 
-  _update_versions "${version_list}" "${upstream}" "${image#*/}" "${branch}" "${release_source}" "${tag_prefixes}"
+  _update_versions "${version_list}" "${upstream}" "${image#*/}" "${release_source}" "${tag_prefixes}"
 }
 
 update_docker4x() {

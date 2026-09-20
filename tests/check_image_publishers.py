@@ -50,7 +50,6 @@ def check_make_aliases(repo: Path) -> int:
             def render(*args: str) -> str:
                 return subprocess.check_output(['make', '--no-print-directory', '-n', 'build', *args],
                                                cwd=makefile.parent, env=env, text=True)
-            new = render(f'{current}=r23')
             variable = 'BASE_IMAGE_TAG' if current.startswith('BASE_') else 'TAG'
             value = subprocess.run(
                 ['make', '--no-print-directory', '-s', '-f', 'Makefile', '-f', '-',
@@ -58,8 +57,12 @@ def check_make_aliases(repo: Path) -> int:
                 input=f"revision-test-input:\n\t@printf '%s' '$({variable})'\n",
                 cwd=makefile.parent, env=env, text=True, capture_output=True, check=True).stdout
             assert value == 'r23' or value.endswith('-r23'), (makefile, current, value)
-            assert new == render(f'{legacy}=r23'), (makefile, legacy, 'alias differs')
-            assert new == render(f'{current}=r23', f'{legacy}=4.83.3'), (makefile, current, 'precedence differs')
+            # Synthetic revision inputs need a matching synthetic digest pin.
+            # Make still enforces the pin contract; this only supplies test data.
+            pins = [f'BASE_IMAGE_DIGEST_{value}=sha256:' + '1' * 64] if current.startswith('BASE_') else []
+            new = render(f'{current}=r23', *pins)
+            assert new == render(f'{legacy}=r23', *pins), (makefile, legacy, 'alias differs')
+            assert new == render(f'{current}=r23', f'{legacy}=4.83.3', *pins), (makefile, current, 'precedence differs')
             count += 2
     return count
 
