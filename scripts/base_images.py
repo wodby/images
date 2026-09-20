@@ -15,7 +15,7 @@ from urllib.request import urlopen
 DIGEST = re.compile(r"sha256:[a-f0-9]{64}\Z")
 PIN = re.compile(r"BASE_IMAGE_DIGEST_([A-Za-z0-9_][A-Za-z0-9_.-]*) := (sha256:[a-f0-9]{64})\Z")
 BUILDER = re.compile(r"(BUILD_IMAGE_[A-Z0-9_]+) := ([a-z0-9_.-]+(?:/[a-z0-9_.-]+)?):([A-Za-z0-9_][A-Za-z0-9_.-]*)@(sha256:[a-f0-9]{64})\Z")
-STABILITY = re.compile(r"-\d+\.\d+\.\d+$")
+IMAGE_RELEASE = re.compile(r"-(?:r(?:0|[1-9][0-9]*)|\d+\.\d+\.\d+)$")
 
 
 def resolve_digest(repository, tag):
@@ -101,13 +101,14 @@ class BaseImages:
                 raise ValueError(f"Missing base image pin for {tag}")
             selected = [(tag, new + self.suffix)]
         elif mode == "stability":
-            if not re.fullmatch(r"\d+\.\d+\.\d+", new):
-                raise ValueError("Invalid stability tag")
-            # Every floating variant needs a matching pin for the new stability release.
-            selected = [(tag, tag + "-" + new) for tag in self.pins if not STABILITY.search(tag)]
+            # Retain the CLI mode name for compatibility with existing callers.
+            if not re.fullmatch(r"(?:r(?:0|[1-9][0-9]*)|\d+\.\d+\.\d+)", new):
+                raise ValueError("Invalid image release tag")
+            # Every floating variant needs a matching pin for the new release.
+            selected = [(tag, tag + "-" + new) for tag in self.pins if not IMAGE_RELEASE.search(tag)]
             if not selected:
                 raise ValueError("No base image variants for stability update")
-            candidate = {tag: digest for tag, digest in candidate.items() if not STABILITY.search(tag)}
+            candidate = {tag: digest for tag, digest in candidate.items() if not IMAGE_RELEASE.search(tag)}
         else:
             raise ValueError(f"Unknown update mode: {mode}")
         for previous, tag in selected:

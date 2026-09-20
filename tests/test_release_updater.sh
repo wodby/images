@@ -108,8 +108,8 @@ assert_eq 'origin 4.82.8' "$(cat "${trace}")"
   )
 
   # Both base-image paths name the image and the complete tag transition.
-  _get_image_tags() { echo 4.9.2; }
-  for updater in _update_base_alpine_image _update_stability_tag; do
+  _get_image_release() { echo 4.9.2; }
+  for updater in _update_base_alpine_image _update_image_revision; do
     echo '  BASE_IMAGE_STABILITY_TAG: 4.8.1' > .github/workflows/workflow.yml
     if [[ "$updater" == _update_base_alpine_image ]]; then
       "$updater" 3.24 wodby/alpine true
@@ -185,8 +185,7 @@ assert_eq 'origin 4.82.8' "$(cat "${trace}")"
   [[ ! -e release-notes ]] || fail 'digest-only rebuild created a release'
 )
 
-# Exact build variants determine version discovery; staged rollout must not merge
-# a migrated default branch into a stability branch that still has marker files.
+# Exact build variants determine version discovery.
 (
   cd "${test_root}/descriptions"
   _get_image_tags() { printf '%s' "$2" > tag-filter; echo 8.5.11; }
@@ -196,13 +195,7 @@ assert_eq 'origin 4.82.8' "$(cat "${trace}")"
   touch base-images.mk Dockerfile
   _get_latest_version php 8.5 php >/dev/null
   assert_eq '^(8\.5\.[0-9.]+)(?=-fpm-alpine$)' "$(cat tag-filter)"
-  _report_event() { echo "$*" > migration-report; }
-  _current_repo_slug() { echo wodby/example; }
-  git() { return 1; }
-  if _require_digest_branch 4.x; then fail 'unmigrated branch was accepted'; fi
-  grep -q 'manual_review.*4.x' migration-report || fail 'missing migration report'
-  git() { return 0; }
-  _require_digest_branch 4.x
+
 )
 
 echo "release updater tests passed"

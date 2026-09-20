@@ -18,7 +18,7 @@ jobs:
       - uses: actions/checkout@v7
       - name: Install report dependencies
         run: python -m pip install -r scripts/requirements.txt
-      - name: Test reports and base image pins
+      - name: Test reports, base image pins, and revision aliases
         run: python -m unittest discover -s tests -p 'test_*.py'
       - name: Test updater helpers
         run: |
@@ -27,6 +27,8 @@ jobs:
           ./tests/test_squid_updater.sh
           ./tests/test_mysql_updater.sh
           ./tests/test_release_updater.sh
+          ./tests/test_default_branch_updater.sh
+          ./tests/test_image_revisions.sh
           ./tests/test_supabase_postgres_updater.sh
           ./tests/test_squid_updater.sh
   tooling:

@@ -97,6 +97,27 @@ class PinTests(unittest.TestCase):
             pins.update("stability", new="4.71.0", resolver=resolve)
         self.assertEqual(before, self.path.read_bytes())
 
+    def test_revision_update_replaces_legacy_and_prior_revision_pins(self):
+        tags = ["8.5", "8.5-dev", "8.5-dev-macos", "8.4"]
+        initial = {tag: A for tag in tags}
+        initial.update({tag + "-4.71.0": A for tag in tags})
+        self.write(initial, "wodby/php", "")
+        for release in ("r0", "r1", "r23"):
+            seen = []
+            def resolve(repo, tag):
+                seen.append(tag)
+                return B
+            module.BaseImages(self.path).update("stability", new=release, resolver=resolve)
+            current = module.BaseImages(self.path)
+            self.assertEqual(set(seen), {tag + "-" + release for tag in tags})
+            self.assertEqual(set(current.pins), set(tags) | set(seen))
+            self.assertEqual(current.ref_for_line("8.5", release), "wodby/php:8.5-" + release + "@" + B)
+        before = self.path.read_bytes()
+        for invalid in ("r01", "r-1", "8.5-r1"):
+            with self.assertRaises(ValueError):
+                module.BaseImages(self.path).update("stability", new=invalid)
+            self.assertEqual(self.path.read_bytes(), before)
+
     def test_make_consumes_the_pin_and_rejects_missing_versions(self):
         self.write({"8.5.10-fpm-alpine": A})
         makefile = self.path.parent / "Makefile"

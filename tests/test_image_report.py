@@ -81,14 +81,14 @@ class GrypeReportTests(unittest.TestCase):
             root = Path(directory)
             readme = root / "README.md"
             readme.write_text('''### Images based on official images (or forks)
-| Image | Upstream | Versions | Stability branch |
-| [wodby/python] | [python] | `3.13`, `3.10` | `stable` |
+| Image | Upstream | Versions |
+| [wodby/python] | [python] | `3.13`, `3.10` |
 ''')
             args = argparse.Namespace(readme=str(readme), events_dir=str(root), eol_warning_days=90)
             config = 'ignore:\n  - vulnerability: CVE-example\n    package: {name: "<unsafe>&", version: 3.13.15}\n'
             with patch.object(report, "analyze_versions", return_value=([], [], [])), patch.object(report, "fetch_grype_config", return_value=(".grype.yaml", config)) as fetch:
                 data = report.generate_report(args)
-            fetch.assert_called_once_with("wodby/python", "stable")
+            fetch.assert_called_once_with("wodby/python", "HEAD")
             self.assertEqual(data["totals"]["grype_exceptions"], 1)
             self.assertEqual(data["totals"]["updated_repos"], 0)
             self.assertEqual(data["totals"]["update_events"], 0)

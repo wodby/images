@@ -53,13 +53,15 @@ printf '%s\n' \
   'FROM ${NGINX_IMAGE}' \
   'ARG S6_OVERLAY_VERSION=3.2.3.2' >"${dockerfile}"
 
-_get_image_tags() {
+_get_image_release() {
   case "${1}" in
     wodby/nginx) echo '5.48.5' ;;
     golang) echo '1.26.5-alpine3.23' ;;
     *) return 1 ;;
   esac
 }
+
+_get_image_tags() { _get_image_release "$@"; }
 
 _get_image_digest() {
   case "${1}:${2}" in
@@ -145,13 +147,40 @@ assert_file_line 'ARG LEGO_VERSION=v4.35.3' "${dockerfile}"
 )
 jq -e 'select(.type == "manual_review" and (.message | contains("diverges")))' "${IMAGES_UPDATE_REPORT_FILE}" >/dev/null || fail 'missing divergent source report'
 
-_get_image_tags() {
+# Revision pins resolve through the same digest path and never fall back to SemVer.
+(
+  revision_dockerfile="${test_root}/Dockerfile.revision"
+  cp "${dockerfile}" "${revision_dockerfile}"
+  _get_image_release() { assert_eq 'wodby/nginx 1.31-' "$*"; echo r1; }
+  _get_image_tags() { echo '1.26.5-alpine3.23'; }
+  _get_image_digest() {
+    case "$1:$2" in
+      wodby/nginx:1.31-r1) echo sha256:revision ;;
+      golang:1.26.5-alpine3.23) echo sha256:new-go ;;
+      *) fail "unexpected image digest request: $*" ;;
+    esac
+  }
+  _prepare_edge_alpine_update "${revision_dockerfile}"
+  assert_file_line 'ARG NGINX_IMAGE=wodby/nginx:1.31-r1@sha256:revision' "${revision_dockerfile}"
+  _get_image_release() { echo 99.9.9; }
+  _get_image_digest() { echo sha256:legacy; }
+  if _prepare_edge_alpine_update "${revision_dockerfile}"; then
+    fail 'revision pin fell back to legacy SemVer'
+  else
+    assert_eq 2 "$?"
+  fi
+  assert_file_line 'ARG NGINX_IMAGE=wodby/nginx:1.31-r1@sha256:revision' "${revision_dockerfile}"
+)
+
+_get_image_release() {
   case "${1}" in
     wodby/nginx) echo '5.48.4' ;;
     golang) echo '1.26.4-alpine3.23' ;;
     *) return 1 ;;
   esac
 }
+
+_get_image_tags() { _get_image_release "$@"; }
 
 _get_image_digest() {
   echo 'sha256:older'
