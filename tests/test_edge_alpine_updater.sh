@@ -209,16 +209,26 @@ else
   assert_eq "2" "$?"
 fi
 
-# Resolve the real patch version rather than reporting the 1.31 image line.
-_github_api() {
-  assert_eq 'repos/wodby/nginx/contents/.github/workflows/workflow.yml?ref=5.48.13' "${1}"
-  jq -nc --arg content "$(printf "env:\n  NGINX131: '1.31.6'\n" | base64)" '{content: $content}'
-}
-assert_eq 1.31.6 "$(_edge_nginx_version wodby/nginx:1.31-5.48.13@sha256:test)"
+# Resolve the real patch version from both legacy and revision parent releases.
+for release in 5.48.13 r0 r23; do
+  _github_api() {
+    assert_eq "repos/wodby/nginx/contents/.github/workflows/workflow.yml?ref=${release}" "${1}"
+    jq -nc --arg content "$(printf "env:\n  NGINX131: '1.31.6'\n" | base64)" '{content: $content}'
+  }
+  assert_eq 1.31.6 "$(_edge_nginx_version "wodby/nginx:1.31-${release}@sha256:test")"
+done
+_github_api() { fail 'invalid parent tag reached GitHub'; }
+for tag in 1.31-r00 1.31-r01 1.31-r1-rc1 1.30-r0 1.31; do
+  if _edge_nginx_version "wodby/nginx:${tag}"; then
+    fail "invalid NGINX tag was accepted: ${tag}"
+  fi
+done
 _github_api() { echo '{"content":""}'; }
-if _edge_nginx_version wodby/nginx:1.31-5.48.13; then
-  fail 'missing NGINX version was accepted'
-fi
+for release in 5.48.13 r0; do
+  if _edge_nginx_version "wodby/nginx:1.31-${release}"; then
+    fail 'missing NGINX version was accepted'
+  fi
+done
 
 # Release comparisons must include changes accumulated since the previous tag.
 notes_dir="${test_root}/notes"
