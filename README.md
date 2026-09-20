@@ -4,9 +4,14 @@
 
 ## Image revisions
 
-Image tags separate the upstream software version from the Wodby image revision.
-Choose a major/minor release line or an exact upstream version. The first release
-uses `r0` everywhere: Git tag `r0` and, for example, Docker tags `11-r0`,
+For images that package upstream software, tags separate the upstream software
+version from the Wodby image revision. Wodby software such as Edge Alpine and
+Backup uses its own semantic product versions for both Git and Docker tags.
+Edge 3.x and 2.x identify different runtime compatibility contracts. These
+repositories do not use the image revision sequence.
+
+For packaged upstream software, choose a major/minor release line or an exact
+upstream version. The first release uses `r0` everywhere: Git tag `r0` and, for example, Docker tags `11-r0`,
 `11.4-r0`, and `11.4.2-r0`. Subsequent releases follow the counters below:
 
 | Example Docker tag | Revision counter | Matching Git tag |
@@ -19,7 +24,7 @@ These illustrative aliases all point to the primary Git release tag `r102`'s
 commit. A major alias selects the supported minor line designated for that major.
 Development variants retain their qualifier, such as `wodby/php:8.5-dev-r102`
 and `wodby/php:8.5.10-dev-r0`. Images without an upstream-version prefix use the
-repository release directly, such as `wodby/backup:r102`.
+repository release directly, such as `wodby/sshd:r102`.
 
 - Git release tags are `r0`, `r1`, `r2`, and so on. The counter increases per repository
   and is shared by its runtime versions, variants, and architectures.
@@ -57,9 +62,13 @@ version, such as `17.6.1.136-r0`. WordPress initial releases named `7.2` use
 Deploy this updater before migrating image repositories. A repository opts in by
 adding `.image-release-format` containing `revision`. Its next release starts at
 `r0`, or advances its highest existing `rN` Git tag across all branches. Repositories
-without the marker, including software tools such as `gotpl`, retain their existing
-release numbering. The updater creates annotated Git tags with the release
-description. Build and publishing checks remain in each image repository.
+without the marker, including `edge-alpine`, `backup`, and `gotpl`, retain their
+semantic product versions. For these repositories, the updater ignores image
+revision tags and selects the latest semantic version in the current major line.
+The previously published Edge Alpine and Backup `r0` tags remain available; their
+next releases continue the existing semantic version series. The updater creates
+annotated Git tags with the release description. Build and publishing checks
+remain in each image repository.
 
 Versioned repositories also declare their upstream version sources and tag
 templates in `.image-revision-aliases.json`. Keep this mapping aligned with the

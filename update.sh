@@ -304,7 +304,11 @@ _latest_release_tag() {
     fi
   fi
 
-  described_tag=$(git describe --abbrev=0 --tags) || {
+  # Keep product versions independent from image revision/alias tags, including
+  # an accidentally published rN tag retained after opting out of revisions.
+  described_tag=$(git describe --abbrev=0 --tags \
+    --match '[0-9]*.[0-9]*.[0-9]*' \
+    --exclude '*[!0-9.]*' --exclude '*.*.*.*') || {
     echo >&2 "Failed to find the current release tag"
     return 1
   }
@@ -1371,7 +1375,7 @@ _edge_nginx_version() {
 
   tag=$(_image_ref_tag "${1}")
   release="${tag#1.31-}"
-  [[ "${tag}" =~ ^1\.31-[0-9]+\.[0-9]+\.[0-9]+$ ]] || return 1
+  [[ "${tag}" =~ ^1\.31-(r(0|[1-9][0-9]*)|[0-9]+\.[0-9]+\.[0-9]+)$ ]] || return 1
   workflow=$(_github_api "repos/wodby/nginx/contents/.github/workflows/workflow.yml?ref=${release}") || return 1
   workflow=$(jq -er '.content' <<<"${workflow}" | base64 -d) || return 1
   version=$(sed -n -E "s/^[[:space:]]*NGINX131: ['\"]?([0-9.]+).*$/\\1/p" <<<"${workflow}")
