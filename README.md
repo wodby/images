@@ -34,6 +34,7 @@ repository release directly, such as `wodby/sshd:r102`.
   repository release containing that same version uses `r1`, and so on. A new
   upstream version starts at `r0` again. Variants and architectures share the
   counter. Failed release attempts can leave gaps; retries reuse their number.
+- Alias tag descriptions use the primary release notes to explain what changed.
 - Every published versioned revision tag gets a matching annotated Git alias
   pointing to the primary release commit. Only primary Git tags trigger builds.
   Dropping a major or minor line stops new releases for it; existing Docker and
