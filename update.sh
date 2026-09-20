@@ -304,7 +304,11 @@ _latest_release_tag() {
     fi
   fi
 
-  described_tag=$(git describe --abbrev=0 --tags) || {
+  # Keep product versions independent from image revision/alias tags, including
+  # an accidentally published rN tag retained after opting out of revisions.
+  described_tag=$(git describe --abbrev=0 --tags \
+    --match '[0-9]*.[0-9]*.[0-9]*' \
+    --exclude '*[!0-9.]*' --exclude '*.*.*.*') || {
     echo >&2 "Failed to find the current release tag"
     return 1
   }

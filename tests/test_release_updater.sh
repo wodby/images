@@ -68,6 +68,59 @@ _release_tag 'Base image stability tag updated' ''
 assert_eq 'tag' "$(git cat-file -t refs/tags/4.82.8)"
 assert_eq 'origin 4.82.8' "$(cat "${trace}")"
 
+# Returning to product versions must preserve r0 without letting it, aliases,
+# prereleases, or an unrelated major line choose the next release.
+(
+  git init -q -b master "${test_root}/product"
+  cd "${test_root}/product"
+  git config user.email test@wodby.invalid
+  git config user.name 'Wodby Tests'
+  git config commit.gpgsign false
+  git config tag.gpgsign false
+  git commit --allow-empty -qm 'Product release'
+  git tag -am 'Current product version' 3.0.11
+  printf 'revision\n' > .image-release-format
+  git add .image-release-format
+  git commit -qm 'Opt in to image revisions'
+  git tag -am 'Accidental image revision' r0
+  revision_commit=$(git rev-parse r0)
+  assert_eq r1 "$(_next_release_tag '')"
+  for tag in 3-r0 3.0.11-r0 9.9.9-rc1 3.0.11.1; do
+    git tag -am 'Non-product tag' "${tag}"
+  done
+  git checkout -qb future
+  git commit --allow-empty -qm 'Future major'
+  git tag -am 'Future major version' 4.0.0
+  git checkout -q master
+  git rm -q .image-release-format
+  git commit -qm 'Restore product versions'
+  assert_eq 3.0.11 "$(_latest_release_tag)"
+  assert_eq 3.0.12 "$(_next_release_tag '')"
+  assert_eq 3.1.0 "$(_next_release_tag 1)"
+  _git_push() { assert_eq 'origin 3.0.12' "$*"; }
+  _release_tag 'Compatible product fixes' ''
+  assert_eq tag "$(git cat-file -t 3.0.12)"
+  assert_eq 'Compatible product fixes' "$(git for-each-ref --format='%(contents:subject)' refs/tags/3.0.12)"
+  assert_eq "${revision_commit}" "$(git rev-parse r0)"
+  assert_eq 3.0.12 "$(_latest_release_tag)"
+  git checkout -q future
+  rm .image-release-format
+  assert_eq 4.0.0 "$(_latest_release_tag)"
+)
+
+# A repository with no product history must not invent a semantic version.
+(
+  git init -q -b master "${test_root}/no-product-version"
+  cd "${test_root}/no-product-version"
+  git config user.email test@wodby.invalid
+  git config user.name 'Wodby Tests'
+  git config commit.gpgsign false
+  git config tag.gpgsign false
+  git commit --allow-empty -qm initial
+  git tag -am 'Image revision only' r0
+  if _next_release_tag ''; then fail 'invented a product version'; fi
+)
+
 # Exercise the real update paths while keeping all publication local to the test.
 (
   mkdir -p "${test_root}/descriptions/.github/workflows"

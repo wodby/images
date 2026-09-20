@@ -40,7 +40,7 @@ def check_make_aliases(repo: Path) -> int:
     """Verify old and new build inputs resolve to the same parent and image tags."""
     count = 0
     env = {k: v for k, v in os.environ.items() if k not in (
-        'IMAGE_REVISION', 'STABILITY_TAG', 'BASE_IMAGE_REVISION', 'BASE_IMAGE_STABILITY_TAG')}
+        'RELEASE_VERSION', 'IMAGE_REVISION', 'STABILITY_TAG', 'BASE_IMAGE_REVISION', 'BASE_IMAGE_STABILITY_TAG')}
     for makefile in repo.rglob('Makefile'):
         source = makefile.read_text()
         for current, legacy in (('IMAGE_REVISION', 'STABILITY_TAG'),
@@ -56,7 +56,11 @@ def check_make_aliases(repo: Path) -> int:
                  'revision-test-input', f'{current}=r23'],
                 input=f"revision-test-input:\n\t@printf '%s' '$({variable})'\n",
                 cwd=makefile.parent, env=env, text=True, capture_output=True, check=True).stdout
-            assert value == 'r23' or value.endswith('-r23'), (makefile, current, value)
+            if repo.name == 'backup' and current == 'BASE_IMAGE_REVISION':
+                # Backup deliberately retains its digest-pinned latest base.
+                assert value == 'latest', (makefile, current, value)
+            else:
+                assert value == 'r23' or value.endswith('-r23'), (makefile, current, value)
             # Synthetic revision inputs need a matching synthetic digest pin.
             # Make still enforces the pin contract; this only supplies test data.
             pins = [f'BASE_IMAGE_DIGEST_{value}=sha256:' + '1' * 64] if current.startswith('BASE_') else []
@@ -120,8 +124,17 @@ docker() {
 . "$1"
 '''
     count = 0
+    product = name in ('edge-alpine', 'backup') and not (repo / '.image-release-format').exists()
+    releases = ('4.83.3',) if product else ('r0', 'r1', 'r23', '4.83.3')
+    if product:
+        for invalid in ('r0', 'r1', 'r23', '4.83.3-rc1', '04.83.3'):
+            result = subprocess.run(['bash', '-c', wrapper, 'publisher-test', str(script)],
+                                    cwd=workdir, env={**env, 'GITHUB_REF': 'refs/tags/' + invalid},
+                                    capture_output=True, text=True)
+            assert result.returncode != 0 and not result.stdout.strip(), (name, invalid, result)
+            count += 1
     for variant in variants:
-        for revision in ('r0', 'r1', 'r23', '4.83.3'):
+        for revision in releases:
             result = subprocess.run(['bash', '-c', wrapper, 'publisher-test', str(script)],
                                     cwd=workdir, env={**env, **variant, 'GITHUB_REF': 'refs/tags/' + revision},
                                     capture_output=True, text=True, check=True)
@@ -169,7 +182,8 @@ def main() -> None:
     parser.add_argument('repos', nargs='*')
     args = parser.parse_args()
     repos = [args.root / n for n in args.repos] if args.repos else sorted(
-        p for p in args.root.iterdir() if (p / '.image-release-format').is_file())
+        p for p in args.root.iterdir() if (p / '.image-release-format').is_file()
+        or (p.name in ('edge-alpine', 'backup') and (p / '.github/actions/release.sh').is_file()))
     assert repos, 'No image repository checkouts found'
     cases = sum(check_repo(p.resolve()) for p in repos)
     print(f'{len(repos)} image publishers: {cases} checks passed')
