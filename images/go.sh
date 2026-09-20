@@ -4,4 +4,4 @@ set -e
 
 . ../update.sh
 
-update_from_base_image "wodby/go" "1.26 1.25"
+update_from_base_image "wodby/go" "1.27 1.26"
