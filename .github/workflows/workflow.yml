@@ -22,6 +22,7 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_*.py'
       - name: Test updater helpers
         run: |
+          ./tests/test_action_runner.sh
           ./tests/test_backup_updater.sh
           ./tests/test_edge_alpine_updater.sh
           ./tests/test_gotpl_updater.sh

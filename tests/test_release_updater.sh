@@ -24,9 +24,6 @@ assert_eq() {
   [[ "${actual}" == "${expected}" ]] || fail "expected '${expected}', got '${actual}'"
 }
 
-grep -Fq -- '-e IMAGES_UPDATE_PUSH' "${repo_root}/.github/actions/action.yml" \
-  || fail "the updater container does not receive IMAGES_UPDATE_PUSH"
-
 release_repo="${test_root}/release-repo"
 git init -q -b master "${release_repo}"
 cd "${release_repo}"
