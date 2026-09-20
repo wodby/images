@@ -92,6 +92,10 @@ its dependencies with `python -m pip install -r scripts/requirements.txt`.
 - Rebuild `wodby/alpine` against complete new gotpl releases
 - New image revision released on version update
 - New image revision released on Alpine Linux update
+- New `wodby/alpine` revision when tested package upgrades fix known CVEs. All
+  supported variants and architectures are compared with the last revision using
+  one vulnerability database snapshot. Digest-only changes do not trigger releases.
+  Release notes list package versions and CVEs; release builds verify those fixes.
 
 | Image             | Upstream (base image) | Versions                               |
 |-------------------|-----------------------|----------------------------------------|

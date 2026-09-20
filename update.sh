@@ -1550,6 +1550,10 @@ update_from_base_image() {
 
   base_image=$(_get_base_image)
 
+  # Compare yesterday's tested images before new input commits make them stale.
+  if [[ "${image}" == wodby/alpine ]]; then
+    update_alpine_security || return 1
+  fi
   _update_versions "${version_list}" "${base_image}" "${image#*/}"
   _update_digests "${version_list}" "${base_image}" "${image}"
 }
@@ -1779,4 +1783,41 @@ update_gotpl_go() {
   _git_commit ./ "Update Go to ${latest}"
   _git_push origin
   _release_tag "Go updated from ${current} to ${latest}" ""
+}
+
+# Publish a security revision only after all tested mutable variants are available.
+# Push the receipt commit and annotated tag atomically: retries cannot leave an
+# untagged release commit or reuse an already reserved revision number.
+update_alpine_security() {
+  if [[ ! -f .image-security-updates ]] || [[ "$(cat .image-security-updates)" != 1 ]]; then
+    echo "Alpine security release detection is not enabled"
+    return 0
+  fi
+  if ! _publishing_enabled; then
+    echo "Skipping Alpine security release detection in validation runs"
+    return 0
+  fi
+  local release plan_file notes branch
+  release=$(_next_release_tag "") || return 1
+  plan_file=$(mktemp) || return 1
+  if ! python3 "${IMAGES_REPO_ROOT}/scripts/alpine_security.py" plan \
+    --tools "${IMAGES_REPO_ROOT}/.image-security-tools" \
+    --release "${release}" --output "${plan_file}"; then
+    rm -f "${plan_file}"
+    return 1
+  fi
+  if ! jq -e '.release' "${plan_file}" >/dev/null; then
+    rm -f "${plan_file}"
+    return 0
+  fi
+  notes=$(jq -er '.notes' "${plan_file}") || return 1
+  branch=$(git branch --show-current) || return 1
+  test -n "${branch}" || return 1
+  mv "${plan_file}" .image-security-release.json || return 1
+  _ensure_git_identity
+  git add -- .image-security-release.json || return 1
+  git commit -m "${notes}" || return 1
+  git tag -a "${release}" -m "${notes}" || return 1
+  _git_push --atomic origin "HEAD:refs/heads/${branch}" "refs/tags/${release}" || return 1
+  _report_event release_tag wodby/alpine "${notes}" "${release}"
 }

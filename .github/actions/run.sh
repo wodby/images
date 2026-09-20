@@ -28,8 +28,14 @@ for attempt in 1 2 3; do
   sleep "$((attempt * 5))"
 done
 
+# The security scanner reads public registry layers using the same login as Docker.
+registry_args=()
+if [[ "$dir/$script" == images/alpine && "$logged_in" == 1 ]]; then
+  registry_args=(-e DOCKER_CONFIG=/registry-auth -v "${DOCKER_CONFIG:-${HOME}/.docker}:/registry-auth:ro")
+fi
+
 echo "Checking ${dir}/${script} for updates"
-docker run --pull=never -e WODBOT_GITHUB_PAT -e WODBOT_GITHUB_USERNAME -e WODBOT_GIT_EMAIL -e WODBOT_GIT_NAME -e DEBUG -e IMAGES_UPDATE_PUSH \
+docker run --pull=never "${registry_args[@]}" -e WODBOT_GITHUB_PAT -e WODBOT_GITHUB_USERNAME -e WODBOT_GIT_EMAIL -e WODBOT_GIT_NAME -e DEBUG -e IMAGES_UPDATE_PUSH \
   -e IMAGES_UPDATE_REPORT_FILE="/images/${report_file}" \
   -e IMAGES_UPDATE_DIR="${dir}" \
   -e IMAGES_UPDATE_SCRIPT="${script}" \
