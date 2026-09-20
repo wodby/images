@@ -66,7 +66,8 @@ if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
     _report_event manual_review wodby/squid 'Waiting for the Squid 7 / Alpine 3.24 image migration before enabling automatic updates'
     exit 0
   fi
+  _require_base_image_pins || exit 0
   _update_squid_package
-  _update_timestamps "3.24" "wodby/alpine"
+  _update_digests "3.24" "wodby/alpine"
   _update_base_alpine_image "3.24" "wodby/alpine" "true"
 fi
