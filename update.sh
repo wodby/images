@@ -154,34 +154,6 @@ _get_image_tags() {
   return 1
 }
 
-_get_timestamp() {
-  local repo="${1}"
-  local tag="${2}"
-  local namespace
-  local name
-  local url
-  local response
-
-  if [[ "${repo}" =~ / ]]; then
-    namespace="${repo%/*}"
-    name="${repo#*/}"
-  else
-    namespace="library"
-    name="${repo}"
-  fi
-
-  url="https://hub.docker.com/v2/namespaces/${namespace}/repositories/${name}/tags/${tag}"
-  response=$(curl -fsSL --connect-timeout 10 --max-time 30 --retry 3 "${url}") || {
-    echo >&2 "Failed to fetch Docker Hub tag metadata for ${namespace}/${name}:${tag}"
-    exit 1
-  }
-
-  jq -er '.last_updated' <<<"${response}" || {
-    echo >&2 "Failed to parse Docker Hub tag metadata for ${namespace}/${name}:${tag}"
-    exit 1
-  }
-}
-
 # Select a published release for an exact runtime/variant prefix. Prefer the
 # revision format, retaining legacy tags until the parent publishes its first rN.
 # Docker Hub orders pages by update time, so inspect every matching page.
@@ -251,23 +223,36 @@ _get_image_digest() {
   }
 }
 
-_find_timestamp_file() {
-  local base_image="${1%:*}"
-  local fallback="${2:-}"
-  local filename
+# Invoke the pin editor against the cloned image repository, not the updater checkout.
+_base_image_pins() {
+  python3 "${IMAGES_REPO_ROOT}/scripts/base_images.py" "$@"
+}
 
-  filename=".${base_image#*/}"
-  if [[ -f "${filename}" ]]; then
-    echo "${filename}"
-    return 0
+# Permit the updater to ship before individual repositories complete the migration.
+_require_base_image_pins() {
+  if [[ ! -f base-images.mk ]]; then
+    _report_event manual_review "$(_current_repo_slug)" "Waiting for digest-pinned base image build inputs"
+    echo "Skipping base image updates until base-images.mk is available"
+    return 1
   fi
+  _base_image_pins repository >/dev/null || exit 1
+}
 
-  if [[ -n "${fallback}" && -f ".${fallback}" ]]; then
-    echo ".${fallback}"
-    return 0
+# Avoid merging a migrated default branch into an unmigrated stability branch.
+_require_digest_branch() {
+  local branch="${1:-}"
+  if [[ -f base-images.mk && -n "${branch}" ]] && ! git cat-file -e "origin/${branch}:base-images.mk" 2>/dev/null; then
+    _report_event manual_review "$(_current_repo_slug)" "Waiting for digest-pinned build inputs on ${branch}"
+    echo "Skipping updates until ${branch} has digest-pinned build inputs"
+    return 1
   fi
+}
 
-  return 1
+# Select the base actually used by the workflow, including its image revision.
+_base_image_ref_for_line() {
+  local stability
+  stability=$(_base_image_release)
+  _base_image_pins ref --line "$1" --stability "${stability}"
 }
 
 _join_ws() {
@@ -706,8 +691,12 @@ _get_latest_version() {
     makefilePath=$(find . -name Makefile -maxdepth 2 | head -n 1)
     dockerfilePath=$(find . -name Dockerfile -maxdepth 2 | head -n 1)
 
-    # Alpine-only tags.
-    if grep -qP "BASE_IMAGE_TAG.+?-alpine" "${makefilePath}" || grep -qP "^FROM .+?-alpine" "${dockerfilePath}" ; then
+    # Match the build's exact variant, including PHP's fpm-alpine suffix.
+    if [[ -f base-images.mk && "$(_base_image_pins repository)" == "${upstream}" ]]; then
+      local variant
+      variant=$(_base_image_pins suffix) || return 1
+      suffix="(?=${variant}$)"
+    elif grep -qP "BASE_IMAGE_TAG.+?-alpine" "${makefilePath}" || grep -qP "^FROM .+?-alpine" "${dockerfilePath}"; then
       suffix="(?=\-alpine$)"
     fi
 
@@ -811,6 +800,10 @@ _get_latest_complete_gotpl_release() {
 }
 
 _get_base_image() {
+  if [[ -f base-images.mk ]]; then
+    _base_image_pins repository
+    return
+  fi
   local path
   local base_image
 
@@ -844,13 +837,12 @@ _update_versions() {
   local version_list="${1}"
   local upstream="${2%:*}"
   local name="${3}"
-  local branch="${4}"
+  local branch="${4:-}"
   local release_source="${5:-}"
   local tag_prefixes="${6:-}"
 
   local updated=()
   local latest_ver
-  local latest_timestamp
   local cur_ver
   local cur_series
   local dir
@@ -860,12 +852,10 @@ _update_versions() {
   local minor_update=""
   local version_key
   local name_key
-  local timestamp_file
 
   IFS=' ' read -r -a arr_versions <<<"${version_list}"
 
   name_key=$(tr '[:lower:]-' '[:upper:]_' <<<"${name}")
-  timestamp_file=$(_find_timestamp_file "${upstream}" "${name}" || true)
 
   echo "============================"
   echo "Checking for version updates"
@@ -910,6 +900,10 @@ _update_versions() {
     if _version_is_newer "${latest_ver}" "${cur_ver}"; then
       echo "${name^} ${cur_ver} is outdated, updating to ${latest_ver}"
 
+      if [[ -f base-images.mk && "$(_base_image_pins repository)" == "${upstream}" ]]; then
+        _base_image_pins version --old "${cur_ver}" --new "${latest_ver}" || return 1
+      fi
+
       if [[ "${version_key}" == "version" ]]; then
         if [[ -z "${has_quotes}" ]]; then
           sed -i -E "s/(version): ${version//\./\\.}\.[0-9.]+/\1: '${latest_ver}'/g" .github/workflows/workflow.yml
@@ -930,12 +924,6 @@ _update_versions() {
       fi
 
       sed -i -E "s/(${name_key}_VER \?= )${cur_ver}/\1${latest_ver}/" "${dir}/Makefile"
-
-      # Update base image timestamps.
-      if [[ -n "${timestamp_file}" ]]; then
-        latest_timestamp=$(_get_timestamp "${upstream}" "${latest_ver}")
-        sed -i "s/${cur_ver}#.*/${latest_ver}#${latest_timestamp}/" "${timestamp_file}"
-      fi
 
       _git_commit ./ "Update ${name} to ${latest_ver}"
       updated+=("${cur_ver} -> ${latest_ver}")
@@ -1004,116 +992,63 @@ _alpine_release_description() {
   printf 'Alpine Linux updates: %s' "$(_join_ws "; " "${descriptions[@]}")"
 }
 
-_update_timestamps() {
+# Refresh content pins even when upstream versions and stability tags are unchanged.
+_update_digests() {
   local version_list="${1}"
   local base_image="${2}"
-
-  # When passed we also check for Alpine update and release versions.
   local image="${3:-}"
-  local updated=""
+  local changes version previous current cur_alpine_ver latest_alpine_ver
+  local minor_update="" alpine_updated="" alpine_transition ver_list
+  local -a versions=() previous_refs=() alpine_transitions=()
 
-  local latest_timestamp
-  local cur_timestamp
-  local tag
-
-  local latest_alpine_ver
-  local cur_alpine_ver
-  local branch_name
-  local had_local_commits
-  local minor_update=""
-  local ver_list
-  local timestamp_file
-
-  local -a alpine_transitions=()
-  local alpine_transition
-  local alpine_updated=""
-
-  IFS=' ' read -r -a arr_versions <<<"${version_list}"
-  timestamp_file=$(_find_timestamp_file "${base_image}" "${image#*/}" || true)
-  if [[ -z "${timestamp_file}" ]]; then
-    echo >&2 "Failed to find timestamp file"
-    exit 1
+  _require_base_image_pins || return 0
+  IFS=' ' read -r -a versions <<<"${version_list}"
+  if [[ -n "${image}" && "${base_image}" != alpine* ]]; then
+    for version in "${versions[@]}"; do
+      previous=$(_base_image_ref_for_line "${version}") || return 1
+      previous_refs+=("${previous}")
+    done
   fi
+  changes=$(_base_image_pins refresh) || return 1
+  if [[ -z "${changes}" ]]; then
+    echo "Base image digests have not changed"
+    return 0
+  fi
+  printf '%s\n' "${changes}"
 
-  echo "=============================="
-  echo "Checking for timestamp updates"
-  echo "=============================="
-
-  for version in "${arr_versions[@]}"; do
+  local i=0
+  for version in "${versions[@]}"; do
     alpine_transition=""
-    latest_timestamp=$(_get_timestamp "${base_image%:*}" "${version}")
-    if [[ -z "${latest_timestamp}" ]]; then
-      echo >&2 "Failed to acquire latest timestamp"
-      exit 1
-    fi
-
-    cur_timestamp=$(grep "^${version}" "${timestamp_file}" | grep -oP "(?<=#)(.+)$" || true)
-    if [[ -z "${cur_timestamp}" ]]; then
-      echo >&2 "Failed to acquire current timestamp"
-      exit 1
-    fi
-
-    if [[ "${cur_timestamp}" != "${latest_timestamp}" ]]; then
-      echo "Base image has been updated. Triggering rebuild."
-      sed -i "s/${cur_timestamp}/${latest_timestamp}/" "${timestamp_file}"
-      updated=1
-
-      # Check for Alpine updates.
-      if [[ -n "${image}" && "${base_image}" != alpine* ]]; then
-        cur_alpine_ver=$(_get_alpine_ver "${image}:${version}")
-        if [[ "${base_image}" != wodby* ]]; then
-          local suffix="${base_image#*:}"
-          if [[ -z "${suffix}" ]]; then
-            echo >&2 "Failed to identify base image"
-            exit 1
-          fi
-          latest_alpine_ver=$(_get_alpine_ver "${base_image%:*}:${version}-${suffix}")
-        else
-          latest_alpine_ver=$(_get_alpine_ver "${base_image%:*}:${version}")
-        fi
-
+    if [[ -n "${image}" && "${base_image}" != alpine* ]]; then
+      previous="${previous_refs[$i]}"
+      current=$(_base_image_ref_for_line "${version}") || return 1
+      if [[ "${previous}" != "${current}" ]]; then
+        cur_alpine_ver=$(_get_alpine_ver "${image}:${version}") || return 1
+        latest_alpine_ver=$(_get_alpine_ver "${current}") || return 1
         if _version_is_newer "${latest_alpine_ver}" "${cur_alpine_ver}"; then
           if [[ "$(_get_minor_series "${latest_alpine_ver}")" != "$(_get_minor_series "${cur_alpine_ver}")" ]]; then
             minor_update=1
           fi
-
           alpine_transition="${cur_alpine_ver} -> ${latest_alpine_ver}"
           alpine_updated=1
         fi
       fi
     fi
     alpine_transitions+=("${alpine_transition}")
+    i=$((i + 1))
   done
 
-  if [[ -n "${updated}" ]]; then
-    _git_commit ./ "Rebuild against updated base image" "0"
-
-    branch_name=$(git rev-parse --abbrev-ref HEAD)
-    had_local_commits=""
-    if _head_has_unpushed_commits "${branch_name}"; then
-      had_local_commits=1
-    fi
-    _git_push origin
-
-    # Release tags on alpine updates.
-    if [[ -n "${alpine_updated}" ]]; then
-      # In case there were no new commits but the base image alpine we want to force rebuild latest images against new Alpine.
-      if [[ -z "${had_local_commits}" ]]; then
-        _ensure_git_identity
-        git commit --allow-empty -m "Rebuild against updated Alpine"
-        _report_event "commit" "$(_current_repo_slug)" "Rebuild against updated Alpine"
-        _git_push origin
-      fi
-      ver_list=$(_alpine_release_description "${image}" "${version_list}" "${alpine_transitions[@]}")
-      _release_tag "${ver_list}" "${minor_update}"
-    fi
-  else
-    echo "Base image hasn't changed"
+  _git_commit ./ "Rebuild against updated base image digests" "0"
+  _git_push origin
+  if [[ -n "${alpine_updated}" ]]; then
+    ver_list=$(_alpine_release_description "${image}" "${version_list}" "${alpine_transitions[@]}")
+    _release_tag "${ver_list}" "${minor_update}"
   fi
 }
 
 _update_base_alpine_image() {
-  local version="${1}"
+  # Use the leading line to discover the release, then resolve every pinned line.
+  local version="${1%% *}"
   local base_image="${2}"
   local release_tag="${3}"
   local branch_name
@@ -1140,6 +1075,9 @@ _update_base_alpine_image() {
   fi
 
   if _image_release_is_newer "${latest}" "${current}"; then
+    if [[ -f base-images.mk ]]; then
+      _base_image_pins stability --new "${latest}" || return 1
+    fi
     _set_base_image_release "${latest}"
 
     _git_commit ./ "Update base image revision to ${latest}"
@@ -1174,7 +1112,7 @@ _update_base_alpine_image() {
 _update_image_revision() {
   local version="${1}"
   local base_image="${2}"
-  local branch="${3}"
+  local branch="${3:-}"
   local tag=""
   local minor_update=""
   local latest
@@ -1204,6 +1142,9 @@ _update_image_revision() {
   fi
 
   if _image_release_is_newer "${latest}" "${current}"; then
+    if [[ -f base-images.mk ]]; then
+      _base_image_pins stability --new "${latest}" || return 1
+    fi
     _set_base_image_release "${latest}"
     _git_commit ./ "Update base image revision to ${latest}"
     _git_push origin
@@ -1583,30 +1524,34 @@ update_from_base_image() {
   local base_image
 
   _git_clone "${image}"
+  _require_base_image_pins || return 0
 
   base_image=$(_get_base_image)
 
   _update_versions "${version_list}" "${base_image}" "${image#*/}"
-  _update_timestamps "${version_list}" "${base_image}" "${image}"
+  _update_digests "${version_list}" "${base_image}" "${image}"
 }
 
 rebuild_and_rebase() {
   local image="${1}"
   local version_list="${2}"
-  local branch="${3}"
+  local branch="${3:-}"
   local base_image=
 
   _git_clone "${image}"
+  _require_base_image_pins || return 0
+  _require_digest_branch "${branch}" || return 0
 
   base_image=$(_get_base_image)
 
   IFS=' ' read -r -a array <<<"${version_list}"
 
-  if [[ -n "${branch}" ]]; then
-    _update_timestamps "${version_list}" "${base_image}"
-  fi
-
+  _update_digests "${version_list}" "${base_image}"
   _update_image_revision "${array[0]}" "${base_image}" "${branch}"
+  if [[ -n "${branch}" ]]; then
+    # The release branch has its own build inputs after merging the default branch.
+    _update_digests "${version_list}" "${base_image}"
+  fi
 }
 
 update_base_alpine() {
@@ -1617,12 +1562,9 @@ update_base_alpine() {
 
   _git_clone "${image}"
 
-  if [[ ! -f ".alpine" ]]; then
-    echo >&2 "ERROR: Missing .alpine file!"
-    exit 1
-  fi
+  _require_base_image_pins || return 0
 
-  _update_timestamps "${version}" "${base_image}"
+  _update_digests "${version}" "${base_image}"
   _update_base_alpine_image "${version}" "${base_image}" "${release_tag}"
 }
 
@@ -1630,11 +1572,12 @@ update_from_upstream() {
   local image="${1}"
   local version_list="${2}"
   local upstream="${3%:*}"
-  local branch="${4}"
+  local branch="${4:-}"
   local release_source="${5:-}"
   local tag_prefixes="${6:-}"
 
   _git_clone "${image}"
+  _require_digest_branch "${branch}" || return 0
 
   _update_versions "${version_list}" "${upstream}" "${image#*/}" "${branch}" "${release_source}" "${tag_prefixes}"
 }

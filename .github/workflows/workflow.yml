@@ -18,10 +18,8 @@ jobs:
       - uses: actions/checkout@v7
       - name: Install report dependencies
         run: python -m pip install -r scripts/requirements.txt
-      - name: Test report generation
-        run: python -m unittest discover -s tests -p 'test_*report*.py'
-      - name: Test image revision aliases
-        run: python -m unittest discover -s tests -p 'test_image_revision_aliases.py'
+      - name: Test reports, base image pins, and revision aliases
+        run: python -m unittest discover -s tests -p 'test_*.py'
       - name: Test updater helpers
         run: |
           ./tests/test_edge_alpine_updater.sh
@@ -70,7 +68,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        script: [ alpine,apache,memcached,mysql,node,php,postgres,supabase-postgres,python,go,redis,valkey,ruby,rabbitmq ]
+        script: [ alpine,apache,backup,memcached,mysql,node,php,postgres,supabase-postgres,python,go,redis,valkey,ruby,rabbitmq ]
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions

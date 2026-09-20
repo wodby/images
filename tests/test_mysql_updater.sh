@@ -23,12 +23,14 @@ _git_clone() {
   printf 'clone:%s\n' "$1" >>"${TRACE}"
 }
 
+_require_base_image_pins() { return 0; }
+
 _update_versions() {
   printf 'versions:%s:%s:%s\n' "$1" "$2" "$3" >>"${TRACE}"
 }
 
-_update_timestamps() {
-  printf 'timestamps:%s:%s:%s\n' "$1" "$2" "$#" >>"${TRACE}"
+_update_digests() {
+  printf 'digests:%s:%s:%s\n' "$1" "$2" "$#" >>"${TRACE}"
 }
 EOF
 
@@ -38,7 +40,7 @@ export TRACE="${test_root}/trace"
   ./mysql.sh
 )
 
-expected=$'clone:wodby/mysql\nversions:8.4:mysql:mysql\ntimestamps:8.4:mysql:2'
+expected=$'clone:wodby/mysql\nversions:8.4:mysql:mysql\ndigests:8.4:mysql:2'
 actual="$(cat "${TRACE}")"
 [[ "${actual}" == "${expected}" ]] || fail "unexpected updater calls: ${actual}"
 

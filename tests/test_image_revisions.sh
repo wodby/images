@@ -78,6 +78,10 @@ for key in BASE_IMAGE_STABILITY_TAG BASE_IMAGE_REVISION; do
  echo "  ${key}: 4.71.5" > .github/workflows/workflow.yml
  _update_image_revision 8.5 wodby/php ''
  assert_eq r12 "$(_base_image_release)"
+ (
+   _base_image_pins() { assert_eq 'ref --line 8.5 --stability r12' "$*"; }
+   _base_image_ref_for_line 8.5
+ )
  grep -Fq "${key}: r12" .github/workflows/workflow.yml
  grep -Fq '8.5-4.71.5 -> 8.5-r12' revision-notes
  rm revision-notes
