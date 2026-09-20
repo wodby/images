@@ -122,8 +122,39 @@ assert_eq 'origin 4.82.8' "$(cat "${trace}")"
   }
   printf '1#old1\n2#old2\n3#old3\n' > timestamps
   _update_timestamps '1 2 3' upstream:alpine wodby/app
-  assert_eq 'Alpine Linux updates: wodby/app:1: 3.22.1 -> 3.22.2, wodby/app:2: 3.23.3 -> 3.24.1' "$(cat release-notes)"
+  assert_eq 'Alpine Linux updates: 3.22.1 -> 3.22.2 (wodby/app:1); 3.23.3 -> 3.24.1 (wodby/app:2)' "$(cat release-notes)"
   assert_eq 1 "$(cat release-minor)"
+
+  # Identical updates are described once, including exceptions for unchanged
+  # Alpine versions and image lines whose timestamps did not change.
+  _get_alpine_ver() {
+    case "$1" in
+      wodby/app:*) echo 3.24.1 ;;
+      upstream:3-alpine) echo 3.24.1 ;;
+      upstream:*-alpine) echo 3.24.2 ;;
+      *) fail "unexpected image: $1" ;;
+    esac
+  }
+  printf '1#old1\n2#old2\n' > timestamps
+  _update_timestamps '1 2' upstream:alpine wodby/app
+  assert_eq 'Alpine Linux updates: 3.24.1 -> 3.24.2' "$(cat release-notes)"
+  assert_eq '' "$(cat release-minor)"
+
+  printf '1#old1\n2#old2\n3#old3\n' > timestamps
+  _update_timestamps '1 2 3' upstream:alpine wodby/app
+  assert_eq 'Alpine Linux updates: 3.24.1 -> 3.24.2 (except wodby/app:3)' "$(cat release-notes)"
+
+  printf '1#old1\n2#new\n3#old3\n' > timestamps
+  _update_timestamps '1 2 3' upstream:alpine wodby/app
+  assert_eq 'Alpine Linux updates: 3.24.1 -> 3.24.2 (except wodby/app:2, wodby/app:3)' "$(cat release-notes)"
+
+  printf '1#old1\n' > timestamps
+  _update_timestamps '1' upstream:alpine wodby/app
+  assert_eq 'Alpine Linux updates: 3.24.1 -> 3.24.2' "$(cat release-notes)"
+
+  # Multiple transitions group their affected images without duplicating versions.
+  assert_eq 'Alpine Linux updates: 3.24.1 -> 3.24.2 (wodby/app:1, wodby/app:2); 3.23.3 -> 3.24.2 (wodby/app:3)' \
+    "$(_alpine_release_description wodby/app '1 2 3 4' '3.24.1 -> 3.24.2' '3.24.1 -> 3.24.2' '3.23.3 -> 3.24.2' '')"
 
   # Timestamp-only rebuilds still do not create release tags.
   rm release-notes
