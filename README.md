@@ -59,6 +59,8 @@ Supabase PostgreSQL is monitored for newer bundles within its pinned major versi
 
 ### Descendant images
 
+`wodby/backup` also rebuilds when the digest of its `wodby/alpine:latest` base changes.
+
 - Rebuild against updated base image
 - Rebase to the new stability tag
 - New stability tag release
@@ -289,3 +291,22 @@ Not automated:
 [wodby/supabase-postgres]: https://github.com/wodby/supabase-postgres
 
 [supabase/postgres]: https://github.com/supabase/postgres
+
+## Base image updates
+
+Image Makefiles consume `base-images.mk` to pass an exact `repository:tag@digest`
+reference to Docker. The updater compares these digests instead of Docker Hub
+timestamps. It resolves the actual build tag, including variants such as
+`fpm-alpine`, `dev`, and `dev-macos`. Pins use the multi-platform image index.
+
+Version and stability-tag updates resolve all affected references before changing
+the pins. A missing tag, invalid response, or failed lookup leaves the pin file
+unchanged. Digest-only changes trigger rebuilds; the existing version and Alpine
+release rules still determine when a stability release is created. A committed
+pin is a build input, not proof of a successful build; failed image builds can be
+retried using the same commit and digest.
+
+Roll out this updater first: base-image jobs report and skip repositories without
+`base-images.mk`. Then merge the image migrations, including their maintained
+stability branches. Remove the old timestamp markers with each image migration.
+Images that only track application releases keep their existing update flow.

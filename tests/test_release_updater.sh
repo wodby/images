@@ -80,7 +80,6 @@ assert_eq 'origin 4.82.8' "$(cat "${trace}")"
 
   # Multiple upstream lines retain both their old and new versions.
   _get_dir() { echo .; }
-  _find_timestamp_file() { return 1; }
   _get_latest_version() {
     case "$2" in
       1.2) echo 1.2.10 ;;
@@ -122,10 +121,19 @@ assert_eq 'origin 4.82.8' "$(cat "${trace}")"
   done
 
   # A later unchanged Alpine line must not overwrite earlier release details.
-  _find_timestamp_file() { echo timestamps; }
-  _get_timestamp() { echo new; }
+  _require_base_image_pins() { return 0; }
+  _base_image_ref_for_line() {
+    printf 'upstream:%s-alpine@%s\n' "$1" "$(awk -F '#' -v version="$1" '$1 == version {print $2}' pins)"
+  }
+  _base_image_pins() {
+    [[ "$1" == refresh ]] || fail "unexpected pin command: $*"
+    if grep -q '#old' pins; then
+      sed -i -E 's/#old[0-9]*/#new/g' pins
+      echo 'Updated base image digest'
+    fi
+  }
   _get_alpine_ver() {
-    case "$1" in
+    case "${1%@*}" in
       wodby/app:1) echo 3.22.1 ;;
       upstream:1-alpine) echo 3.22.2 ;;
       wodby/app:2) echo 3.23.3 ;;
@@ -134,47 +142,67 @@ assert_eq 'origin 4.82.8' "$(cat "${trace}")"
       *) fail "unexpected image: $1" ;;
     esac
   }
-  printf '1#old1\n2#old2\n3#old3\n' > timestamps
-  _update_timestamps '1 2 3' upstream:alpine wodby/app
+  printf '1#old1\n2#old2\n3#old3\n' > pins
+  _update_digests '1 2 3' upstream:alpine wodby/app
   assert_eq 'Alpine Linux updates: 3.22.1 -> 3.22.2 (wodby/app:1); 3.23.3 -> 3.24.1 (wodby/app:2)' "$(cat release-notes)"
   assert_eq 1 "$(cat release-minor)"
 
   # Identical updates are described once, including exceptions for unchanged
-  # Alpine versions and image lines whose timestamps did not change.
+  # Alpine versions and image lines whose pins did not change.
   _get_alpine_ver() {
-    case "$1" in
+    case "${1%@*}" in
       wodby/app:*) echo 3.24.1 ;;
       upstream:3-alpine) echo 3.24.1 ;;
       upstream:*-alpine) echo 3.24.2 ;;
       *) fail "unexpected image: $1" ;;
     esac
   }
-  printf '1#old1\n2#old2\n' > timestamps
-  _update_timestamps '1 2' upstream:alpine wodby/app
+  printf '1#old1\n2#old2\n' > pins
+  _update_digests '1 2' upstream:alpine wodby/app
   assert_eq 'Alpine Linux updates: 3.24.1 -> 3.24.2' "$(cat release-notes)"
   assert_eq '' "$(cat release-minor)"
 
-  printf '1#old1\n2#old2\n3#old3\n' > timestamps
-  _update_timestamps '1 2 3' upstream:alpine wodby/app
+  printf '1#old1\n2#old2\n3#old3\n' > pins
+  _update_digests '1 2 3' upstream:alpine wodby/app
   assert_eq 'Alpine Linux updates: 3.24.1 -> 3.24.2 (except wodby/app:3)' "$(cat release-notes)"
 
-  printf '1#old1\n2#new\n3#old3\n' > timestamps
-  _update_timestamps '1 2 3' upstream:alpine wodby/app
+  printf '1#old1\n2#new\n3#old3\n' > pins
+  _update_digests '1 2 3' upstream:alpine wodby/app
   assert_eq 'Alpine Linux updates: 3.24.1 -> 3.24.2 (except wodby/app:2, wodby/app:3)' "$(cat release-notes)"
 
-  printf '1#old1\n' > timestamps
-  _update_timestamps '1' upstream:alpine wodby/app
+  printf '1#old1\n' > pins
+  _update_digests '1' upstream:alpine wodby/app
   assert_eq 'Alpine Linux updates: 3.24.1 -> 3.24.2' "$(cat release-notes)"
 
   # Multiple transitions group their affected images without duplicating versions.
   assert_eq 'Alpine Linux updates: 3.24.1 -> 3.24.2 (wodby/app:1, wodby/app:2); 3.23.3 -> 3.24.2 (wodby/app:3)' \
     "$(_alpine_release_description wodby/app '1 2 3 4' '3.24.1 -> 3.24.2' '3.24.1 -> 3.24.2' '3.23.3 -> 3.24.2' '')"
 
-  # Timestamp-only rebuilds still do not create release tags.
+  # Digest-only rebuilds still do not create release tags.
   rm release-notes
-  echo '3#old' > timestamps
-  _update_timestamps 3 upstream:alpine wodby/app
-  [[ ! -e release-notes ]] || fail 'timestamp-only rebuild created a release'
+  echo '3#old' > pins
+  _update_digests 3 upstream:alpine wodby/app
+  [[ ! -e release-notes ]] || fail 'digest-only rebuild created a release'
+)
+
+# Exact build variants determine version discovery; staged rollout must not merge
+# a migrated default branch into a stability branch that still has marker files.
+(
+  cd "${test_root}/descriptions"
+  _get_image_tags() { printf '%s' "$2" > tag-filter; echo 8.5.11; }
+  _base_image_pins() {
+    case "$1" in repository) echo php ;; suffix) echo -fpm-alpine ;; *) fail "unexpected pin command" ;; esac
+  }
+  touch base-images.mk Dockerfile
+  _get_latest_version php 8.5 php >/dev/null
+  assert_eq '^(8\.5\.[0-9.]+)(?=-fpm-alpine$)' "$(cat tag-filter)"
+  _report_event() { echo "$*" > migration-report; }
+  _current_repo_slug() { echo wodby/example; }
+  git() { return 1; }
+  if _require_digest_branch 4.x; then fail 'unmigrated branch was accepted'; fi
+  grep -q 'manual_review.*4.x' migration-report || fail 'missing migration report'
+  git() { return 0; }
+  _require_digest_branch 4.x
 )
 
 echo "release updater tests passed"
