@@ -2,13 +2,53 @@
 
 [![Build Status](https://github.com/wodby/images/workflows/Update/badge.svg)](https://github.com/wodby/images/actions)
 
+## Image revisions
+
+Image tags separate the upstream software version from the Wodby image revision.
+For example, `wodby/mariadb:11.4-r23` selects MariaDB 11.4 with image revision 23.
+Development variants retain their qualifier, such as `wodby/php:8.5-dev-r23`.
+Images without an upstream-version prefix use `r23` directly.
+
+- Git release tags are `r1`, `r2`, and so on. The counter increases per repository
+  and is shared by its runtime versions, variants, architectures, and release branches.
+  It never resets when an upstream version changes. Numbers can have gaps.
+- Each new image release gets a new revision, including releases that adopt
+  dependency or security fixes without changing the upstream software version.
+  CI retries do not allocate another revision.
+- Revisions identify releases; they do not indicate compatibility. Review the
+  release notes before upgrading. Breaking configuration, permission, storage,
+  or startup changes require explicit migration instructions.
+- Published revision tags must not be reassigned to different image contents.
+  Pin an image digest when the exact artifact must be enforced independently
+  of registry tag settings. Floating tags such as `11.4` and `latest` remain mutable.
+- Existing SemVer image tags remain available. Parent-image and Docker4X updates
+  accept both formats, prefer published revisions for the selected runtime and
+  variant, and never automatically move from a revision back to a SemVer tag.
+
+### Transition for maintainers
+
+Deploy this updater before migrating image repositories. A repository opts in by
+adding `.image-release-format` containing `revision`. Its next release starts at
+`r1`, or advances its highest existing `rN` Git tag across all branches. Repositories
+without the marker retain their existing release numbering; software releases such
+as `gotpl` continue to use SemVer. The updater creates annotated Git tags with the
+release description. Build and publishing checks remain in each image repository.
+
+Use `IMAGE_REVISION` for local image release builds and `BASE_IMAGE_REVISION` for
+parent-image release pins where those Makefile inputs apply. The legacy
+`STABILITY_TAG` and `BASE_IMAGE_STABILITY_TAG` inputs remain accepted during the
+transition. Existing parent pins are retained until a newer parent release is
+published. Merge publishing changes into the active release branch before creating
+its first revision tag; for descendant images, the existing updater merge from the
+default branch into `4.x` carries the migration there before tagging.
+
 ## Update reports
 
 Email digests and consolidated reports include a **Grype Exception Warnings** section
 when catalog image repositories contain configured `ignore` rules. Each warning shows
 the repository, branch, complete rule scope, and configuration URL so exceptions can
 be reviewed and removed after a fix is adopted. The report checks the default branch
-or the stability branch listed below, using the first conventional `.grype.yaml`,
+or the release branch listed below, using the first conventional `.grype.yaml`,
 `.grype.yml`, `.grype/config.yaml`, or `.grype/config.yml` file. Custom config paths,
 environment-only rules, and VEX files are not inspected. These are configured rules,
 not confirmed matches from a vulnerability scan. Lookup and parsing errors appear in
@@ -35,8 +75,8 @@ its dependencies with `python -m pip install -r scripts/requirements.txt`.
 - Minor/patch version update
 - Rebuild against updated base image
 - Rebuild `wodby/alpine` against complete new gotpl releases
-- New stability tag released on version update
-- New stability tag released on Alpine Linux update
+- New image revision released on version update
+- New image revision released on Alpine Linux update
 
 | Image             | Upstream (base image) | Versions                               |
 |-------------------|-----------------------|----------------------------------------|
@@ -60,10 +100,10 @@ Supabase PostgreSQL is monitored for newer bundles within its pinned major versi
 ### Descendant images
 
 - Rebuild against updated base image
-- Rebase to the new stability tag
-- New stability tag release
+- Update the base image revision
+- New image revision release
 
-| Image                 | Upstream (base image) | Versions                   | Stability branch |
+| Image                 | Upstream (base image) | Versions                   | Release branch |
 |-----------------------|-----------------------|----------------------------|------------------|
 | [wodby/edge-alpine]   | [wodby/nginx]         | `1.31`                     |                  |
 | [wodby/drupal-php]    | [wodby/php]           | `8.5`, `8.4`, `8.3`, `8.2` | `4.x`            |
@@ -79,9 +119,9 @@ Supabase PostgreSQL is monitored for newer bundles within its pinned major versi
 ### Version updates from upstream other than the base image
 
 - Minor/patch version updates
-- New stability tag release
+- New image revision release
 
-| Image                 | Upstream                | Versions                                 | Stability branch |
+| Image                 | Upstream                | Versions                                 | Release branch |
 |-----------------------|-------------------------|------------------------------------------|------------------|
 | [wodby/adminer]       | [vrana/adminer]         | `6`                                      |                  |
 | [wodby/cachet]        | [CachetHQ/Cachet]       | `2`                                      |                  |
@@ -101,7 +141,7 @@ Supabase PostgreSQL is monitored for newer bundles within its pinned major versi
 
 ### Docker4X projects
 
-Update images stability tags
+Update image revision tags
 
 | Project                  |
 |--------------------------|
@@ -132,7 +172,7 @@ Not automated:
 - Moving gotpl to a new Go minor line
 - Rebase to a new major Alpine version
 - Switching the latest version
-- New stability branches for major stability tags updates
+- New release branches for incompatible image changes
 - [wodby/opensmtpd] (installed from Alpine repository package)
 - [wodby/adminer] not auto-updates for the base image (php:8.4-apache)
 

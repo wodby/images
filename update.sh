@@ -182,6 +182,47 @@ _get_timestamp() {
   }
 }
 
+# Select a published release for an exact runtime/variant prefix. Prefer the
+# revision format, retaining legacy tags until the parent publishes its first rN.
+# Docker Hub orders pages by update time, so inspect every matching page.
+_get_image_release() {
+  local slug="${1}"
+  local prefix="${2:-}"
+  local page=1 response tag candidate latest=""
+  local url="https://hub.docker.com/v2/namespaces/${slug%/*}/repositories/${slug#*/}/tags"
+  while :; do
+    response=$(curl -fsSL --connect-timeout 10 --max-time 30 --retry 3 \
+      "${url}?page=${page}&page_size=100&name=$(urlencode "${prefix}")") || return 1
+    jq -e '.results | type == "array"' <<<"${response}" >/dev/null || return 1
+    while IFS= read -r tag; do
+      [[ "${tag}" == "${prefix}"* ]] || continue
+      candidate="${tag#"${prefix}"}"
+      [[ "${candidate}" =~ ^r[1-9][0-9]*$ || "${candidate}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || continue
+      if [[ -z "${latest}" ]] || _image_release_is_newer "${candidate}" "${latest}"; then
+        latest="${candidate}"
+      fi
+    done < <(jq -r '.results[].name' <<<"${response}")
+    [[ "$(jq -r '.next // empty' <<<"${response}")" != "" ]] || break
+    ((++page))
+  done
+  if [[ -z "${latest}" ]]; then
+    echo >&2 "No published image release found for ${slug}:${prefix}"
+    return 1
+  fi
+  echo "${latest}"
+}
+
+# Accept the legacy workflow variable while repositories migrate independently.
+_base_image_release() {
+  sed -n -E 's/^ *BASE_IMAGE_(REVISION|STABILITY_TAG): ([r0-9.]+) *$/\2/p' .github/workflows/workflow.yml | head -n1
+}
+
+_set_base_image_release() {
+  local release="${1}"
+  # Keep the old variable in repositories whose build definitions have not moved.
+  sed -i -E "s/(BASE_IMAGE_(REVISION|STABILITY_TAG): )[r0-9.]+/\1${release}/" .github/workflows/workflow.yml
+}
+
 _get_image_digest() {
   local repo="${1}"
   local tag="${2}"
@@ -269,6 +310,15 @@ _latest_release_tag() {
   local major
   local tag
 
+  # Image repositories opt in independently; software releases retain SemVer.
+  if _uses_image_revisions; then
+    tag=$(_latest_image_revision)
+    if [[ -n "${tag}" ]]; then
+      echo "${tag}"
+      return 0
+    fi
+  fi
+
   described_tag=$(git describe --abbrev=0 --tags) || {
     echo >&2 "Failed to find the current release tag"
     return 1
@@ -301,6 +351,13 @@ _next_release_tag() {
   local tag
   local -a sem_ver
 
+  if _uses_image_revisions; then
+    current_tag=$(_latest_image_revision)
+    tag="r$(( ${current_tag#r} + 1 ))"
+    echo "${tag}"
+    return 0
+  fi
+
   current_tag=$(_latest_release_tag) || return 1
   IFS="." read -r -a sem_ver <<<"${current_tag}"
 
@@ -320,6 +377,40 @@ _next_release_tag() {
   fi
 
   echo "${tag}"
+}
+
+# The marker lets the updater deploy before image repositories migrate.
+_uses_image_revisions() {
+  [[ -f .image-release-format ]] && [[ "$(cat .image-release-format)" == revision ]]
+}
+
+# One sequence covers every runtime, variant and architecture in a repository.
+# Scan all tags, not only ancestors: maintenance branches share the sequence.
+_latest_image_revision() {
+  local tag
+  while IFS= read -r tag; do
+    if [[ "${tag}" =~ ^r[1-9][0-9]*$ ]]; then
+      echo "${tag}"
+      return 0
+    fi
+  done < <(git tag --list 'r[0-9]*' --sort=-version:refname)
+}
+
+# Revisions follow legacy SemVer releases, but never transition back to them.
+_image_release_is_newer() {
+  local candidate="${1}"
+  local current="${2}"
+  if [[ "${candidate}" =~ ^r[1-9][0-9]*$ ]]; then
+    if [[ "${current}" =~ ^r[1-9][0-9]*$ ]]; then
+      _version_is_newer "${candidate#r}" "${current#r}"
+    else
+      [[ "${current}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+    fi
+  elif [[ "${candidate}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ && "${current}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    _version_is_newer "${candidate}" "${current}"
+  else
+    return 1
+  fi
 }
 
 _release_tag() {
@@ -1035,26 +1126,26 @@ _update_base_alpine_image() {
   echo "Checking for alpine base image tag updates"
   echo "=========================================="
 
-  latest=$(_get_image_tags "${base_image}" "(?<=${version//\./\\.}-)[0-9.]+")
+  latest=$(_get_image_release "${base_image}" "${version}-")
 
   if [[ -z "${latest}" ]]; then
     echo >&2 "Failed to acquire latest image tag"
     exit 1
   fi
 
-  current=$(grep -oP "(?<=BASE_IMAGE_STABILITY_TAG: )[0-9.]+$" .github/workflows/workflow.yml || true)
+  current=$(_base_image_release)
   if [[ -z "${current}" ]]; then
-    echo >&2 "Failed to acquire current base image stability tag"
+    echo >&2 "Failed to acquire current base image revision"
     exit 1
   fi
 
-  if _version_is_newer "${latest}" "${current}"; then
-    sed -i -E "s/(BASE_IMAGE_STABILITY_TAG: )${current}/\1${latest}/" .github/workflows/workflow.yml
+  if _image_release_is_newer "${latest}" "${current}"; then
+    _set_base_image_release "${latest}"
 
-    _git_commit ./ "Update base image stability tag to ${latest}"
+    _git_commit ./ "Update base image revision to ${latest}"
   else
     release_tag=""
-    echo "Base image stability tag ${current} is already the latest"
+    echo "Base image revision ${current} is already the latest"
   fi
 
   branch_name=$(git rev-parse --abbrev-ref HEAD)
@@ -1080,7 +1171,7 @@ _update_base_alpine_image() {
   fi
 }
 
-_update_stability_tag() {
+_update_image_revision() {
   local version="${1}"
   local base_image="${2}"
   local branch="${3}"
@@ -1090,7 +1181,7 @@ _update_stability_tag() {
   local current
 
   echo "=================================="
-  echo "Checking for stability tag updates"
+  echo "Checking for image revision updates"
   echo "=================================="
 
   if [[ -n "${branch}" ]]; then
@@ -1099,26 +1190,26 @@ _update_stability_tag() {
     git merge --no-edit master
   fi
 
-  latest=$(_get_image_tags "${base_image}" "(?<=${version//\./\\.}-)[0-9.]+")
+  latest=$(_get_image_release "${base_image}" "${version}-")
 
   if [[ -z "${latest}" ]]; then
     echo >&2 "Failed to acquire latest image tag"
     exit 1
   fi
 
-  current=$(grep -oP "(?<=BASE_IMAGE_STABILITY_TAG: )[0-9.]+$" .github/workflows/workflow.yml || true)
+  current=$(_base_image_release)
   if [[ -z "${current}" ]]; then
-    echo >&2 "Failed to acquire current base image stability tag"
+    echo >&2 "Failed to acquire current base image revision"
     exit 1
   fi
 
-  if _version_is_newer "${latest}" "${current}"; then
-    sed -i -E "s/(BASE_IMAGE_STABILITY_TAG: )${current}/\1${latest}/" .github/workflows/workflow.yml
-    _git_commit ./ "Update base image stability tag to ${latest}"
+  if _image_release_is_newer "${latest}" "${current}"; then
+    _set_base_image_release "${latest}"
+    _git_commit ./ "Update base image revision to ${latest}"
     _git_push origin
     tag=1
   else
-    echo "Base image stability tag ${current} is already the latest"
+    echo "Base image revision ${current} is already the latest"
   fi
 
   if [[ -n "${tag}" ]]; then
@@ -1152,8 +1243,9 @@ _edge_require_current_or_newer() {
   local dependency="${1}"
   local candidate="${2}"
   local current="${3}"
+  local compare="${4:-_version_is_newer}"
 
-  if [[ "${candidate}" == "${current}" ]] || _version_is_newer "${candidate}" "${current}"; then
+  if [[ "${candidate}" == "${current}" ]] || "${compare}" "${candidate}" "${current}"; then
     return 0
   fi
 
@@ -1264,12 +1356,12 @@ SOURCES
 
 _prepare_edge_alpine_update() {
   local dockerfile="${1:-Dockerfile}"
-  local nginx_stability_tag
+  local nginx_revision
   local nginx_tag
   local nginx_digest
   local current_nginx_image
   local current_nginx_tag
-  local current_nginx_stability_tag
+  local current_nginx_revision
   local go_tag
   local go_digest
   local current_go_image
@@ -1279,8 +1371,8 @@ _prepare_edge_alpine_update() {
   local update_status
   local updated=""
 
-  nginx_stability_tag=$(_get_image_tags "wodby/nginx" '(?<=1\.31-)[0-9]+(?:\.[0-9]+)+$') || return 2
-  nginx_tag="1.31-${nginx_stability_tag}"
+  nginx_revision=$(_get_image_release "wodby/nginx" "1.31-") || return 2
+  nginx_tag="1.31-${nginx_revision}"
   nginx_digest=$(_get_image_digest "wodby/nginx" "${nginx_tag}") || return 2
 
   current_nginx_image=$(_dockerfile_arg_value "NGINX_IMAGE" "${dockerfile}") || return 2
@@ -1289,11 +1381,11 @@ _prepare_edge_alpine_update() {
     echo >&2 "Expected NGINX_IMAGE to remain on the 1.31 compatibility line"
     return 2
   fi
-  current_nginx_stability_tag="${current_nginx_tag#1.31-}"
+  current_nginx_revision="${current_nginx_tag#1.31-}"
   _edge_require_current_or_newer \
-    "wodby/nginx stability tag" \
-    "${nginx_stability_tag}" \
-    "${current_nginx_stability_tag}" || return 2
+    "wodby/nginx image revision" \
+    "${nginx_revision}" \
+    "${current_nginx_revision}" _image_release_is_newer || return 2
 
   go_tag=$(_get_image_tags "golang" '^1\.26\.[0-9]+-alpine3\.23$') || return 2
   go_digest=$(_get_image_digest "golang" "${go_tag}") || return 2
@@ -1514,7 +1606,7 @@ rebuild_and_rebase() {
     _update_timestamps "${version_list}" "${base_image}"
   fi
 
-  _update_stability_tag "${array[0]}" "${base_image}" "${branch}"
+  _update_image_revision "${array[0]}" "${base_image}" "${branch}"
 }
 
 update_base_alpine() {
@@ -1558,7 +1650,9 @@ update_docker4x() {
   local current
   local latest
 
-  local name="${image#*/}"
+  local name
+  local prefix
+  local escaped_current
 
   _git_clone "${project}"
 
@@ -1592,34 +1686,30 @@ update_docker4x() {
 
     current="${tags[0]##*-}"
     name="${image#*/}"
-
-    latest=$(_get_image_tags "${image}" "(?<=-)([0-9]+\.){2}[0-9]+")
-
-    # If no stability tags have been found, try searching one without a version (e.g. xhprof image).
-    if [[ -z "${latest}" ]]; then
-      latest=$(_get_image_tags "${image}" "^([0-9]+\.){2}[0-9]+")
-    fi
+    prefix="${tags[0]%"${current}"}"
+    latest=$(_get_image_release "${image}" "${prefix}")
 
     if [[ -z "${latest}" ]]; then
       echo >&2 "Failed to acquire latest image tag"
       exit 1
     fi
 
-    if _version_is_newer "${latest}" "${current}"; then
-      sed -i -E "s/^(${env_var}=[0-9.-]+?)${current}$/\1${latest}/" .env
+    if _image_release_is_newer "${latest}" "${current}"; then
+      escaped_current="${current//./\\.}"
+      sed -i -E "s/^(${env_var}=)(.*-)?${escaped_current}$/\1\2${latest}/" .env
 
       # Update tests.
-      find tests/ -name .env -exec sed -i -E "s/^(#?${env_var}=[0-9.]+(:?-dev|-dev-macos)?-)${current}$/\1${latest}/" .env {} +
+      find tests/ -name .env -exec sed -i -E "s/^(#?${env_var}=)(.*-)?${escaped_current}$/\1\2${latest}/" {} +
 
-      # Update env var like like $DRUPAL_STABILITY_TAG in tests.
+      # Keep older Docker4X test fixtures working during the terminology change.
       if [[ "${name}" == "${project#*docker4}" ]]; then
-        find tests/ -name .env -exec sed -i -E "s/^(${name^^}_STABILITY_TAG)=.+$/\1=${latest}/" .env {} +
+        find tests/ -name .env -exec sed -i -E "s/^(${name^^}_(IMAGE_REVISION|STABILITY_TAG))=.+$/\1=${latest}/" {} +
       fi
 
-      _git_commit ./ "Update ${name} stability tag to ${latest}"
+      _git_commit ./ "Update ${name} image revision to ${latest}"
       _git_push origin
     else
-      echo "${name}: stability tag ${current} is already latest"
+      echo "${name}: image revision ${current} is already latest"
     fi
   done
 }
