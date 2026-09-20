@@ -2,3 +2,4 @@
 .vscode
 __pycache__/
 image-update-reports/
+.image-security-tools/

@@ -1,0 +1,48 @@
+name: Alpine package security comparison
+description: Prepare one scanner database snapshot and optionally verify release fixes
+inputs:
+  image:
+    description: Local image to verify; omit when preparing tools for the updater
+    default: ''
+  tag:
+    description: Alpine minor tag including the dev qualifier
+    default: ''
+  arch:
+    description: Image architecture
+    default: ''
+runs:
+  using: composite
+  steps:
+    - id: grype
+      uses: anchore/scan-action/download-grype@27805bf3b4e84b4a5c980df22ed233c00390a439
+      with:
+        grype-version: v0.118.0
+    - id: syft
+      uses: anchore/sbom-action/download-syft@e22c389904149dbc22b58101806040fa8d37a610
+      with:
+        syft-version: v1.52.0
+    - name: Prepare immutable scanner database snapshot
+      shell: bash
+      env:
+        GRYPE_BIN: ${{ steps.grype.outputs.cmd }}
+        SYFT_BIN: ${{ steps.syft.outputs.cmd }}
+        GRYPE_DB_REQUIRE_UPDATE_CHECK: 'true'
+      run: |
+        set -euo pipefail
+        mkdir -p .image-security-tools
+        cp "$GRYPE_BIN" .image-security-tools/grype
+        cp "$SYFT_BIN" .image-security-tools/syft
+        export GRYPE_DB_CACHE_DIR="$PWD/.image-security-tools/db"
+        .image-security-tools/grype db update
+    - name: Verify advertised security fixes
+      if: inputs.image != ''
+      shell: bash
+      env:
+        SECURITY_IMAGE: ${{ inputs.image }}
+        SECURITY_TAG: ${{ inputs.tag }}
+        SECURITY_ARCH: ${{ inputs.arch }}
+        SECURITY_ACTION_PATH: ${{ github.action_path }}
+      run: |
+        python3 "$SECURITY_ACTION_PATH/../../../scripts/alpine_security.py" verify \
+          --tools .image-security-tools --release "$GITHUB_REF_NAME" \
+          --image "$SECURITY_IMAGE" --tag "$SECURITY_TAG" --arch "$SECURITY_ARCH"

@@ -23,6 +23,7 @@ jobs:
       - name: Test updater helpers
         run: |
           ./tests/test_action_runner.sh
+          ./tests/test_alpine_security_updater.sh
           ./tests/test_backup_updater.sh
           ./tests/test_edge_alpine_updater.sh
           ./tests/test_gotpl_updater.sh
@@ -75,6 +76,8 @@ jobs:
         script: [ alpine,apache,backup,memcached,mysql,node,php,postgres,supabase-postgres,python,go,redis,valkey,ruby,rabbitmq ]
     steps:
       - uses: actions/checkout@v7
+      - uses: ./.github/actions/alpine-security
+        if: matrix.script == 'alpine' && github.event_name != 'pull_request'
       - uses: ./.github/actions
         with:
           dir: images
