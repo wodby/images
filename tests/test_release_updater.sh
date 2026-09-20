@@ -83,7 +83,7 @@ assert_eq 'origin 4.82.8' "$(cat "${trace}")"
   _find_timestamp_file() { return 1; }
   _get_latest_version() {
     case "$2" in
-      1.2) echo 1.2.4 ;;
+      1.2) echo 1.2.10 ;;
       2.3) echo 2.3.8 ;;
       *) fail "unexpected version: $2" ;;
     esac
@@ -91,8 +91,22 @@ assert_eq 'origin 4.82.8' "$(cat "${trace}")"
   printf "env:\n  APP12: '1.2.3'\n  APP23: '2.3.7'\n" > .github/workflows/workflow.yml
   echo 'APP_VER ?= 1.2.3' > Makefile
   _update_versions '1.2 2.3' upstream app ''
-  assert_eq 'app updates: 1.2.3 -> 1.2.4, 2.3.7 -> 2.3.8' "$(cat release-notes)"
+  assert_eq 'app updates: 1.2.3 -> 1.2.10, 2.3.7 -> 2.3.8' "$(cat release-notes)"
   assert_eq '' "$(cat release-minor)"
+  assert_eq 'APP_VER ?= 1.2.10' "$(cat Makefile)"
+
+  # Equal and older candidates must not rewrite or publish the current version.
+  (
+    workflow_before=$(cat .github/workflows/workflow.yml)
+    _git_commit() { fail 'unchanged or older version was committed'; }
+    _git_push() { fail 'unchanged or older version was pushed'; }
+    _release_tag() { fail 'unchanged or older version was released'; }
+    _update_versions '1.2 2.3' upstream app ''
+    _get_latest_version() { echo 1.2.9; }
+    _update_versions '1.2' upstream app ''
+    assert_eq "${workflow_before}" "$(cat .github/workflows/workflow.yml)"
+    assert_eq 'APP_VER ?= 1.2.10' "$(cat Makefile)"
+  )
 
   # Both base-image paths name the image and the complete tag transition.
   _get_image_tags() { echo 4.9.2; }
