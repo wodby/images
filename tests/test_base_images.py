@@ -102,7 +102,7 @@ class PinTests(unittest.TestCase):
         initial = {tag: A for tag in tags}
         initial.update({tag + "-4.71.0": A for tag in tags})
         self.write(initial, "wodby/php", "")
-        for release in ("r1", "r23"):
+        for release in ("r0", "r1", "r23"):
             seen = []
             def resolve(repo, tag):
                 seen.append(tag)
@@ -113,7 +113,7 @@ class PinTests(unittest.TestCase):
             self.assertEqual(set(current.pins), set(tags) | set(seen))
             self.assertEqual(current.ref_for_line("8.5", release), "wodby/php:8.5-" + release + "@" + B)
         before = self.path.read_bytes()
-        for invalid in ("r0", "r01", "8.5-r1"):
+        for invalid in ("r01", "r-1", "8.5-r1"):
             with self.assertRaises(ValueError):
                 module.BaseImages(self.path).update("stability", new=invalid)
             self.assertEqual(self.path.read_bytes(), before)

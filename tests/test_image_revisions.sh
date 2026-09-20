@@ -45,8 +45,10 @@ assert_eq tag "$(git cat-file -t r11)"
 assert_eq 'Adopt compatible dependency fixes' "$(git for-each-ref --format='%(contents:subject)' refs/tags/r11)"
 
 _image_release_is_newer r1 99.9.9 || fail 'legacy transition rejected'
+_image_release_is_newer r0 99.9.9 || fail 'full-version legacy transition rejected'
+_image_release_is_newer r1 r0 || fail 'full-version revision increment rejected'
 _image_release_is_newer r10 r2 || fail 'revisions not ordered numerically'
-for pair in 'r2 r10' 'r1 r1' '99.9.9 r1' 'r01 4.0.0' 'r1-rc1 4.0.0'; do
+for pair in 'r2 r10' 'r1 r1' 'r0 r1' 'r0 r0' '99.9.9 r1' 'r01 4.0.0' 'r1-rc1 4.0.0'; do
  read -r candidate current <<<"$pair"
  if _image_release_is_newer "$candidate" "$current"; then fail "invalid transition: $pair"; fi
 done
@@ -62,6 +64,8 @@ curl() {
 }
 assert_eq r10 "$(_get_image_release wodby/php 8.5-)"
 assert_eq r100 "$(_get_image_release wodby/php 8.5-dev-)"
+curl() { echo '{"next":null,"results":[{"name":"8.5.10-r0"},{"name":"8.5.10-r01"},{"name":"8.5-r23"}]}'; }
+assert_eq r0 "$(_get_image_release wodby/php 8.5.10-)"
 curl() { echo '{"next":null,"results":[{"name":"8.5-4.71.5"},{"name":"8.5-4.71.12"}]}'; }
 assert_eq 4.71.12 "$(_get_image_release wodby/php 8.5-)"
 curl() { return 22; }
@@ -91,19 +95,21 @@ done
 
 # Docker4X updates preserve runtime/variant prefixes and existing test fixtures.
 mkdir -p tests/php
-printf 'services:\n  php:\n    image: wodby/php:$PHP_TAG\n  xhprof:\n    image: wodby/xhprof:$XHPROF_TAG\n' > compose.yml
-printf 'PHP_TAG=8.5-dev-4.71.5\nXHPROF_TAG=2.0.0\n' > .env
+printf 'services:\n  php:\n    image: wodby/php:$PHP_TAG\n  xhprof:\n    image: wodby/xhprof:$XHPROF_TAG\n  postgres:\n    image: wodby/postgres:$POSTGRES_TAG\n' > compose.yml
+printf 'PHP_TAG=8.5-dev-4.71.5\nXHPROF_TAG=2.0.0\nPOSTGRES_TAG=17.11-r0\n' > .env
 printf 'PHP_TAG=8.4-dev-macos-4.71.5\nPHP_STABILITY_TAG=4.71.5\nPHP_IMAGE_REVISION=4.71.5\nXHPROF_TAG=2.0.0\n' > tests/php/.env
 _git_clone() { :; }
 _get_image_release() {
  case "$1:$2" in
   wodby/php:8.5-dev-|wodby/xhprof:) echo r12 ;;
+  wodby/postgres:17.11-) echo r1 ;;
   *) fail "wrong runtime or variant prefix: $*" ;;
  esac
 }
 update_docker4x wodby/docker4php ''
 grep -Fxq 'PHP_TAG=8.5-dev-r12' .env
 grep -Fxq 'XHPROF_TAG=r12' .env
+grep -Fxq 'POSTGRES_TAG=17.11-r1' .env
 grep -Fxq 'PHP_TAG=8.4-dev-macos-r12' tests/php/.env
 grep -Fxq 'PHP_STABILITY_TAG=r12' tests/php/.env
 grep -Fxq 'PHP_IMAGE_REVISION=r12' tests/php/.env

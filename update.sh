@@ -169,7 +169,7 @@ _get_image_release() {
     while IFS= read -r tag; do
       [[ "${tag}" == "${prefix}"* ]] || continue
       candidate="${tag#"${prefix}"}"
-      [[ "${candidate}" =~ ^r[1-9][0-9]*$ || "${candidate}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || continue
+      [[ "${candidate}" =~ ^r(0|[1-9][0-9]*)$ || "${candidate}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || continue
       if [[ -z "${latest}" ]] || _image_release_is_newer "${candidate}" "${latest}"; then
         latest="${candidate}"
       fi
@@ -385,8 +385,8 @@ _latest_image_revision() {
 _image_release_is_newer() {
   local candidate="${1}"
   local current="${2}"
-  if [[ "${candidate}" =~ ^r[1-9][0-9]*$ ]]; then
-    if [[ "${current}" =~ ^r[1-9][0-9]*$ ]]; then
+  if [[ "${candidate}" =~ ^r(0|[1-9][0-9]*)$ ]]; then
+    if [[ "${current}" =~ ^r(0|[1-9][0-9]*)$ ]]; then
       _version_is_newer "${candidate#r}" "${current#r}"
     else
       [[ "${current}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
