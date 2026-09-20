@@ -18,7 +18,11 @@ case "$1" in
     if ((n <= FAIL_PULLS)); then echo >&2 'registry connection reset'; exit 17; fi
     echo 'sha256:updater'
     ;;
-  run) exit "${RUN_STATUS}" ;;
+  run)
+    # The PR publishing guard must reach the updater container unchanged.
+    [[ "$*" == *' -e IMAGES_UPDATE_PUSH '* && "${IMAGES_UPDATE_PUSH:-}" == 0 ]] || exit 99
+    exit "${RUN_STATUS}"
+    ;;
   *) exit 99 ;;
 esac
 DOCKER
@@ -29,7 +33,7 @@ SLEEP
 chmod +x "${test_root}/bin/"*
 export PATH="${test_root}/bin:${PATH}"
 export CALL_LOG="${test_root}/calls" PULL_COUNT="${test_root}/pulls"
-export DOCKER_USERNAME=test DOCKER_PASSWORD=test-password DEBUG=''
+export DOCKER_USERNAME=test DOCKER_PASSWORD=test-password DEBUG='' IMAGES_UPDATE_PUSH=0
 export dir=descendants script=wordpress-php report_file=reports/events.jsonl
 
 # Exercise the actual action runner; no registry or updater mutations occur.
