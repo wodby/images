@@ -31,6 +31,9 @@ git checkout -q master
 git tag -am 'Another revision' r2
 git tag -am 'Unrelated prerelease' r99-rc1
 git tag -am 'Invalid leading zero' r099
+git tag -am 'Major version alias' 8-r999
+git tag -am 'Minor version alias' 8.5-r999
+git tag -am 'Full version alias' 8.5.10-r999
 assert_eq r10 "$(_latest_release_tag)"
 assert_eq r11 "$(_next_release_tag '')"
 assert_eq r11 "$(_next_release_tag 1)"

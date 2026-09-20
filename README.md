@@ -5,13 +5,32 @@
 ## Image revisions
 
 Image tags separate the upstream software version from the Wodby image revision.
-For example, `wodby/mariadb:11.4-r23` selects MariaDB 11.4 with image revision 23.
-Development variants retain their qualifier, such as `wodby/php:8.5-dev-r23`.
-Images without an upstream-version prefix use `r23` directly.
+Choose a major/minor release line or an exact upstream version:
+
+| Example Docker tag | Revision counter | Matching Git tag |
+|--------------------|------------------|------------------|
+| `wodby/mariadb:11-r102` | Repository release 102 | `11-r102` |
+| `wodby/mariadb:11.4-r102` | Repository release 102 | `11.4-r102` |
+| `wodby/mariadb:11.4.2-r0` | First revision of exactly 11.4.2 | `11.4.2-r0` |
+
+These illustrative aliases all point to the primary Git release tag `r102`'s
+commit. A major alias selects the supported minor line designated for that major.
+Development variants retain their qualifier, such as `wodby/php:8.5-dev-r102`
+and `wodby/php:8.5.10-dev-r0`. Images without an upstream-version prefix use the
+repository release directly, such as `wodby/backup:r102`.
 
 - Git release tags are `r1`, `r2`, and so on. The counter increases per repository
   and is shared by its runtime versions, variants, architectures, and release branches.
-  It never resets when an upstream version changes. Numbers can have gaps.
+  Major/minor Docker tags use this counter. It never resets when an upstream
+  version changes. Numbers can have gaps.
+- Full-version tags start at `r0` for each exact upstream version. The next
+  repository release containing that same version uses `r1`, and so on. A new
+  upstream version starts at `r0` again. Variants and architectures share the
+  counter. Failed release attempts can leave gaps; retries reuse their number.
+- Every published versioned revision tag gets a matching annotated Git alias
+  pointing to the primary release commit. Only primary Git tags trigger builds.
+  Dropping a major or minor line stops new releases for it; existing Docker and
+  Git revision tags remain available.
 - Each new image release gets a new revision, including releases that adopt
   dependency or security fixes without changing the upstream software version.
   CI retries do not allocate another revision.
@@ -25,6 +44,12 @@ Images without an upstream-version prefix use `r23` directly.
   accept both formats, prefer published revisions for the selected runtime and
   variant, and never automatically move from a revision back to a SemVer tag.
 
+Upstream version formats differ. PostgreSQL `17.11` and Squid `7.6` are complete
+versions, so `17.11-r0` and `7.6-r0` use the full-version counter; `17-r102` and
+`7-r102` use the repository counter. Supabase PostgreSQL uses its complete bundle
+version, such as `17.6.1.136-r0`. WordPress initial releases named `7.2` use
+`7.2.0-r0` for the exact version, keeping `7.2-r102` for the minor line.
+
 ### Transition for maintainers
 
 Deploy this updater before migrating image repositories. A repository opts in by
@@ -33,6 +58,27 @@ adding `.image-release-format` containing `revision`. Its next release starts at
 without the marker retain their existing release numbering; software releases such
 as `gotpl` continue to use SemVer. The updater creates annotated Git tags with the
 release description. Build and publishing checks remain in each image repository.
+
+Versioned repositories also declare their upstream version sources and tag
+templates in `.image-revision-aliases.json`. Keep this mapping aligned with the
+publishing matrix when adding or dropping supported versions or variants. PHP
+descendants resolve their complete PHP version from the pinned parent release;
+a floating parent cannot produce an exact-version alias.
+
+The shared alias action runs after every publishing job succeeds. It counts earlier
+primary Git tags containing the same upstream version to allocate the full-version
+revision, copies the published manifest by digest, verifies the copy, then pushes
+annotated major, minor, and full-version Git aliases atomically. Existing aliases
+must match the expected commit and image digest. Never move primary release tags,
+delete their history, or insert older release numbers: the committed snapshots
+define the revision sequence, including unsuccessful release attempts. Releases
+created before alias configuration was introduced do not consume this counter.
+
+Preview a release without publishing with
+`python scripts/image_revision_aliases.py --repo /path/to/image-repository --tag r102`.
+Install `scripts/requirements.txt` first and fetch the repository's complete tag
+history. The alias action is pinned by commit in each caller; update those pins
+when adopting changes to the shared publisher.
 
 Use `IMAGE_REVISION` for local image release builds and `BASE_IMAGE_REVISION` for
 parent-image release pins where those Makefile inputs apply. The legacy

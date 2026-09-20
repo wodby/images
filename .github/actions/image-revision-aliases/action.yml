@@ -1,0 +1,34 @@
+name: Publish image revision aliases
+description: Copy published manifests to full-version aliases and annotate their Git tags
+inputs:
+  docker_username:
+    required: true
+    description: Docker Hub publishing account
+  docker_password:
+    required: true
+    description: Docker Hub publishing token
+runs:
+  using: composite
+  steps:
+    - uses: actions/checkout@v6
+      with:
+        fetch-depth: 0
+    - uses: docker/setup-buildx-action@v3
+    - uses: docker/login-action@v3
+      with:
+        username: ${{ inputs.docker_username }}
+        password: ${{ inputs.docker_password }}
+    - name: Publish aliases for this primary release
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        ALIAS_ACTION_PATH: ${{ github.action_path }}
+      run: |
+        set -euo pipefail
+        python -m venv "$RUNNER_TEMP/image-revision-aliases"
+        "$RUNNER_TEMP/image-revision-aliases/bin/pip" install PyYAML==6.0.3
+        git config user.name 'Wodby image releases'
+        git config user.email 'ci@wodby.com'
+        "$RUNNER_TEMP/image-revision-aliases/bin/python" \
+          "$ALIAS_ACTION_PATH/../../../scripts/image_revision_aliases.py" \
+          --tag "$GITHUB_REF_NAME" --expected-commit "$GITHUB_SHA" --publish

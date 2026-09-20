@@ -31,7 +31,7 @@ TAG_INPUTS = {
     'apache': '2.4,2,latest', 'cachet': '2.4,2,latest',
     'drupal-cms': '2,latest', 'elasticsearch': '7.17,7,latest',
     'kibana': '7.17,7,latest', 'matomo': '5,latest', 'node': '26,latest',
-    'slackin': '2.2,2,latest', 'squid': '7,latest', 'webgrind': '1.9,1,latest',
+    'slackin': '2.2,2,latest', 'squid': '7.1,7,latest', 'webgrind': '1.9,1,latest',
     'xhprof': '2.3,2,latest',
 }
 
@@ -123,6 +123,9 @@ docker() {
                 count += 1
                 continue
             assert any(t == revision or t.endswith('-' + revision) for t in destinations), (name, revision, destinations)
+            if revision.startswith('r') and name in ('postgres', 'squid'):
+                full = VERSIONS['POSTGRES_VER' if name == 'postgres' else 'SQUID_VER']
+                assert full + '-' + revision not in destinations, (name, 'full-version namespace collision', destinations)
             if revision == '4.83.3' and name in ('cachet', 'drupal-cms', 'elasticsearch',
                                                 'kibana', 'matomo', 'slackin', 'squid', 'webgrind', 'xhprof'):
                 assert 'latest' in destinations, (name, 'legacy latest alias changed', destinations)
@@ -137,6 +140,12 @@ docker() {
     result = subprocess.run(['bash', '-c', wrapper, 'publisher-test', str(script)], cwd=workdir,
                             env={**env, 'GITHUB_REF': 'refs/heads/feature/test'}, capture_output=True, text=True, check=True)
     assert not result.stdout.strip(), (name, 'feature ref publishes', result.stdout)
+    if (repo / '.image-revision-aliases.json').exists():
+        for ref in ('refs/tags/11-r23', 'refs/tags/11.4-r23', 'refs/tags/11.4.2-r0'):
+            result = subprocess.run(['bash', '-c', wrapper, 'publisher-test', str(script)], cwd=workdir,
+                                    env={**env, 'GITHUB_REF': ref}, capture_output=True, text=True, check=True)
+            assert not result.stdout.strip(), (name, 'alias ref publishes', ref, result.stdout)
+            count += 1
     aliases = check_make_aliases(repo)
     print(f'{name}: {count} release cases, feature-ref guard, and {aliases} build-input checks passed')
     return count + 1 + aliases
