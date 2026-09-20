@@ -64,7 +64,7 @@ _git_push() {
 }
 
 export IMAGES_UPDATE_PUSH=1
-_release_tag 'Base image stability tag updated' ''
+_release_tag 'Base image revision updated' ''
 assert_eq 'tag' "$(git cat-file -t refs/tags/4.82.8)"
 assert_eq 'origin 4.82.8' "$(cat "${trace}")"
 

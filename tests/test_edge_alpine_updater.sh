@@ -92,7 +92,7 @@ _github_api() {
 }
 
 export IMAGES_UPDATE_REPORT_FILE="${test_root}/events.jsonl"
-export IMAGES_UPDATE_DIR="stability-tags"
+export IMAGES_UPDATE_DIR="descendants"
 export IMAGES_UPDATE_SCRIPT="edge-alpine"
 
 _prepare_edge_alpine_update "${dockerfile}" || fail "expected image pin updates"

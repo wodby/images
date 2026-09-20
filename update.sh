@@ -1025,7 +1025,7 @@ update_backup() {
   _report_event release_tag "${repo}" "${message}" "${tag}"
 }
 
-# Refresh content pins even when upstream versions and stability tags are unchanged.
+# Refresh content pins even when upstream versions and image revisions are unchanged.
 _update_digests() {
   local version_list="${1}"
   local base_image="${2}"
