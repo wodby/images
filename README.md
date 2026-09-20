@@ -57,54 +57,6 @@ versions, so `17.11-r0` and `7.6-r0` use the full-version counter; `17-r102` and
 version, such as `17.6.1.136-r0`. WordPress initial releases named `7.2` use
 `7.2.0-r0` for the exact version, keeping `7.2-r102` for the minor line.
 
-### Transition for maintainers
-
-Deploy this updater before migrating image repositories. A repository opts in by
-adding `.image-release-format` containing `revision`. Its next release starts at
-`r0`, or advances its highest existing `rN` Git tag across all branches. Repositories
-without the marker, including `edge-alpine`, `backup`, and `gotpl`, retain their
-semantic product versions. For these repositories, the updater ignores image
-revision tags and selects the latest semantic version in the current major line.
-The previously published Edge Alpine and Backup `r0` tags remain available; their
-next releases continue the existing semantic version series. The updater creates
-annotated Git tags with the release description. Build and publishing checks
-remain in each image repository.
-
-Versioned repositories also declare their upstream version sources and tag
-templates in `.image-revision-aliases.json`. Keep this mapping aligned with the
-publishing matrix when adding or dropping supported versions or variants. PHP
-descendants resolve their complete PHP version from the pinned parent release;
-a floating parent cannot produce an exact-version alias.
-
-The shared alias action runs after every publishing job succeeds. It counts earlier
-primary Git tags containing the same upstream version to allocate the full-version
-revision, copies the published manifest by digest, verifies the copy, then pushes
-annotated major, minor, and full-version Git aliases atomically. Existing aliases
-must match the expected commit and image digest. Never move primary release tags,
-delete their history, or insert older release numbers: the committed snapshots
-define the revision sequence, including unsuccessful release attempts. Releases
-created before alias configuration was introduced do not consume this counter.
-
-Preview a release without publishing with
-`python scripts/image_revision_aliases.py --repo /path/to/image-repository --tag r102`.
-Install `scripts/requirements.txt` first and fetch the repository's complete tag
-history. The alias action is pinned by commit in each caller; update those pins
-when adopting changes to the shared publisher.
-
-Use `IMAGE_REVISION` for local image release builds and `BASE_IMAGE_REVISION` for
-parent-image release pins where those Makefile inputs apply. The legacy
-`STABILITY_TAG` and `BASE_IMAGE_STABILITY_TAG` inputs remain accepted during the
-transition. Existing parent pins are retained until a newer parent release is
-published. Create revision tags from the default branch (`main` or `master`).
-Descendant images pin the parent release with `BASE_IMAGE_REVISION` in their
-workflow and its exact digests in `base-images.mk` on that same branch. The updater
-commits parent updates there and tags the resulting commit; no separate revision
-branch or merge is needed. Existing branches and published tags are retained.
-
-Merge the default-branch parent pins before creating the first revision release.
-Until those pins are present, the updater reports and skips both parent-image and
-application-version updates for descendants.
-
 ## Update reports
 
 Email digests and consolidated reports include a **Grype Exception Warnings** section
@@ -161,11 +113,16 @@ Supabase PostgreSQL is monitored for newer bundles within its pinned major versi
 
 ### Descendant images
 
-`wodby/backup` also rebuilds when the digest of its `wodby/alpine:latest` base changes.
+`wodby/backup` checks the digest of its `wodby/alpine:latest` base on each updater
+run. A changed digest produces a new semantic patch release, such as `2.3.3`.
+The updater publishes the pin commit and annotated release tag together. Backup's
+release workflow tests the image, publishes the matching Docker tag, and then
+creates a GitHub Release with that same version. An unchanged digest creates no
+release. A failed image build can be retried with the existing tag.
 
 - Rebuild against updated base image
 - Update the base image revision
-- New image revision release
+- New release using the image revision or product version format
 
 | Image                 | Upstream (base image) | Versions                   |
 |-----------------------|-----------------------|----------------------------|
@@ -183,7 +140,7 @@ Supabase PostgreSQL is monitored for newer bundles within its pinned major versi
 ### Version updates from upstream other than the base image
 
 - Minor/patch version updates
-- New image revision release
+- New release using the image revision or product version format
 
 | Image                 | Upstream                | Versions                                 |
 |-----------------------|-------------------------|------------------------------------------|
@@ -402,12 +359,9 @@ timestamps. It resolves the actual build tag, including variants such as
 
 Version and image-revision updates resolve all affected references before changing
 the pins. A missing tag, invalid response, or failed lookup leaves the pin file
-unchanged. Digest-only changes trigger rebuilds; the existing version and Alpine
-release rules still determine when an image release is created. A committed
-pin is a build input, not proof of a successful build; failed image builds can be
+unchanged. Digest-only changes trigger rebuilds. Backup also creates a semantic
+patch release for each changed base digest; other images retain their version
+and Alpine release rules. A committed pin is a build input, not proof of a successful build; failed image builds can be
 retried using the same commit and digest.
 
-Roll out this updater first: base-image jobs report and skip repositories without
-`base-images.mk`. Then merge the image migrations into their default branches.
-Remove the old timestamp markers with each image migration.
 Images that only track application releases keep their existing update flow.
