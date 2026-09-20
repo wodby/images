@@ -55,6 +55,7 @@ def event_counts(report: dict[str, Any], workflow_result: str, artifact_result: 
         "update_events": int(totals.get("update_events") or 0),
         "eol_notifications": int(totals.get("eol_notifications") or 0),
         "major_version_notifications": int(totals.get("major_version_notifications") or 0),
+        "grype_exceptions": len(report.get("grype_exceptions") or []),
         "warnings": int(totals.get("warnings") or 0),
     }
 
@@ -132,6 +133,8 @@ def build_body(
     append_update_events(lines, report.get("update_events") or [])
     append_messages(lines, "New Major Versions", report.get("major_version_notifications") or [])
     append_messages(lines, "EOL Notifications", report.get("eol_notifications") or [])
+
+    append_messages(lines, "Grype Exception Warnings", report.get("grype_exceptions") or [])
 
     warnings = [{"message": warning} for warning in report.get("warnings") or []]
     append_messages(lines, "Warnings", warnings)
@@ -242,6 +245,7 @@ def build_html_body(
     body.append(html_section("New Major Versions", report.get("major_version_notifications") or []))
     body.append(html_section("EOL Notifications", report.get("eol_notifications") or []))
     warnings = [{"message": warning} for warning in report.get("warnings") or []]
+    body.append(html_section("Grype Exception Warnings", report.get("grype_exceptions") or []))
     body.append(html_section("Warnings", warnings))
     body.append("</div></body></html>")
     return "".join(body)
