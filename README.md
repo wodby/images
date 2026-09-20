@@ -2,6 +2,22 @@
 
 [![Build Status](https://github.com/wodby/images/workflows/Update/badge.svg)](https://github.com/wodby/images/actions)
 
+## Update reports
+
+Email digests and consolidated reports include a **Grype Exception Warnings** section
+when catalog image repositories contain configured `ignore` rules. Each warning shows
+the repository, branch, complete rule scope, and configuration URL so exceptions can
+be reviewed and removed after a fix is adopted. The report checks the default branch
+or the stability branch listed below, using the first conventional `.grype.yaml`,
+`.grype.yml`, `.grype/config.yaml`, or `.grype/config.yml` file. Custom config paths,
+environment-only rules, and VEX files are not inspected. These are configured rules,
+not confirmed matches from a vulnerability scan. Lookup and parsing errors appear in
+the general warnings section.
+
+Exceptions alone do not trigger an email; digests retain the existing update-event
+and workflow/artifact-failure triggers. To generate a report locally, first install
+its dependencies with `python -m pip install -r scripts/requirements.txt`.
+
 ## Auto-updated images
 
 ### Alpine-based images

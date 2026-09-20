@@ -16,6 +16,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+      - name: Install report dependencies
+        run: python -m pip install -r scripts/requirements.txt
+      - name: Test report generation
+        run: python -m unittest discover -s tests -p 'test_*report*.py'
       - name: Test updater helpers
         run: |
           ./tests/test_edge_alpine_updater.sh
@@ -149,6 +153,9 @@ jobs:
         continue-on-error: true
         with:
           path: reports
+
+      - name: Install report dependencies
+        run: python -m pip install -r scripts/requirements.txt
 
       - name: Generate Image Update Report
         run: |

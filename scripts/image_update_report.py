@@ -6,10 +6,14 @@ import re
 import sys
 import urllib.error
 import urllib.request
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any
+from urllib.parse import quote
+
+import yaml
 
 
 TABLE_SECTIONS = {
@@ -77,6 +81,7 @@ class VersionItem:
     source: str
     version: str
     section: str
+    ref: str = "HEAD"
 
 
 def parse_args() -> argparse.Namespace:
@@ -161,12 +166,13 @@ def parse_readme(path: Path) -> list[VersionItem]:
             product = product_for_label(source)
             versions = extract_versions(cells[2])
 
+        ref = (cells[3].strip("` ") if len(cells) > 3 else "") or "HEAD"
         for version in versions:
-            items.append(VersionItem(image=image, product=product, source=source, version=version, section=section))
+            items.append(VersionItem(image=image, product=product, source=source, version=version, section=section, ref=ref))
 
-    unique: dict[tuple[str, str, str, str], VersionItem] = {}
+    unique: dict[tuple[str, str, str, str, str], VersionItem] = {}
     for item in items:
-        unique[(item.image, item.product, item.source, item.version)] = item
+        unique[(item.image, item.product, item.source, item.version, item.ref)] = item
     return sorted(unique.values(), key=lambda item: (item.product, item.image, version_key(item.version)))
 
 
@@ -207,6 +213,72 @@ def fetch_json(url: str) -> Any | None:
         if exc.code == 404:
             return None
         raise
+
+
+# Follow Grype's repository-local configuration search order.
+GRYPE_CONFIG_PATHS = (".grype.yaml", ".grype.yml", ".grype/config.yaml", ".grype/config.yml")
+
+
+def fetch_grype_config(repo: str, ref: str) -> tuple[str, str] | None:
+    """Read the first conventional Grype config from a public catalog repository."""
+    for path in GRYPE_CONFIG_PATHS:
+        url = f"https://raw.githubusercontent.com/{repo}/{quote(ref, safe='')}/{path}"
+        request = urllib.request.Request(url, headers={"User-Agent": "wodby-images-update-report/1.0"})
+        try:
+            with urllib.request.urlopen(request, timeout=15) as response:
+                return path, response.read().decode("utf-8")
+        except urllib.error.HTTPError as exc:
+            if exc.code != 404:
+                raise
+    return None
+
+
+def inspect_grype_exceptions(target: tuple[str, str]) -> tuple[list[dict[str, Any]], list[str]]:
+    """Report configured ignores, not claims that these rules matched a scan."""
+    repo, ref = target
+    exceptions: list[dict[str, Any]] = []
+    warnings: list[str] = []
+    try:
+        config = fetch_grype_config(repo, ref)
+        if config is None:
+            return exceptions, warnings
+        path, text = config
+        data = yaml.safe_load(text)
+        if data is None:
+            return exceptions, warnings
+        if not isinstance(data, dict):
+            raise ValueError("Grype configuration must be a mapping")
+        rules = data.get("ignore")
+        if rules is None:
+            return exceptions, warnings
+        if not isinstance(rules, list):
+            raise ValueError("Grype ignore rules must be a list")
+        url = f"https://github.com/{repo}/blob/{quote(ref, safe='')}/{path}"
+        for index, rule in enumerate(rules, 1):
+            if not isinstance(rule, dict):
+                warnings.append(f"Invalid Grype ignore rule {index} in `{repo}` ({ref}): {url}")
+                continue
+            # Preserve all selectors, including broad rules without a CVE or package.
+            scope = json.dumps(rule, sort_keys=True, default=str)
+            exceptions.append({
+                "repo": repo, "ref": ref, "config_url": url, "rule": json.loads(scope),
+                "message": f"`{repo}` ({ref}) has a Grype ignore rule: `{scope}`. Configuration: {url}",
+            })
+    except (OSError, TypeError, ValueError, yaml.YAMLError) as exc:
+        warnings.append(f"Failed to inspect Grype exceptions for `{repo}` ({ref}): {exc}")
+    return exceptions, warnings
+
+
+def collect_grype_exceptions(items: list[VersionItem]) -> tuple[list[dict[str, Any]], list[str]]:
+    """Inspect each repository/ref once, independently of updater job success."""
+    targets = sorted({(item.image, item.ref) for item in items})
+    exceptions: list[dict[str, Any]] = []
+    warnings: list[str] = []
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        for found, errors in pool.map(inspect_grype_exceptions, targets):
+            exceptions.extend(found)
+            warnings.extend(errors)
+    return exceptions, warnings
 
 
 def version_key(value: Any) -> tuple[int, ...]:
@@ -408,6 +480,7 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append(f"- Updated repos: {totals['updated_repos']}")
     lines.append(f"- EOL notifications: {totals['eol_notifications']}")
     lines.append(f"- New major version notifications: {totals['major_version_notifications']}")
+    lines.append(f"- Grype exceptions: {totals.get('grype_exceptions', 0)}")
     lines.append(f"- Warnings: {totals['warnings']}")
     lines.append("")
 
@@ -437,6 +510,14 @@ def render_markdown(report: dict[str, Any]) -> str:
             lines.append(f"- {item['message']}")
         lines.append("")
 
+    if report.get("grype_exceptions"):
+        lines.extend([
+            "## Grype Exception Warnings", "",
+            "Configured ignore rules may suppress vulnerability findings; review whether they are still needed.", "",
+        ])
+        lines.extend(f"- {item['message']}" for item in report["grype_exceptions"])
+        lines.append("")
+
     if report["warnings"]:
         lines.append("## Warnings")
         lines.append("")
@@ -444,7 +525,7 @@ def render_markdown(report: dict[str, Any]) -> str:
             lines.append(f"- {warning}")
         lines.append("")
 
-    if not (report["update_events"] or report["major_version_notifications"] or report["eol_notifications"] or report["warnings"]):
+    if not (report.get("grype_exceptions") or report["update_events"] or report["major_version_notifications"] or report["eol_notifications"] or report["warnings"]):
         lines.append("No reportable image update events were found.")
         lines.append("")
 
@@ -457,6 +538,8 @@ def generate_report(args: argparse.Namespace) -> dict[str, Any]:
     items = parse_readme(readme)
     update_events = load_update_events(events_dir)
     eol_notifications, major_notifications, warnings = analyze_versions(items, args.eol_warning_days)
+    grype_exceptions, grype_warnings = collect_grype_exceptions(items)
+    warnings.extend(grype_warnings)
     updated_repos = sorted({event.get("repo") for event in update_events if event.get("repo")})
 
     return {
@@ -469,12 +552,14 @@ def generate_report(args: argparse.Namespace) -> dict[str, Any]:
             "updated_repos": len(updated_repos),
             "eol_notifications": len(eol_notifications),
             "major_version_notifications": len(major_notifications),
+            "grype_exceptions": len(grype_exceptions),
             "warnings": len(warnings),
         },
         "updated_repos": updated_repos,
         "update_events": update_events,
         "eol_notifications": eol_notifications,
         "major_version_notifications": major_notifications,
+        "grype_exceptions": grype_exceptions,
         "warnings": warnings,
     }
 
