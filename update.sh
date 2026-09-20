@@ -870,6 +870,49 @@ _update_versions() {
   fi
 }
 
+# Group identical Alpine transitions, naming only exceptions when there is one
+# shared update. Keep distinct transitions associated with their image tags.
+_alpine_release_description() {
+  local image="${1}"
+  local version_list="${2}"
+  shift 2
+  local -a transitions=("$@") versions=() groups=() descriptions=()
+  local -a affected=() excluded=()
+  local transition group found i
+  IFS=' ' read -r -a versions <<<"${version_list}"
+
+  for transition in "${transitions[@]}"; do
+    [[ -n "${transition}" ]] || continue
+    found=""
+    for group in "${groups[@]}"; do
+      [[ "${group}" != "${transition}" ]] || found=1
+    done
+    [[ -n "${found}" ]] || groups+=("${transition}")
+  done
+
+  for group in "${groups[@]}"; do
+    affected=()
+    excluded=()
+    for ((i = 0; i < ${#versions[@]}; i++)); do
+      if [[ "${transitions[i]}" == "${group}" ]]; then
+        affected+=("${image}:${versions[i]}")
+      else
+        excluded+=("${image}:${versions[i]}")
+      fi
+    done
+    if [[ "${#groups[@]}" == 1 ]]; then
+      if [[ "${#excluded[@]}" == 0 ]]; then
+        descriptions+=("${group}")
+      else
+        descriptions+=("${group} (except $(_join_ws ", " "${excluded[@]}"))")
+      fi
+    else
+      descriptions+=("${group} ($(_join_ws ", " "${affected[@]}"))")
+    fi
+  done
+  printf 'Alpine Linux updates: %s' "$(_join_ws "; " "${descriptions[@]}")"
+}
+
 _update_timestamps() {
   local version_list="${1}"
   local base_image="${2}"
@@ -890,7 +933,9 @@ _update_timestamps() {
   local ver_list
   local timestamp_file
 
-  local -a ver_with_updated_alpine=()
+  local -a alpine_transitions=()
+  local alpine_transition
+  local alpine_updated=""
 
   IFS=' ' read -r -a arr_versions <<<"${version_list}"
   timestamp_file=$(_find_timestamp_file "${base_image}" "${image#*/}" || true)
@@ -904,6 +949,7 @@ _update_timestamps() {
   echo "=============================="
 
   for version in "${arr_versions[@]}"; do
+    alpine_transition=""
     latest_timestamp=$(_get_timestamp "${base_image%:*}" "${version}")
     if [[ -z "${latest_timestamp}" ]]; then
       echo >&2 "Failed to acquire latest timestamp"
@@ -940,10 +986,12 @@ _update_timestamps() {
             minor_update=1
           fi
 
-          ver_with_updated_alpine+=("${image}:${version}: ${cur_alpine_ver} -> ${latest_alpine_ver}")
+          alpine_transition="${cur_alpine_ver} -> ${latest_alpine_ver}"
+          alpine_updated=1
         fi
       fi
     fi
+    alpine_transitions+=("${alpine_transition}")
   done
 
   if [[ -n "${updated}" ]]; then
@@ -957,7 +1005,7 @@ _update_timestamps() {
     _git_push origin
 
     # Release tags on alpine updates.
-    if [[ "${#ver_with_updated_alpine[@]}" != 0 ]]; then
+    if [[ -n "${alpine_updated}" ]]; then
       # In case there were no new commits but the base image alpine we want to force rebuild latest images against new Alpine.
       if [[ -z "${had_local_commits}" ]]; then
         _ensure_git_identity
@@ -965,8 +1013,8 @@ _update_timestamps() {
         _report_event "commit" "$(_current_repo_slug)" "Rebuild against updated Alpine"
         _git_push origin
       fi
-      ver_list=$(_join_ws ", " "${ver_with_updated_alpine[@]}")
-      _release_tag "Alpine Linux updates: ${ver_list}" "${minor_update}"
+      ver_list=$(_alpine_release_description "${image}" "${version_list}" "${alpine_transitions[@]}")
+      _release_tag "${ver_list}" "${minor_update}"
     fi
   else
     echo "Base image hasn't changed"
