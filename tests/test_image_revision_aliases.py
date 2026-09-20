@@ -40,7 +40,7 @@ class AliasTests(unittest.TestCase):
                 {'short': ['{minor}', '{major}'], 'full': '{version}'},
                 {'short': ['{minor}-dev', '{major}-dev'], 'full': '{version}-dev'}]}]}
 
-    def release(self, tag, version='11.4.2'):
+    def release(self, tag, version='11.4.2', notes=None):
         """Create disposable Git fixtures, including non-ancestral releases."""
         path = self.path / aliases.WORKFLOW
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -48,7 +48,7 @@ class AliasTests(unittest.TestCase):
         (self.path / aliases.CONFIG).write_text(json.dumps(self.config))
         self.repo.git('add', '.')
         self.repo.git('commit', '--allow-empty', '-qm', f'Fixture {tag}')
-        self.repo.git('tag', '-a', tag, '-m', f'Fixture release {tag}')
+        self.repo.git('tag', '-a', tag, '-m', notes if notes is not None else f'Fixture release {tag}')
         self.repo.read.cache_clear()
         return self.repo.plan(tag)
 
@@ -114,7 +114,8 @@ class AliasTests(unittest.TestCase):
         self.assertIn('11.4.2-r1', [a['tag'] for a in self.repo.plan('r1')['aliases']])
 
     def test_publish_preserves_digest_and_annotates_all_aliases(self):
-        plan = self.release('r0')
+        notes = 'Update Alpine base image\n\nwodby/alpine:3.22-2.20.8 -> 3.22-r0'
+        plan = self.release('r0', notes=notes)
         self.seed_sources(plan)
         self.publish(plan)
         self.assertEqual(len(self.writes), 2)
@@ -122,10 +123,43 @@ class AliasTests(unittest.TestCase):
             ref = 'refs/tags/' + alias['tag']
             self.assertEqual(self.repo.git('cat-file', '-t', ref).stdout.strip(), 'tag')
             self.assertEqual(self.repo.git('rev-parse', ref+'^{commit}').stdout.strip(), plan['commit'])
-            self.assertIn(DIGEST, self.repo.git('for-each-ref', '--format=%(contents)', ref).stdout)
+            self.assertEqual(notes, self.repo.git('for-each-ref', '--format=%(contents)', ref).stdout.strip())
             self.assertIn(ref, self.repo.git('ls-remote', 'origin', ref).stdout)
         self.publish(self.repo.plan('r0'))
         self.assertEqual(len(self.writes), 2, 'Retry must not republish any manifest')
+
+    def test_old_annotations_remain_retryable_without_rewriting_tags(self):
+        plan = self.release('r0')
+        self.seed_sources(plan)
+        for alias in plan['aliases']:
+            alias['digest'] = DIGEST
+            self.repo.git('tag', '-a', alias['tag'], plan['commit'],
+                          '-m', aliases.legacy_annotation(plan, alias))
+        before = self.repo.git('show-ref', '--tags').stdout
+        self.publish(plan)
+        self.assertEqual(self.repo.git('show-ref', '--tags').stdout, before)
+
+    def test_unrelated_existing_notes_are_rejected(self):
+        plan = self.release('r0')
+        self.seed_sources(plan)
+        self.repo.git('tag', '-a', '11.4-r0', '-m', 'Unrelated release description')
+        with self.assertRaisesRegex(ValueError, 'metadata differs'):
+            self.publish(plan)
+        self.assertEqual(self.writes, [])
+
+    def test_missing_primary_notes_are_rejected(self):
+        self.release('r0')
+        self.repo.git('tag', '-d', 'r0')
+        self.repo.git('tag', '-a', 'r0', '-m', '')
+        with self.assertRaisesRegex(ValueError, 'nonempty'):
+            self.repo.plan('r0')
+
+    def test_lightweight_primary_is_rejected(self):
+        self.release('r0')
+        self.repo.git('tag', '-d', 'r0')
+        self.repo.git('tag', 'r0')
+        with self.assertRaisesRegex(ValueError, 'annotated'):
+            self.repo.plan('r0')
 
     def test_partial_docker_publication_resumes(self):
         plan = self.release('r0')

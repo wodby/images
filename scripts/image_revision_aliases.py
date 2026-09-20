@@ -114,6 +114,15 @@ class Repository:
             raise ValueError('No versioned images configured')
         return config['image'], releases
 
+    def release_notes(self, ref):
+        """Read the release annotation without copying its cryptographic signature."""
+        if self.git('cat-file', '-t', ref).stdout.strip() != 'tag':
+            raise ValueError('Primary release requires an annotated Git tag')
+        notes = self.git('for-each-ref', '--format=%(contents:subject)%0a%0a%(contents:body)', ref).stdout.strip()
+        if not notes:
+            raise ValueError('Primary release requires nonempty release notes')
+        return notes + '\n'
+
     def plan(self, primary):
         """Count earlier primary releases containing each complete upstream version.
 
@@ -154,6 +163,7 @@ class Repository:
                 self.add_alias(aliases, f'{variant["full"]}-{revision}', source,
                                release['version'], revision)
         return {'primary': primary, 'commit': commit, 'image': image,
+                'notes': self.release_notes(ref),
                 'aliases': [dict(tag=tag, **value) for tag, value in sorted(aliases.items())]}
 
     @staticmethod
@@ -178,8 +188,8 @@ def digest(image, missing_ok=False):
     return match[1]
 
 
-def annotation(plan, alias):
-    """Describe both the primary release and the exact published artifact."""
+def legacy_annotation(plan, alias):
+    """Recognize already-published metadata annotations when retrying older releases."""
     return (f'{plan["image"]}:{alias["tag"]} from image release {plan["primary"]}\n\n'
             f'Upstream version: {alias["version"]}\n'
             f'Image: {plan["image"]}@{alias["digest"]}\n')
@@ -221,7 +231,7 @@ def publish(repo, plan):
         if alias not in missing_git:
             message = repo.git('for-each-ref', '--format=%(contents)',
                                f'refs/tags/{alias["tag"]}').stdout
-            if message.strip() != annotation(plan, alias).strip():
+            if message.strip() not in (plan['notes'].strip(), legacy_annotation(plan, alias).strip()):
                 raise ValueError(f'Git alias metadata differs: {alias["tag"]}')
 
     for alias in plan['aliases']:
@@ -234,7 +244,7 @@ def publish(repo, plan):
 
     for alias in missing_git:
         repo.git('-c', 'tag.gpgSign=false', 'tag', '-a', alias['tag'], plan['commit'],
-                 '-m', annotation(plan, alias))
+                 '-m', plan['notes'])
     # Include existing local aliases too: a previous push may have failed after
     # creating the local tags. Explicit refspecs never push unrelated tags.
     if plan['aliases']:
