@@ -105,12 +105,12 @@ _git_commit() {
   local msg="${2}"
   local report_event="${3:-1}"
 
-  cd "${dir}"
-  git add -A
+  cd "${dir}" || return 1
+  git add -A || return 1
 
   if ! git diff --cached --quiet; then
     _ensure_git_identity
-    git commit -m "${msg}"
+    git commit -m "${msg}" || return 1
     if [[ "${report_event}" != "0" ]]; then
       _report_event "commit" "$(_current_repo_slug)" "${msg}"
     fi
@@ -743,8 +743,8 @@ _get_latest_version() {
 _git_clone() {
   local slug="${1}"
 
-  git clone "https://${WODBOT_GITHUB_USERNAME}:${WODBOT_GITHUB_PAT}@github.com/${slug}" "/tmp/${slug#*/}"
-  cd "/tmp/${slug#*/}"
+  git clone "https://${WODBOT_GITHUB_USERNAME}:${WODBOT_GITHUB_PAT}@github.com/${slug}" "/tmp/${slug#*/}" || return 1
+  cd "/tmp/${slug#*/}" || return 1
 }
 
 _get_go_downloads_metadata() {
@@ -990,6 +990,39 @@ _alpine_release_description() {
     fi
   done
   printf 'Alpine Linux updates: %s' "$(_join_ws "; " "${descriptions[@]}")"
+}
+
+# Backup has its own product versions. Publish each base refresh atomically with
+# its patch tag so a failed tag push cannot leave an untagged rebuild on master.
+update_backup() {
+  local repo="wodby/backup"
+  local changes tag branch message
+
+  _git_clone "${repo}" || return 1
+  _require_base_image_pins || return 0
+  if _uses_image_revisions; then
+    echo >&2 "Backup must use semantic product versions before automatic releases"
+    return 1
+  fi
+  changes=$(_base_image_pins refresh) || return 1
+  if [[ -z "${changes}" ]]; then
+    echo "Backup base image digest has not changed"
+    return 0
+  fi
+
+  tag=$(_next_release_tag '') || return 1
+  branch=$(git symbolic-ref --short HEAD) || return 1
+  message=$(printf 'Refresh Backup base image\n\n%s' "${changes}")
+  _git_commit ./ "${message}" 0 || return 1
+  if ! _publishing_enabled; then
+    echo "Publishing is disabled; proposed Backup release: ${tag}"
+    return 0
+  fi
+
+  _ensure_git_identity
+  git tag -m "${message}" "${tag}" || return 1
+  _git_push --atomic origin "HEAD:refs/heads/${branch}" "refs/tags/${tag}" || return 1
+  _report_event release_tag "${repo}" "${message}" "${tag}"
 }
 
 # Refresh content pins even when upstream versions and stability tags are unchanged.
