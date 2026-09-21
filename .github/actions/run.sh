@@ -31,7 +31,9 @@ done
 # The security scanner reads public registry layers using the same login as Docker.
 registry_args=()
 if [[ "$dir/$script" == images/alpine && "$logged_in" == 1 ]]; then
-  registry_args=(-e DOCKER_CONFIG=/registry-auth -v "${DOCKER_CONFIG:-${HOME}/.docker}:/registry-auth:ro")
+  # Buildx also inspects manifests and needs writable state outside the auth mount.
+  registry_args=(-e DOCKER_CONFIG=/registry-auth -e BUILDX_CONFIG=/tmp/buildx
+    -v "${DOCKER_CONFIG:-${HOME}/.docker}:/registry-auth:ro")
 fi
 
 echo "Checking ${dir}/${script} for updates"

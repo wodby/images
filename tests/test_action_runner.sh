@@ -54,6 +54,10 @@ check_case() {
   ! grep -q '^+' "${test_root}/stderr"
 }
 check_case 0 0 0 1 1
+if grep -q -- 'BUILDX_CONFIG=' "$CALL_LOG"; then
+  echo >&2 'Buildx state override leaked into another updater'
+  exit 1
+fi
 ! grep -q '^sleep ' "${CALL_LOG}"
 check_case 2 0 0 3 1
 [[ "$(grep -c '^sleep ' "${CALL_LOG}")" == 2 ]]
@@ -64,5 +68,7 @@ check_case 0 42 42 1 1
 export dir=images script=alpine
 check_case 0 0 0 1 1
 grep -q -- '-e DOCKER_CONFIG=/registry-auth' "$CALL_LOG"
+# Manifest inspection must not create Buildx state inside the read-only auth mount.
+grep -q -- '-e BUILDX_CONFIG=/tmp/buildx' "$CALL_LOG"
 grep -q -- ':/registry-auth:ro' "$CALL_LOG"
 echo 'Action runner retry, registry authentication and logging tests passed'
