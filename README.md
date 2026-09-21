@@ -122,12 +122,15 @@ Supabase PostgreSQL is monitored for newer bundles within its pinned major versi
 
 ### Descendant images
 
-`wodby/backup` checks the digest of its `wodby/alpine:latest` base on each updater
-run. A changed digest produces a new semantic patch release, such as `2.3.3`.
-The updater publishes the pin commit and annotated release tag together. Backup's
-release workflow tests the image, publishes the matching Docker tag, and then
-creates a GitHub Release with that same version. An unchanged digest creates no
-release. A failed image build can be retried with the existing tag.
+`wodby/backup` follows the published `wodby/alpine:3-rN` revisions. A newer
+parent revision, including one with package security fixes, produces a Backup
+semantic patch release. Release notes include the parent's changes, and release
+builds use that exact digest-pinned parent revision. Changes to the floating
+`wodby/alpine:3` digest only rebuild Backup's `latest` tag.
+
+The updater publishes the parent-pin commit and annotated product tag together.
+Backup's release workflow tests the image, publishes its Docker tag, then creates
+a GitHub Release with the same version. Failed builds can retry the existing tag.
 
 - Rebuild against updated base image
 - Update the base image revision
@@ -368,9 +371,9 @@ timestamps. It resolves the actual build tag, including variants such as
 
 Version and image-revision updates resolve all affected references before changing
 the pins. A missing tag, invalid response, or failed lookup leaves the pin file
-unchanged. Digest-only changes trigger rebuilds. Backup also creates a semantic
-patch release for each changed base digest; other images retain their version
-and Alpine release rules. A committed pin is a build input, not proof of a successful build; failed image builds can be
+unchanged. Digest-only changes trigger rebuilds. Backup creates a semantic patch
+release only for a newer published Alpine image revision; other images retain
+their version and Alpine release rules. A committed pin is a build input, not proof of a successful build; failed image builds can be
 retried using the same commit and digest.
 
 Images that only track application releases keep their existing update flow.
