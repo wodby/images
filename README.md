@@ -35,6 +35,10 @@ repository release directly, such as `wodby/sshd:r102`.
   upstream version starts at `r0` again. Variants and architectures share the
   counter. Failed release attempts can leave gaps; retries reuse their number.
 - Alias tag descriptions use the primary release notes to explain what changed.
+- After the images and any versioned aliases publish successfully, CI creates one
+  GitHub Release named after the primary tag, such as `r2`, with its annotated tag
+  notes. Versioned aliases do not get separate GitHub Releases. Retrying a workflow
+  preserves an existing published release; a manually prepared draft needs review.
 - Every published versioned revision tag gets a matching annotated Git alias
   pointing to the primary release commit. Only primary Git tags trigger builds.
   Dropping a major or minor line stops new releases for it; existing Docker and

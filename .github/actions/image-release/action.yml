@@ -1,0 +1,18 @@
+name: Publish image GitHub Release
+description: Create a primary revision release from its annotated tag after image publication
+runs:
+  using: composite
+  steps:
+    - uses: actions/checkout@v6
+      with:
+        ref: ${{ github.ref }}
+        fetch-depth: 0
+    - name: Publish GitHub Release for this primary revision
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        RELEASE_ACTION_PATH: ${{ github.action_path }}
+      run: |
+        python3 "$RELEASE_ACTION_PATH/../../../scripts/image_release.py" \
+          --repository "$GITHUB_REPOSITORY" --tag "$GITHUB_REF_NAME" \
+          --expected-commit "$GITHUB_SHA"
