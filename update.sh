@@ -992,11 +992,23 @@ _alpine_release_description() {
   printf 'Alpine Linux updates: %s' "$(_join_ws "; " "${descriptions[@]}")"
 }
 
-# Backup has its own product versions. Publish each base refresh atomically with
-# its patch tag so a failed tag push cannot leave an untagged rebuild on master.
+# Copy the parent release's human-readable annotation, excluding its signature.
+_parent_revision_notes() {
+  local repo="$1" tag="$2" object notes
+  object=$(_github_api "repos/${repo}/git/ref/tags/${tag}") || return 1
+  object=$(jq -er '.object | select(.type == "tag") | .sha | select(test("^[a-f0-9]{40}$"))' <<<"${object}") || return 1
+  notes=$(_github_api "repos/${repo}/git/tags/${object}") || return 1
+  jq -er --arg tag "${tag}" '. | select(.tag == $tag) | .message
+    | split("\n-----BEGIN PGP SIGNATURE-----")[0]
+    | split("\n-----BEGIN SSH SIGNATURE-----")[0]
+    | sub("[[:space:]]+$"; "") | select(length > 0)' <<<"${notes}"
+}
+
+# Digest changes rebuild floating images. Only a published parent revision creates
+# a product patch release; publish its pin commit and tag in one atomic push.
 update_backup() {
-  local repo="wodby/backup"
-  local changes tag branch message
+  local repo="wodby/backup" parent="wodby/alpine" version="${1:-3}"
+  local changes tag branch message current latest notes
 
   _git_clone "${repo}" || return 1
   _require_base_image_pins || return 0
@@ -1004,25 +1016,50 @@ update_backup() {
     echo >&2 "Backup must use semantic product versions before automatic releases"
     return 1
   fi
-  changes=$(_base_image_pins refresh) || return 1
-  if [[ -z "${changes}" ]]; then
-    echo "Backup base image digest has not changed"
+  # Deploy the updater first: older Backup checkouts must not keep releasing on
+  # digest changes while their build inputs migrate to a published parent pin.
+  if ! grep -q "^BASE_IMAGE_DIGEST_${version} := " base-images.mk; then
+    _report_event manual_review "${repo}" "Waiting for Backup parent-revision build inputs"
     return 0
   fi
-
-  tag=$(_next_release_tag '') || return 1
+  _require_parent_image_revision || return 0
+  current=$(_base_image_release) || return 1
+  _base_image_pins ref --line "${version}" --stability "${current}" >/dev/null || return 1
+  latest=$(_get_image_release "${parent}" "${version}-") || return 1
+  [[ -n "${latest}" ]] || return 1
   branch=$(git symbolic-ref --short HEAD) || return 1
-  message=$(printf 'Refresh Backup base image\n\n%s' "${changes}")
-  _git_commit ./ "${message}" 0 || return 1
-  if ! _publishing_enabled; then
-    echo "Publishing is disabled; proposed Backup release: ${tag}"
-    return 0
-  fi
 
-  _ensure_git_identity
-  git tag -m "${message}" "${tag}" || return 1
-  _git_push --atomic origin "HEAD:refs/heads/${branch}" "refs/tags/${tag}" || return 1
-  _report_event release_tag "${repo}" "${message}" "${tag}"
+  if _image_release_is_newer "${latest}" "${current}"; then
+    # Fetch notes before changing build inputs; incomplete parent publication or
+    # API errors must not consume a product version or advance the parent pin.
+    notes=$(_parent_revision_notes "${parent}" "${version}-${latest}") || return 1
+    _base_image_pins refresh || return 1
+    _base_image_pins stability --new "${latest}" || return 1
+    _set_base_image_release "${latest}" || return 1
+    tag=$(_next_release_tag '') || return 1
+    message=$(printf 'Update Alpine base image to %s-%s\n\n%s' "${version}" "${latest}" "${notes}")
+    _git_commit ./ "${message}" 0 || return 1
+    if ! _publishing_enabled; then
+      echo "Publishing is disabled; proposed Backup release: ${tag}"
+      return 0
+    fi
+    _ensure_git_identity
+    git tag -m "${message}" "${tag}" || return 1
+    _git_push --atomic origin "HEAD:refs/heads/${branch}" "refs/tags/${tag}" || return 1
+    _report_event release_tag "${repo}" "${message}" "${tag}"
+  else
+    changes=$(_base_image_pins refresh) || return 1
+    if [[ -z "${changes}" ]]; then
+      echo "Backup base image inputs have not changed"
+      return 0
+    fi
+    message=$(printf 'Rebuild against updated base image digests\n\n%s' "${changes}")
+    _git_commit ./ "${message}" 0 || return 1
+    _git_push origin "HEAD:refs/heads/${branch}" || return 1
+    if _publishing_enabled; then
+      _report_event commit "${repo}" "Rebuild against updated base image digests"
+    fi
+  fi
 }
 
 # Refresh content pins even when upstream versions and image revisions are unchanged.

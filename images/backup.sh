@@ -3,4 +3,4 @@ set -e
 
 . ../update.sh
 
-update_backup
+update_backup "3"
