@@ -1,5 +1,5 @@
 name: Publish image revision aliases
-description: Copy published manifests to full-version aliases and annotate their Git tags
+description: Publish image aliases, annotate their Git tags, then create the primary GitHub Release
 inputs:
   docker_username:
     required: true
@@ -33,3 +33,12 @@ runs:
         "$RUNNER_TEMP/image-revision-aliases/bin/python" \
           "$ALIAS_ACTION_PATH/../../../scripts/image_revision_aliases.py" \
           --tag "$GITHUB_REF_NAME" --expected-commit "$GITHUB_SHA" --publish
+    - name: Publish GitHub Release for this primary revision
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        RELEASE_ACTION_PATH: ${{ github.action_path }}
+      run: |
+        python3 "$RELEASE_ACTION_PATH/../../../scripts/image_release.py" \
+          --repository "$GITHUB_REPOSITORY" --tag "$GITHUB_REF_NAME" \
+          --expected-commit "$GITHUB_SHA"
