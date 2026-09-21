@@ -54,7 +54,10 @@ check_case() {
   ! grep -q '^+' "${test_root}/stderr"
 }
 check_case 0 0 0 1 1
-! grep -q -- 'BUILDX_CONFIG=' "$CALL_LOG"
+if grep -q -- 'BUILDX_CONFIG=' "$CALL_LOG"; then
+  echo >&2 'Buildx state override leaked into another updater'
+  exit 1
+fi
 ! grep -q '^sleep ' "${CALL_LOG}"
 check_case 2 0 0 3 1
 [[ "$(grep -c '^sleep ' "${CALL_LOG}")" == 2 ]]
