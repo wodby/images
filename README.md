@@ -174,7 +174,11 @@ a GitHub Release with the same version. Failed builds can retry the existing tag
 
 ### Docker4X projects
 
-Update image revision tags
+Update image revision tags in active and commented `.env` entries, including
+test fixtures. Each runtime and variant is checked against its own published
+revisions, so alternatives can catch up even when the active tag is current.
+Docker4X test fixtures use `*_IMAGE_REVISION` for the image release suffix; the
+updater also accepts legacy `*_STABILITY_TAG` variables in older checkouts.
 
 | Project                  |
 |--------------------------|

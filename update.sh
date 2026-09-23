@@ -1652,18 +1652,20 @@ update_docker4x() {
 
   local -a lines=()
   local -a tags=()
-  local image
-  local env_var
-  local current
-  local latest
-
-  local name
-  local prefix
-  local escaped_current
+  local -a env_files=(.env)
+  local image env_var current latest name prefix tag escaped_tag active_tag
+  local changed line file
+  local -A releases=()
 
   _git_clone "${project}"
 
-  mapfile -t lines < <(grep -hoP "(?<=image: )wodby\/.+" compose*.yml || true)
+  if [[ -d tests ]]; then
+    while IFS= read -r -d '' file; do
+      env_files+=("${file}")
+    done < <(find tests/ -name .env -print0)
+  fi
+
+  mapfile -t lines < <(grep -hoP "(?<=image: )wodby\/.+" compose*.yml | sort -u || true)
 
   if [[ -f Dockerfile ]]; then
     if grep -q "FROM wodby/python" Dockerfile; then
@@ -1676,47 +1678,54 @@ update_docker4x() {
   fi
 
   for line in "${lines[@]}"; do
-    [[ "${line}" =~ (.+?):\$(.+) ]]
+    [[ "${line}" =~ ^(wodby/[^:[:space:]]+):\$([A-Z0-9_]+) ]] || continue
 
     image="${BASH_REMATCH[1]}"
     env_var="${BASH_REMATCH[2]}"
+    name="${image#*/}"
+    changed=0
+    active_tag=$(sed -n -E "s/^[[:blank:]]*${env_var}=([^[:space:]#]+).*$/\\1/p" .env | head -n1)
 
-    mapfile -t tags < <(grep -oP "(?<=${env_var}=).+" .env || true)
+    # Include commented alternatives and test-only versions, even when the
+    # active tag is already current. Each runtime/variant has its own release.
+    mapfile -t tags < <(sed -n -E "s/^[[:blank:]]*#?[[:blank:]]*${env_var}=([^[:space:]#]+).*$/\\1/p" "${env_files[@]}" | sort -u)
     if [[ "${#tags[@]}" == 0 ]]; then
       echo >&2 "Failed to acquire current tags for ${env_var}"
-      exit 1
+      return 1
     fi
 
-    if [[ "${tags[0]}" == "latest" ]]; then
-      continue
-    fi
-
-    current="${tags[0]##*-}"
-    name="${image#*/}"
-    prefix="${tags[0]%"${current}"}"
-    latest=$(_get_image_release "${image}" "${prefix}")
-
-    if [[ -z "${latest}" ]]; then
-      echo >&2 "Failed to acquire latest image tag"
-      exit 1
-    fi
-
-    if _image_release_is_newer "${latest}" "${current}"; then
-      escaped_current="${current//./\\.}"
-      sed -i -E "s/^(${env_var}=)(.*-)?${escaped_current}$/\1\2${latest}/" .env
-
-      # Update tests.
-      find tests/ -name .env -exec sed -i -E "s/^(#?${env_var}=)(.*-)?${escaped_current}$/\1\2${latest}/" {} +
-
-      # Keep older Docker4X test fixtures working during the terminology change.
-      if [[ "${name}" == "${project#*docker4}" ]]; then
-        find tests/ -name .env -exec sed -i -E "s/^(${name^^}_(IMAGE_REVISION|STABILITY_TAG))=.+$/\1=${latest}/" {} +
+    for tag in "${tags[@]}"; do
+      [[ "${tag}" == latest ]] && continue
+      current="${tag##*-}"
+      prefix="${tag%"${current}"}"
+      if [[ -z "${releases[${image}:${prefix}]:-}" ]]; then
+        latest=$(_get_image_release "${image}" "${prefix}") || return 1
+        if [[ -z "${latest}" ]]; then
+          echo >&2 "Failed to acquire latest image tag for ${image}:${prefix}"
+          return 1
+        fi
+        releases["${image}:${prefix}"]="${latest}"
       fi
+      latest="${releases[${image}:${prefix}]}"
 
-      _git_commit ./ "Update ${name} image revision to ${latest}"
+      if _image_release_is_newer "${latest}" "${current}"; then
+        escaped_tag="${tag//./\\.}"
+        sed -i -E "s/^([[:blank:]]*#?[[:blank:]]*${env_var}=)${escaped_tag}([[:blank:]]*(#.*)?)$/\\1${prefix}${latest}\\2/" "${env_files[@]}"
+        changed=1
+        echo "${image}: ${tag} -> ${prefix}${latest}"
+
+        # Keep older Docker4X test fixtures working during the terminology change.
+        if [[ "${tag}" == "${active_tag}" && "${name}" == "${project#*docker4}" && -d tests ]]; then
+          find tests/ -name .env -exec sed -i -E "s/^(${name^^}_(IMAGE_REVISION|STABILITY_TAG))=.+$/\\1=${latest}/" {} +
+        fi
+      else
+        echo "${image}: ${tag} is already latest"
+      fi
+    done
+
+    if [[ "${changed}" == 1 ]]; then
+      _git_commit ./ "Update ${name} image revisions"
       _git_push origin
-    else
-      echo "${name}: image revision ${current} is already latest"
     fi
   done
 }

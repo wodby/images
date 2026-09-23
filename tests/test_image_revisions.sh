@@ -106,6 +106,7 @@ _git_clone() { :; }
 _get_image_release() {
  case "$1:$2" in
   wodby/php:8.5-dev-|wodby/xhprof:) echo r12 ;;
+  wodby/php:8.4-dev-macos-) echo r11 ;;
   wodby/postgres:17.11-) echo r1 ;;
   *) fail "wrong runtime or variant prefix: $*" ;;
  esac
@@ -114,8 +115,51 @@ update_docker4x wodby/docker4php ''
 grep -Fxq 'PHP_TAG=8.5-dev-r12' .env
 grep -Fxq 'XHPROF_TAG=r12' .env
 grep -Fxq 'POSTGRES_TAG=17.11-r1' .env
-grep -Fxq 'PHP_TAG=8.4-dev-macos-r12' tests/php/.env
+grep -Fxq 'PHP_TAG=8.4-dev-macos-r11' tests/php/.env
 grep -Fxq 'PHP_STABILITY_TAG=r12' tests/php/.env
 grep -Fxq 'PHP_IMAGE_REVISION=r12' tests/php/.env
+
+# Stale comments must catch up independently of the already-current active tag.
+# Keep formatting, floating tags, newer pins and unrelated variables intact.
+cat >> .env <<'ENV'
+#PHP_TAG=8.4-dev-4.70.0
+  # PHP_TAG=8.3-dev-macos-r1 # alternate platform
+#PHP_TAG=8.2-dev-r99
+#PHP_TAG=latest
+#XHPROF_TAG=2.0.0
+UNRELATED_PHP_TAG=8.4-dev-4.70.0
+ENV
+cat >> tests/php/.env <<'ENV'
+#PHP_TAG=8.4-dev-4.71.5
+  # PHP_TAG=8.3-dev-macos-r0
+ENV
+_get_image_release() {
+ case "$1:$2" in
+  wodby/php:8.5-dev-|wodby/xhprof:) echo r12 ;;
+  wodby/php:8.4-dev-) echo r10 ;;
+  wodby/php:8.4-dev-macos-) echo r11 ;;
+  wodby/php:8.3-dev-macos-) echo r3 ;;
+  wodby/php:8.2-dev-) echo r9 ;;
+  wodby/postgres:17.11-) echo r1 ;;
+  *) fail "wrong runtime or variant prefix: $*" ;;
+ esac
+}
+update_docker4x wodby/docker4php ''
+grep -Fxq 'PHP_TAG=8.5-dev-r12' .env
+grep -Fxq '#PHP_TAG=8.4-dev-r10' .env
+grep -Fxq '  # PHP_TAG=8.3-dev-macos-r3 # alternate platform' .env
+grep -Fxq '#PHP_TAG=8.2-dev-r99' .env
+grep -Fxq '#PHP_TAG=latest' .env
+grep -Fxq '#XHPROF_TAG=r12' .env
+grep -Fxq 'UNRELATED_PHP_TAG=8.4-dev-4.70.0' .env
+grep -Fxq '#PHP_TAG=8.4-dev-r10' tests/php/.env
+grep -Fxq '  # PHP_TAG=8.3-dev-macos-r3' tests/php/.env
+_git_commit() { fail 'unchanged Docker4X project committed again'; }
+_git_push() { fail 'unchanged Docker4X project pushed again'; }
+update_docker4x wodby/docker4php ''
+
+# A failed registry lookup must not become a fabricated revision or a push.
+_get_image_release() { return 1; }
+if update_docker4x wodby/docker4php ''; then fail 'registry lookup failure ignored'; fi
 
 echo 'image revision tests passed'
