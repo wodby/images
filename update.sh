@@ -160,28 +160,37 @@ _get_image_tags() {
 _get_image_release() {
   local slug="${1}"
   local prefix="${2:-}"
-  local page=1 response tag candidate latest=""
+  local page response tag candidate query_prefix latest=""
   local url="https://hub.docker.com/v2/namespaces/${slug%/*}/repositories/${slug#*/}/tags"
-  while :; do
-    response=$(curl -fsSL --connect-timeout 10 --max-time 30 --retry 3 \
-      "${url}?page=${page}&page_size=100&name=$(urlencode "${prefix}")") || return 1
-    jq -e '.results | type == "array"' <<<"${response}" >/dev/null || return 1
-    while IFS= read -r tag; do
-      [[ "${tag}" == "${prefix}"* ]] || continue
-      candidate="${tag#"${prefix}"}"
-      [[ "${candidate}" =~ ^r(0|[1-9][0-9]*)$ || "${candidate}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || continue
-      if [[ -z "${latest}" ]] || _image_release_is_newer "${candidate}" "${latest}"; then
-        latest="${candidate}"
-      fi
-    done < <(jq -r '.results[].name' <<<"${response}")
-    [[ "$(jq -r '.next // empty' <<<"${response}")" != "" ]] || break
-    ((++page))
+  # Revisions always supersede legacy releases. Query them separately so old
+  # runtime tags do not exhaust Docker Hub's anonymous pagination limit.
+  for query_prefix in "${prefix}r" "${prefix}"; do
+    page=1
+    while :; do
+      response=$(curl -fsSL --connect-timeout 10 --max-time 30 --retry 3 \
+        "${url}?page=${page}&page_size=100&name=$(urlencode "${query_prefix}")") || {
+        echo >&2 "Failed to query image releases for ${slug}:${query_prefix} (page ${page})"
+        return 1
+      }
+      jq -e '.results | type == "array"' <<<"${response}" >/dev/null || return 1
+      while IFS= read -r tag; do
+        [[ "${tag}" == "${query_prefix}"* ]] || continue
+        candidate="${tag#"${prefix}"}"
+        [[ "${candidate}" =~ ^r(0|[1-9][0-9]*)$ || "${candidate}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || continue
+        if [[ -z "${latest}" ]] || _image_release_is_newer "${candidate}" "${latest}"; then
+          latest="${candidate}"
+        fi
+      done < <(jq -r '.results[].name' <<<"${response}")
+      [[ "$(jq -r '.next // empty' <<<"${response}")" != "" ]] || break
+      ((++page))
+    done
+    if [[ -n "${latest}" ]]; then
+      echo "${latest}"
+      return 0
+    fi
   done
-  if [[ -z "${latest}" ]]; then
-    echo >&2 "No published image release found for ${slug}:${prefix}"
-    return 1
-  fi
-  echo "${latest}"
+  echo >&2 "No published image release found for ${slug}:${prefix}"
+  return 1
 }
 
 # Accept the legacy workflow variable while repositories migrate independently.
