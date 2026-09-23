@@ -72,6 +72,33 @@ curl() { echo '{"next":null,"results":[{"name":"8.5.10-r0"},{"name":"8.5.10-r01"
 assert_eq r0 "$(_get_image_release wodby/php 8.5.10-)"
 curl() { echo '{"next":null,"results":[{"name":"8.5-4.71.5"},{"name":"8.5-4.71.12"}]}'; }
 assert_eq 4.71.12 "$(_get_image_release wodby/php 8.5-)"
+# Revision lookup must avoid broad legacy pagination (Docker Hub rejects
+# anonymous offsets beyond 1,000). Search and exhaust revision pages first.
+curl() {
+ case "${*: -1}" in
+  *'page=1&'*'name=10-r') echo '{"next":"page2","results":[{"name":"10-r2"},{"name":"10-r01"}]}' ;;
+  *'page=2&'*'name=10-r') echo '{"next":null,"results":[{"name":"10-r12"}]}' ;;
+  *) fail "unnecessary broad legacy query: $*" ;;
+ esac
+}
+assert_eq r12 "$(_get_image_release wodby/drupal 10-)"
+# Only an empty revision result falls back to the legacy search.
+curl() {
+ case "${*: -1}" in
+  *'name=8.5-r') echo '{"next":null,"results":[]}' ;;
+  *'name=8.5-') echo '{"next":null,"results":[{"name":"8.5-4.71.12"}]}' ;;
+  *) fail "unexpected fallback query: $*" ;;
+ esac
+}
+assert_eq 4.71.12 "$(_get_image_release wodby/php 8.5-)"
+# A later revision page failing must not return a partial maximum.
+curl() {
+ case "${*: -1}" in
+  *'page=1&'*) echo '{"next":"page2","results":[{"name":"10-r2"}]}' ;;
+  *) return 22 ;;
+ esac
+}
+if _get_image_release wodby/drupal 10-; then fail 'partial revision result accepted'; fi
 curl() { return 22; }
 if _get_image_release wodby/php 8.5-; then fail 'registry error ignored'; fi
 
