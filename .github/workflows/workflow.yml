@@ -34,6 +34,7 @@ jobs:
           ./tests/test_image_revisions.sh
           ./tests/test_supabase_postgres_updater.sh
           ./tests/test_squid_updater.sh
+          ./tests/test_workspace_agents_updater.sh
   tooling:
     runs-on: ubuntu-latest
     strategy:
@@ -110,7 +111,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        script: [ adminer,cachet,drupal,mariadb,matomo,nginx,webgrind,wordpress,xhprof,drupal-cms,solr,zookeeper,openclaw,prometheus,vinyl ]
+        script: [ adminer,cachet,drupal,mariadb,matomo,nginx,webgrind,wordpress,xhprof,drupal-cms,solr,zookeeper,openclaw,prometheus,vinyl,workspace-agents ]
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions

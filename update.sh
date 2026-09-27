@@ -1572,6 +1572,112 @@ update_edge_alpine() {
   _release_tag "${release_notes}" "" || return 1
 }
 
+# Pins in workspace agents' versions.env, as "VARIABLE Label" lines.
+_workspace_agents_pins() {
+  cat <<'PINS'
+CLAUDE_CODE_VERSION Claude Code
+CODEX_VERSION Codex
+OPENCODE_VERSION opencode
+RIPGREP_VERSION ripgrep
+PINS
+}
+
+# Prints "Label: old -> new" for each pin that differs from the given versions.env.
+_workspace_agents_changes() {
+  local previous="${1}"
+  local var label old new
+
+  while read -r var label; do
+    old=$(sed -n "s/^${var}=//p" <<<"${previous}")
+    new=$(sed -n "s/^${var}=//p" versions.env)
+    if [[ -z "${new}" ]]; then
+      echo >&2 "versions.env has no ${var}"
+      return 1
+    fi
+    if [[ "${old}" != "${new}" ]]; then
+      printf '%s: %s -> %s\n' "${label}" "${old:-none}" "${new}"
+    fi
+  done < <(_workspace_agents_pins)
+}
+
+# Joins arguments as an English list: "A", "A and B", "A, B and C".
+_join_words() {
+  local -a words=("$@")
+  local count="${#words[@]}"
+  local head
+
+  if (( count < 2 )); then
+    printf '%s\n' "${words[@]}"
+    return 0
+  fi
+  head=$(IFS=,; echo "${words[*]:0:count-1}")
+  printf '%s and %s\n' "${head//,/, }" "${words[count-1]}"
+}
+
+_workspace_agents_release_notes() {
+  local previous_release="${1}"
+  local next_release="${2}"
+  local changes="${3}"
+  local -a labels=()
+  local line
+
+  while IFS= read -r line; do
+    labels+=("${line%%:*}")
+  done <<<"${changes}"
+
+  printf 'Update %s\n\n' "$(_join_words "${labels[@]}")"
+  printf 'Changes since %s\n\n' "${previous_release}"
+  while IFS= read -r line; do
+    printf -- '- %s.\n' "${line}"
+  done <<<"${changes}"
+  printf '\nFull changes: https://github.com/wodby/workspace-agents/compare/%s...%s\n' "${previous_release}" "${next_release}"
+}
+
+# Workspace agents bundles coding agent releases. The repository's own script
+# pins newer releases with verified checksums. Every version change is a
+# product patch release; its pin commit and tag are published in one atomic push.
+update_workspace_agents() {
+  local repo="wodby/workspace-agents"
+  local previous_versions previous_release changes notes tag branch
+
+  _git_clone "${repo}" || return 1
+  # The first release is tagged by hand; automatic releases continue from it.
+  if [[ -z "$(git tag --list '[0-9]*.[0-9]*.[0-9]*')" ]]; then
+    _report_event manual_review "${repo}" "Waiting for the first workspace agents release"
+    return 0
+  fi
+
+  previous_versions=$(git show HEAD:versions.env) || return 1
+  GITHUB_TOKEN="${WODBOT_GITHUB_PAT:-}" ./scripts/update.sh >/dev/null || return 1
+  changes=$(_workspace_agents_changes "${previous_versions}") || return 1
+
+  if [[ -z "${changes}" ]]; then
+    # A replaced upstream asset keeps its version but not its checksum.
+    if ! git diff --quiet -- checksums.txt; then
+      _report_event manual_review "${repo}" "Workspace agent checksums changed without a version change"
+      echo >&2 "Workspace agent checksums changed without a version change"
+      git diff -- checksums.txt >&2
+      return 1
+    fi
+    echo "Workspace agents are current"
+    return 0
+  fi
+
+  branch=$(git symbolic-ref --short HEAD) || return 1
+  previous_release=$(_latest_release_tag) || return 1
+  tag=$(_next_release_tag '') || return 1
+  notes=$(_workspace_agents_release_notes "${previous_release}" "${tag}" "${changes}") || return 1
+  _git_commit ./ "${notes}" 0 || return 1
+  if ! _publishing_enabled; then
+    echo "Publishing is disabled; proposed workspace agents release: ${tag}"
+    return 0
+  fi
+  _ensure_git_identity
+  git tag -m "${notes}" "${tag}" || return 1
+  _git_push --atomic origin "HEAD:refs/heads/${branch}" "refs/tags/${tag}" || return 1
+  _report_event release_tag "${repo}" "${notes}" "${tag}"
+}
+
 sync_solr_fork() {
   git clone "https://${WODBOT_GITHUB_USERNAME}:${WODBOT_GITHUB_PAT}@github.com/wodby/base-solr" /tmp/base-solr
   cd /tmp/base-solr

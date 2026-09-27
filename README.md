@@ -203,6 +203,17 @@ Update runtime versions within the configured compatibility line.
 
 Runtime component updates appear in release notes; compiler versions and digests remain in logs and source diffs. Every release waits for the Edge build, runtime tests, and vulnerability scan. Major-line migrations and conflicts with custom source patches require review. The explicit Go library overrides remain manual.
 
+### Workspace agents
+
+[wodby/workspace-agents] bundles coding agent tools for development workspaces. The updater runs the repository's own
+`scripts/update.sh`, which pins Claude Code's stable release and the latest Codex, opencode and ripgrep releases with
+verified checksums. Any version change is pushed to `master` together with a new patch release in one atomic push. The
+release notes list the updated tools.
+
+- A checksum change without a version change stops the update for review, because an upstream asset was replaced.
+- The first release is tagged by hand; until then the updater only reports that it is waiting.
+- Adding tools and major-version changes are manual.
+
 Not automated:
 
 - Adding new minor/major version
@@ -217,6 +228,8 @@ Not automated:
 [alpine]: https://github.com/gliderlabs/docker-alpine
 
 [CachetHQ/Cachet]: https://github.com/CachetHQ/Cachet
+
+[wodby/workspace-agents]: https://github.com/wodby/workspace-agents
 
 [drupal]: https://github.com/drupal/drupal
 
