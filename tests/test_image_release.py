@@ -181,11 +181,16 @@ class ActionTests(unittest.TestCase):
         self.assertNotIn('continue-on-error', steps[-2])
         self.assertEqual(steps[-1]['env']['GH_TOKEN'], '${{ github.token }}')
 
-    def test_direct_publisher_uses_the_same_release_step(self):
+    def test_direct_publisher_preserves_revision_default_and_supports_products(self):
         root = Path(__file__).resolve().parents[1] / '.github/actions'
         alias = yaml.safe_load((root / 'image-revision-aliases/action.yml').read_text())
         direct = yaml.safe_load((root / 'image-release/action.yml').read_text())
-        self.assertEqual(alias['runs']['steps'][-1], direct['runs']['steps'][-1])
+        self.assertEqual(direct['inputs']['release-format']['default'], 'revision')
+        direct_step = direct['runs']['steps'][-1]
+        self.assertEqual(direct_step['env'].pop('RELEASE_FORMAT'), '${{ inputs.release-format }}')
+        self.assertIn('--format \"$RELEASE_FORMAT\"', direct_step['run'])
+        direct_step['run'] = direct_step['run'].replace(' --format \"$RELEASE_FORMAT\"', '')
+        self.assertEqual(alias['runs']['steps'][-1], direct_step)
         self.assertEqual(direct['runs']['steps'][0]['with'],
                          {'ref': '${{ github.ref }}', 'fetch-depth': 0})
 
