@@ -17,17 +17,23 @@ def git(*args):
     return result.stdout.rstrip('\n')
 
 
-def release_notes(tag, expected_commit):
+def release_notes(tag, expected_commit, release_format="revision"):
     """Require the original, remotely published annotated primary revision."""
-    if not re.fullmatch(r'r(0|[1-9][0-9]*)', tag):
-        raise ValueError('Only primary rN tags can have an automatic GitHub Release')
+    if release_format == 'revision':
+        if not re.fullmatch(r'r(0|[1-9][0-9]*)', tag):
+            raise ValueError('Only primary rN tags can have an automatic GitHub Release')
+    elif release_format == 'semver':
+        if not re.fullmatch(r'(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)', tag):
+            raise ValueError('Product releases require a semantic version')
+    else:
+        raise ValueError('Unknown release format')
     ref = f'refs/tags/{tag}'
     if git('cat-file', '-t', ref) != 'tag':
         raise ValueError('Release requires an annotated Git tag')
     if git('rev-parse', f'{ref}^{{commit}}') != expected_commit:
         raise ValueError('Release tag does not match the workflow commit')
-    if git('show', f'{ref}:.image-release-format').strip() != 'revision':
-        raise ValueError('Repository does not use image revisions')
+    if git('show', f'{ref}:.image-release-format').strip() != release_format:
+        raise ValueError('Repository does not use the requested release format')
     remote = git('ls-remote', '--exit-code', 'origin', ref).split()
     if remote != [git('rev-parse', ref), ref]:
         raise ValueError('Remote release tag is missing or changed')
@@ -57,7 +63,7 @@ def api(method, endpoint, payload=None):
                  'X-GitHub-Api-Version': '2022-11-28'})
     try:
         with urlopen(request, timeout=60) as response:
-            return response.status, json.load(response)
+            return response.status, None if response.status == 204 else json.load(response)
     except HTTPError as error:
         # Only these two statuses can mean an absent release or a concurrent create.
         if error.code in (404, 422):
@@ -72,11 +78,11 @@ def published(release, tag):
     return release['html_url']
 
 
-def publish(repository, tag, expected_commit):
+def publish(repository, tag, expected_commit, release_format="revision"):
     """Create exactly one release; retries never overwrite existing release notes."""
     if not re.fullmatch(r'wodby/[a-z0-9-]+', repository):
         raise ValueError('Expected a Wodby image repository')
-    notes = release_notes(tag, expected_commit)
+    notes = release_notes(tag, expected_commit, release_format)
     endpoint = f'repos/{repository}/releases'
     status, release = api('GET', f'{endpoint}/tags/{tag}')
     if status == 200:
@@ -103,9 +109,10 @@ def main():
     parser.add_argument('--repository', required=True)
     parser.add_argument('--tag', required=True)
     parser.add_argument('--expected-commit', required=True)
+    parser.add_argument('--format', choices=['revision', 'semver'], default='revision')
     args = parser.parse_args()
     try:
-        print(publish(args.repository, args.tag, args.expected_commit))
+        print(publish(args.repository, args.tag, args.expected_commit, args.format))
     except (ValueError, OSError, subprocess.CalledProcessError) as error:
         print(f'Image release failed: {error}', file=sys.stderr)
         return 1

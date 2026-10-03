@@ -149,6 +149,48 @@ a GitHub Release with the same version. Failed builds can retry the existing tag
 | [wodby/xhprof]        | [wodby/php]           | `8.2`                      |
 | [wodby/laravel-php]   | [wodby/php]           | `8.5`, `8.4`, `8.3`, `8.2` |
 
+### Product updates in repository workflows
+
+Products can run the shared `product-base-update` action in their own repository.
+This keeps checkout access, logs, and release publication inside that repository.
+The action follows published parent revisions within the configured runtime line;
+it never selects a new Node, PHP, or other runtime major version.
+
+The product opts in with `.image-release-format` containing `semver` and a
+`base-images.mk` with `BASE_IMAGE_VERSION`, `BASE_IMAGE_REVISION`, and digest pins
+for both the floating runtime line and its selected revision. Its build must use
+the revision pin. An initial annotated semantic release must already exist.
+
+Run the action from a clean checkout of the default branch with full Git history:
+
+```yaml
+permissions:
+  contents: write
+  actions: write
+steps:
+  - uses: actions/checkout@v7
+    with:
+      ref: ${{ github.event.repository.default_branch }}
+      fetch-depth: 0
+  - uses: wodby/images/.github/actions/product-base-update@master
+    with:
+      publication-workflow: build.yml
+      publish: 'true'
+```
+
+Pin the action to a reviewed commit for reproducible workflow behavior. Serialize
+scheduled and manual runs with a workflow concurrency group. Omit `publish` for a
+preview that resolves the next parent revision without changing files or Git state.
+The repository token needs permission to push to the default branch and create tags.
+
+A newer parent creates an annotated product patch tag with the parent's release
+notes, pushed atomically with the pin commit. The action explicitly dispatches the
+publication workflow because repository-token pushes do not start other workflows.
+The publication workflow must accept `workflow_dispatch` on a tag, test the images,
+and publish all variants before calling `image-release` with `release-format: semver`.
+Retries reuse the existing product tag; active runs and published releases are
+preserved. Parent lookup failures leave the checkout unchanged.
+
 ### Version updates from upstream other than the base image
 
 - Minor/patch version updates

@@ -1,0 +1,32 @@
+name: Update product base image
+description: Release a semantic patch when the product's pinned parent revision advances
+inputs:
+  publication-workflow:
+    description: Workflow filename that tests and publishes tagged images
+    required: true
+  publish:
+    description: Enable commits, annotated patch tags, and workflow dispatch
+    default: 'false'
+runs:
+  using: composite
+  steps:
+    - name: Check parent image revision
+      shell: bash
+      env:
+        UPDATER_PATH: ${{ github.action_path }}/../../../scripts/product_base_update.py
+        DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        PUBLICATION_WORKFLOW: ${{ inputs.publication-workflow }}
+        PUBLISH: ${{ inputs.publish }}
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        args=()
+        if [[ "$PUBLISH" == true ]]; then
+          if [[ "$GITHUB_REF" != "refs/heads/$DEFAULT_BRANCH" || "$GITHUB_EVENT_NAME" == pull_request* ]]; then
+            echo 'Publication requires the default branch outside pull requests' >&2
+            exit 1
+          fi
+          git config user.name 'Wodby image updates'
+          git config user.email 'images@wodby.com'
+          args+=(--publish)
+        fi
+        python3 "$UPDATER_PATH" --branch "$DEFAULT_BRANCH" --workflow "$PUBLICATION_WORKFLOW" "${args[@]}"
