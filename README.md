@@ -111,7 +111,7 @@ its dependencies with `python -m pip install -r scripts/requirements.txt`.
 | [wodby/php]       | [_/php]               | `8.5`, `8.4`, `8.3`, `8.2`             |
 | [wodby/postgres]  | [_/postgres]          | `18`, `17`, `16`, `15`, `14`           |
 | [wodby/supabase-postgres] | [supabase/postgres] | `17` |
-| [wodby/python]    | [python]              | `3.14`, `3.13`, `3.12`, `3.11`, `3.10` |
+| [wodby/python]    | [python]              | `3.14`, `3.13`, `3.12`, `3.11`         |
 | [wodby/go]        | [_/golang]            | `1.27`, `1.26`                         |
 | [wodby/valkey]    | [valkey/valkey]       | `9.0`, `8.1`, `8.0`, `7.2`             |
 | [wodby/redis]     | [redis]               | `8.6`, `8.4`, `8.2`, `7.4`             |
