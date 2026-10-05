@@ -34,6 +34,11 @@ git config tag.gpgsign false
 
 git commit --allow-empty -qm root
 git branch divergent
+# Give the main tag more ancestors so its describe distance is strictly smaller.
+# Equal distances depend on commit traversal order when commits share a timestamp.
+for number in 1 2 3 4 5; do
+  git commit --allow-empty -qm "main change ${number}"
+done
 git commit --allow-empty -qm 'main release'
 GIT_COMMITTER_DATE='2026-01-02T00:00:00Z' git tag -m 'Release 4.82.6' 4.82.6
 
