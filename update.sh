@@ -560,10 +560,12 @@ _git_get_versions() {
       | sed -E 's#^refs/tags/##; s#\^\{\}$##' \
       | while IFS= read -r tag; do
           tag="${tag#releases/${name}/}"
-          tag="${tag#${name}-}"
+          # Explicit prefixes go first: "vinyl-cache-" would otherwise lose
+          # its "vinyl-" part to the image name and no longer match.
           for prefix in "${prefixes[@]}"; do
             tag="${tag#${prefix}}"
           done
+          tag="${tag#${name}-}"
           tag="${tag#release-}"
           if [[ "${tag}" =~ ^v[0-9] ]]; then
             tag="${tag#v}"
@@ -656,8 +658,21 @@ _release_source_has_version() {
     return 0
   fi
 
-  url="${release_source//\{\{version\}\}/${version}}"
-  _url_exists "${url}"
+  # A release source may list several URL templates when an upstream renamed
+  # its downloads between supported version lines; any match is a release.
+  local template
+  local -a templates
+
+  IFS=' ' read -r -a templates <<<"${release_source}"
+
+  for template in "${templates[@]}"; do
+    url="${template//\{\{version\}\}/${version}}"
+    if _url_exists "${url}"; then
+      return 0
+    fi
+  done
+
+  return 1
 }
 
 _release_source_get_latest_ver() {

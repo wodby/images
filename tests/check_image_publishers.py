@@ -23,10 +23,10 @@ VERSIONS = {
     'PROMETHEUS_VER': '3.13.1', 'PYTHON_VER': '3.14.1', 'RABBITMQ_VER': '4.3.1',
     'REDIS_VER': '8.6.1', 'RUBY_VER': '4.0.1', 'SLACKIN_VER': '2.2.1',
     'SOLR_VER': '10.0.1', 'SQUID_VER': '7.1', 'VALKEY_VER': '9.0.1',
-    'VINYL_VER': '8.0.1', 'WEBGRIND_VER': '1.9.1', 'WORDPRESS_VER': '7.0.1',
+    'VINYL_VER': '9.1.1', 'WEBGRIND_VER': '1.9.1', 'WORDPRESS_VER': '7.0.1',
     'XHPROF_VER': '2.3.1', 'ZOO_VER': '3.9.1',
 }
-WORKDIRS = {'php': '8', 'mariadb': '11', 'drupal': '11', 'vinyl': '8'}
+WORKDIRS = {'php': '8', 'mariadb': '11', 'drupal': '11', 'vinyl': '9'}
 TAG_INPUTS = {
     'apache': '2.4,2,latest', 'cachet': '2.4,2,latest',
     'drupal-cms': '2,latest', 'elasticsearch': '7.17,7,latest',
