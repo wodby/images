@@ -206,7 +206,7 @@ preserved. Parent lookup failures leave the checkout unchanged.
 | [wodby/matomo]        | [matomo-org/matomo]     | `5`                                      |
 | [wodby/nginx]         | [nginx]                 | `1.31`, `1.30`                           |
 | [wodby/prometheus]    | [prometheus/prometheus] | `3.13`                                   |
-| [wodby/vinyl]         | [vinyl-cache/vinyl-cache] | `8.0`, `6.0`                             |
+| [wodby/vinyl]         | [vinyl-cache/vinyl-cache] | `9.1`, `6.0`                             |
 | [wodby/webgrind]      | [jokkedk/webgrind]      | `1`                                      |
 | [wodby/wordpress]     | [wordpress]             | `7`                                      |
 | [wodby/xhprof]        | [longxinH/xhprof]       | `2`                                      |
