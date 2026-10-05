@@ -202,7 +202,7 @@ preserved. Parent lookup failures leave the checkout unchanged.
 | [wodby/cachet]        | [CachetHQ/Cachet]       | `2`                                      |
 | [wodby/drupal]        | [drupal]                | `11`, `10`                               |
 | [wodby/drupal-cms]    | [drupal-cms]            | `2`                                      |
-| [wodby/mariadb]       | [mariadb]               | `11.8`, `11.4`, `11.2`, `10.11`,  `10.6` |
+| [wodby/mariadb]       | [mariadb]               | `12.3`, `11.8`, `11.4`, `10.11`, `10.6` |
 | [wodby/matomo]        | [matomo-org/matomo]     | `5`                                      |
 | [wodby/nginx]         | [nginx]                 | `1.31`, `1.30`                           |
 | [wodby/prometheus]    | [prometheus/prometheus] | `3.13`                                   |
