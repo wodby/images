@@ -34,8 +34,7 @@ git config tag.gpgsign false
 
 git commit --allow-empty -qm root
 git branch divergent
-# Give the main tag more ancestors so its describe distance is strictly smaller.
-# Equal distances depend on commit traversal order when commits share a timestamp.
+# Build release histories on both sides of a merge.
 for number in 1 2 3 4 5; do
   git commit --allow-empty -qm "main change ${number}"
 done
@@ -52,13 +51,26 @@ done
 git switch -q master
 git merge -q --no-edit divergent
 
-# The nearest tag is older even though the newer release is reachable through
-# the merged branch. This is the history shape that caused drupal-php to try to
-# create 4.82.7 a second time.
-assert_eq '4.82.6' "$(git describe --abbrev=0 --tags)"
+# Both releases must be reachable, including the newer one on the merged branch.
+# Select the newest release without depending on Git's describe traversal order.
+git merge-base --is-ancestor 4.82.6 HEAD
+git merge-base --is-ancestor 4.82.7 HEAD
 assert_eq '4.82.7' "$(_latest_release_tag)"
 assert_eq '4.82.8' "$(_next_release_tag '')"
 assert_eq '4.83.0' "$(_next_release_tag '1')"
+
+# Always exercise an older describe result, regardless of the installed Git version.
+(
+  git() {
+    if [[ "$1" == describe ]]; then
+      echo 4.82.6
+    else
+      command git "$@"
+    fi
+  }
+  assert_eq '4.82.7' "$(_latest_release_tag)"
+  assert_eq '4.82.8' "$(_next_release_tag '')"
+)
 
 trace="${test_root}/push-trace"
 _git_push() {
