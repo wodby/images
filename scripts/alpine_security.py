@@ -70,11 +70,26 @@ def version_compare(actual, previous, image=None):
     return result
 
 
+class DistributionTransition(ValueError):
+    """A different Alpine release series needs the upstream-version update path."""
+
+
 def fixed_packages(before_sbom, after_sbom, before_scan, after_scan, compare=version_compare):
     """Require both an installed package upgrade and removal of the same CVE."""
     old, new = packages(before_sbom), packages(after_sbom)
-    if distro_version(before_sbom) != distro_version(after_sbom):
-        raise ValueError('Distribution versions differ; use the upstream-version release path')
+    previous, current = distro_version(before_sbom), distro_version(after_sbom)
+    versions = []
+    for version in (previous, current):
+        if not isinstance(version, str) or not re.fullmatch(r'[0-9]+\.[0-9]+\.[0-9]+', version):
+            raise ValueError(f'Invalid Alpine distribution version: {version}')
+        versions.append(tuple(map(int, version.split('.'))))
+    if versions[1] < versions[0]:
+        raise ValueError(f'Distribution version moved backwards: {previous} -> {current}')
+    if versions[0][:2] != versions[1][:2]:
+        raise DistributionTransition(
+            f'Distribution series differ: {previous} -> {current}; use the upstream-version release path')
+    # apk upgrade can advance the reported patch version within a repository series.
+    # Keep requiring package upgrades and resolved CVEs even when that patch changes.
     before, after = findings(before_scan), findings(after_scan)
     fixes = []
     for name, cves in sorted(before.items()):
@@ -204,9 +219,16 @@ def plan(repo, scanner, release):
             targets.append({**row, 'arch': arch, 'baseline_image': old[arch], 'candidate_image': new[arch]})
     fixes = []
     for target in targets:
-        old_sbom, old_scan = scanner.scan('registry:' + target['baseline_image'], target['arch'])
-        new_sbom, new_scan = scanner.scan('registry:' + target['candidate_image'], target['arch'])
-        for fix in fixed_packages(old_sbom, new_sbom, old_scan, new_scan):
+        context = f'Alpine {target["tag"]} ({target["arch"]})'
+        try:
+            old_sbom, old_scan = scanner.scan('registry:' + target['baseline_image'], target['arch'])
+            new_sbom, new_scan = scanner.scan('registry:' + target['candidate_image'], target['arch'])
+            resolved = fixed_packages(old_sbom, new_sbom, old_scan, new_scan)
+        except DistributionTransition as transition:
+            return {'reason': f'Deferring security comparison for {context}: {transition}'}
+        except ValueError as error:
+            raise ValueError(f'{context}: {error}') from error
+        for fix in resolved:
             fixes.append({**fix, 'tag': target['tag'], 'arch': target['arch']})
     if not fixes:
         return {'reason': 'No package security fixes since the last revision'}

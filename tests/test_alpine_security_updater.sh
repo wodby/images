@@ -18,11 +18,13 @@ python3() {
   if [[ "$SCAN_RESULT" == failure ]]; then return 2; fi
   if [[ "$SCAN_RESULT" == none ]]; then
     printf '%s\n' '{"reason":"No security fixes"}' > "$output"
+  elif [[ "$SCAN_RESULT" == deferred ]]; then
+    printf '%s\n' '{"reason":"Deferring security comparison for Alpine 3.24 (amd64): Distribution series differ: 3.24.2 -> 3.25.0; use the upstream-version release path"}' > "$output"
   else
     printf '%s\n' '{"schema":1,"release":"r1","notes":"Alpine package security updates\n\n- Alpine 3.24: openssl 1.0-r0 -> 1.0-r1; fixes CVE-2026-1234"}' > "$output"
   fi
 }
-for mode in none failure fixed push-failure disabled; do
+for mode in none deferred failure fixed push-failure disabled; do
   origin="$scratch/$mode.git"
   git init -q --bare "$origin"
   git clone -q "$origin" "$scratch/$mode"
@@ -65,7 +67,24 @@ HOOK
       ! git --git-dir="$origin" show-ref --verify --quiet refs/tags/r1
       ;;
     failure) [[ "$status" != 0 && "$(git rev-parse HEAD)" == "$initial" ]] ;;
-    none|disabled) [[ "$status" == 0 && "$(git rev-parse HEAD)" == "$initial" ]] ;;
+    none|deferred|disabled) [[ "$status" == 0 && "$(git rev-parse HEAD)" == "$initial" ]] ;;
   esac
+  if [[ "$mode" == none || "$mode" == deferred || "$mode" == failure ]]; then
+    (
+      # Exercise the real caller: deferral permits normal updates, scanner errors do not.
+      _git_clone() { :; }
+      _require_base_image_pins() { return 0; }
+      _get_base_image() { echo alpine; }
+      _update_versions() { echo versions >> "$scratch/update-calls"; }
+      _update_digests() { echo digests >> "$scratch/update-calls"; }
+      : > "$scratch/update-calls"
+      if update_from_base_image wodby/alpine '3.24'; then status=0; else status=$?; fi
+      if [[ "$mode" == failure ]]; then
+        [[ "$status" != 0 && ! -s "$scratch/update-calls" ]]
+      else
+        [[ "$status" == 0 && "$(cat "$scratch/update-calls")" == $'versions\ndigests' ]]
+      fi
+    )
+  fi
 done
 echo 'Alpine security updater atomic-publication and retry tests passed'
