@@ -301,11 +301,20 @@ _git_push() {
 
 _latest_release_tag() {
   local described_tag
-  local major
+  local major="${1:-}"
   local tag
+
+  if [[ -n "${major}" && ! "${major}" =~ ^(0|[1-9][0-9]*)$ ]]; then
+    echo >&2 "Invalid product release line: ${major}"
+    return 1
+  fi
 
   # Image repositories opt in independently; software releases retain SemVer.
   if _uses_image_revisions; then
+    if [[ -n "${major}" ]]; then
+      echo >&2 "Cannot select a product major in an image revision repository"
+      return 1
+    fi
     tag=$(_latest_image_revision)
     if [[ -n "${tag}" ]]; then
       echo "${tag}"
@@ -313,20 +322,22 @@ _latest_release_tag() {
     fi
   fi
 
-  # Keep product versions independent from image revision/alias tags, including
-  # an accidentally published rN tag retained after opting out of revisions.
-  described_tag=$(git describe --abbrev=0 --tags \
-    --match '[0-9]*.[0-9]*.[0-9]*' \
-    --exclude '*[!0-9.]*' --exclude '*.*.*.*') || {
-    echo >&2 "Failed to find the current release tag"
-    return 1
-  }
+  # Maintenance branches can descend from a newer major's release. An explicit
+  # line must win over graph proximity; default callers still infer their line.
+  if [[ -z "${major}" ]]; then
+    described_tag=$(git describe --abbrev=0 --tags \
+      --match '[0-9]*.[0-9]*.[0-9]*' \
+      --exclude '*[!0-9.]*' --exclude '*.*.*.*') || {
+      echo >&2 "Failed to find the current release tag"
+      return 1
+    }
 
-  if [[ ! "${described_tag}" =~ ^([0-9]+)\.[0-9]+\.[0-9]+$ ]]; then
-    echo >&2 "Current release tag is not semantic: ${described_tag}"
-    return 1
+    if [[ ! "${described_tag}" =~ ^([0-9]+)\.[0-9]+\.[0-9]+$ ]]; then
+      echo >&2 "Current release tag is not semantic: ${described_tag}"
+      return 1
+    fi
+    major="${BASH_REMATCH[1]}"
   fi
-  major="${BASH_REMATCH[1]}"
 
   # git describe returns the closest tag in the commit graph, which can be an
   # older release after branches have been merged. Release tag names are
@@ -345,11 +356,16 @@ _latest_release_tag() {
 
 _next_release_tag() {
   local minor_update="${1}"
+  local release_major="${2:-}"
   local current_tag
   local tag
   local -a sem_ver
 
   if _uses_image_revisions; then
+    if [[ -n "${release_major}" ]]; then
+      echo >&2 "Cannot select a product major in an image revision repository"
+      return 1
+    fi
     current_tag=$(_latest_image_revision)
     if [[ -z "${current_tag}" ]]; then
       tag=r0
@@ -360,7 +376,7 @@ _next_release_tag() {
     return 0
   fi
 
-  current_tag=$(_latest_release_tag) || return 1
+  current_tag=$(_latest_release_tag "${release_major}") || return 1
   IFS="." read -r -a sem_ver <<<"${current_tag}"
 
   # Minor version changed.
@@ -423,9 +439,10 @@ _release_tag() {
 
   local message="${1}"
   local minor_update="${2}"
+  local release_major="${3:-}"
   local tag
 
-  tag=$(_next_release_tag "${minor_update}") || return 1
+  tag=$(_next_release_tag "${minor_update}" "${release_major}") || return 1
 
   _ensure_git_identity
   git tag -m "${message}" "${tag}"
@@ -766,8 +783,13 @@ _get_latest_version() {
 
 _git_clone() {
   local slug="${1}"
+  local branch="${2:-}"
+  local -a clone_args=()
+  if [[ -n "${branch}" ]]; then
+    clone_args=(--branch "${branch}")
+  fi
 
-  git clone "https://${WODBOT_GITHUB_USERNAME}:${WODBOT_GITHUB_PAT}@github.com/${slug}" "/tmp/${slug#*/}" || return 1
+  git clone "${clone_args[@]}" "https://${WODBOT_GITHUB_USERNAME}:${WODBOT_GITHUB_PAT}@github.com/${slug}" "/tmp/${slug#*/}" || return 1
   cd "/tmp/${slug#*/}" || return 1
 }
 
@@ -1315,9 +1337,12 @@ _update_dockerfile_arg_image() {
 # commit must descend from a pinned commit before replacing that source pin.
 _edge_runtime_updates() {
   local dockerfile="${1}"
+  local release_major="${2:-3}"
   local name arg repo line current latest commit_arg commit comparison sha old_sha
   local changed=1
   while read -r name arg repo line commit_arg; do
+    # Edge 2 uses host etcd v2 and confd; never introduce their v3 replacements.
+    [[ "${release_major}:${name}" == 2:etcd-client ]] && continue
     current=$(_dockerfile_arg_value "${arg}" "${dockerfile}") || return 2
     current="${current#v}"
     latest=$(_get_latest_version "github.com/${repo}" "${line}" "${name}") || return 2
@@ -1346,6 +1371,7 @@ etcd-client ETCD_CLIENT_VERSION etcd-io/etcd 3.6 -
 DEPENDENCIES
 
   while read -r name arg repo line; do
+    [[ "${release_major}:${name}" == 2:confd ]] && continue
     old_sha=$(_dockerfile_arg_value "${arg}" "${dockerfile}") || return 2
     latest=$(_get_latest_version "github.com/${repo}" "${line}" "${name}") || return 2
     [[ "${latest}" =~ ^[0-9]+(\.[0-9]+)+$ && "${latest}" == "${line}."* ]] || {
@@ -1380,6 +1406,7 @@ SOURCES
 
 _prepare_edge_alpine_update() {
   local dockerfile="${1:-Dockerfile}"
+  local release_major="${2:-3}"
   local nginx_revision
   local nginx_tag
   local nginx_digest
@@ -1449,7 +1476,7 @@ _prepare_edge_alpine_update() {
     [[ "${update_status}" -eq 1 ]] || return 2
   fi
 
-  if _edge_runtime_updates "${dockerfile}"; then
+  if _edge_runtime_updates "${dockerfile}" "${release_major}"; then
     updated=1
   else
     update_status=$?
@@ -1485,7 +1512,7 @@ _edge_release_notes() {
   local old_nginx new_nginx old_version new_version
   local old_go new_go old_tag new_tag
 
-  next_release=$(_next_release_tag "") || return 1
+  next_release=$(_next_release_tag "" "${previous%%.*}") || return 1
   old_dockerfile=$(git show "${previous}:Dockerfile") || return 1
   old_nginx=$(_dockerfile_arg_value NGINX_IMAGE <(printf '%s\n' "${old_dockerfile}")) || return 1
   new_nginx=$(_dockerfile_arg_value NGINX_IMAGE Dockerfile) || return 1
@@ -1519,6 +1546,9 @@ _edge_release_notes() {
   fi
   local arg label old_value new_value
   while read -r arg label; do
+    if [[ "${previous}" == 2.* && ( "${arg}" == ETCD_CLIENT_VERSION || "${arg}" == CONFD_COMMIT ) ]]; then
+      continue
+    fi
     old_value=$(_dockerfile_arg_value "${arg}" <(printf '%s\n' "${old_dockerfile}")) || return 1
     new_value=$(_dockerfile_arg_value "${arg}" Dockerfile) || return 1
     if [[ "${old_value}" != "${new_value}" ]]; then
@@ -1549,13 +1579,18 @@ _edge_update_requires_release() {
 
 update_edge_alpine() {
   local repo="wodby/edge-alpine"
+  local release_major="${1:-3}"
   local prepare_status
   local previous_release
   local release_notes
 
-  _git_clone "${repo}" || return 1
+  case "${release_major}" in
+    2) _git_clone "${repo}" release/edge-2.x || return 1 ;;
+    3) _git_clone "${repo}" || return 1 ;;
+    *) echo >&2 "Unsupported Edge release line: ${release_major}"; return 1 ;;
+  esac
 
-  if _prepare_edge_alpine_update Dockerfile; then
+  if _prepare_edge_alpine_update Dockerfile "${release_major}"; then
     :
   else
     prepare_status=$?
@@ -1578,13 +1613,13 @@ update_edge_alpine() {
     return 0
   fi
 
-  previous_release=$(_latest_release_tag) || return 1
+  previous_release=$(_latest_release_tag "${release_major}") || return 1
   release_notes=$(_edge_release_notes "${previous_release}") || return 1
   _git_commit ./ "${release_notes}" || return 1
   _git_push origin || return 1
 
   # Build outcomes belong to the image repository; updates do not wait for CI.
-  _release_tag "${release_notes}" "" || return 1
+  _release_tag "${release_notes}" "" "${release_major}" || return 1
 }
 
 # Pins in workspace agents' versions.env, as "VARIABLE Label" lines.

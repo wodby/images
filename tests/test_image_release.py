@@ -58,6 +58,23 @@ class ReleaseTests(unittest.TestCase):
                 'draft': False, 'prerelease': False, 'generate_release_notes': False,
                 'make_latest': 'legacy'}))
 
+    def test_legacy_edge_is_never_promoted_to_latest(self):
+        Path('.image-release-format').write_text('semver\n')
+        release.git('commit', '-am', 'Product release fixture')
+        self.sha = release.git('rev-parse', 'HEAD')
+        for repository, tag, latest in [('wodby/edge-alpine', '2.7.2', 'false'),
+                                        ('wodby/edge-alpine', '3.0.29', 'legacy'),
+                                        ('wodby/backup', '2.3.3', 'legacy')]:
+            self.tag(tag)
+            existing = dict(self.existing, tag_name=tag)
+            with self.subTest(repository=repository, tag=tag), patch.object(
+                    release, 'api', side_effect=[(404, None), (201, existing)]) as api:
+                release.publish(repository, tag, self.sha, 'semver')
+                payload = api.call_args_list[1].args[2]
+                self.assertEqual(payload['make_latest'], latest)
+                self.assertEqual(payload['name'], tag)
+                self.assertFalse(payload['prerelease'])
+
     def test_signed_annotation_preserves_markdown_without_signature(self):
         subprocess.run(['ssh-keygen', '-q', '-t', 'ed25519', '-N', '', '-f', 'key'], check=True)
         release.git('config', 'gpg.format', 'ssh')
@@ -171,6 +188,16 @@ class ApiTests(unittest.TestCase):
 
 
 class ActionTests(unittest.TestCase):
+    def test_edge_release_lines_have_independent_updater_jobs(self):
+        root = Path(__file__).resolve().parents[1]
+        workflow = yaml.safe_load((root / '.github/workflows/workflow.yml').read_text())
+        strategy = workflow['jobs']['descendants']['strategy']
+        self.assertFalse(strategy['fail-fast'])
+        for script in ['edge-alpine', 'edge-alpine-2']:
+            self.assertIn(script, strategy['matrix']['script'])
+        entry = (root / 'descendants/edge-alpine-2.sh').read_text()
+        self.assertIn('update_edge_alpine 2', entry)
+
     def test_release_runs_after_alias_publication(self):
         root = Path(__file__).resolve().parents[1]
         action = yaml.safe_load((root / '.github/actions/image-revision-aliases/action.yml').read_text())
