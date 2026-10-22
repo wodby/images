@@ -28,8 +28,8 @@ runs:
         set -euo pipefail
         python -m venv "$RUNNER_TEMP/image-revision-aliases"
         "$RUNNER_TEMP/image-revision-aliases/bin/pip" install PyYAML==6.0.3
-        git config user.name 'Wodby image releases'
-        git config user.email 'ci@wodby.com'
+        source "$ALIAS_ACTION_PATH/../../../scripts/git_identity.sh"
+        configure_wodbot_git_identity
         "$RUNNER_TEMP/image-revision-aliases/bin/python" \
           "$ALIAS_ACTION_PATH/../../../scripts/image_revision_aliases.py" \
           --tag "$GITHUB_REF_NAME" --expected-commit "$GITHUB_SHA" --publish

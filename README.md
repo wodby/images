@@ -2,6 +2,11 @@
 
 [![Build Status](https://github.com/wodby/images/workflows/Update/badge.svg)](https://github.com/wodby/images/actions)
 
+Automated commits and annotated tags use `Wodby Robot <robot@wodby.com>`,
+the Git identity associated with [wodbot](https://github.com/wodbot).
+`WODBOT_GIT_NAME` and `WODBOT_GIT_EMAIL` override this identity for update jobs.
+The updater sets both author and committer without changing global Git configuration.
+
 ## Image revisions
 
 For images that package upstream software, tags separate the upstream software
