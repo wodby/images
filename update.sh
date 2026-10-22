@@ -6,6 +6,8 @@ set -o pipefail
 IMAGES_REPO_ROOT="${IMAGES_REPO_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}"
 IMAGES_HOST_ROOT="${IMAGES_HOST_ROOT:-${IMAGES_REPO_ROOT}}"
 
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/scripts/git_identity.sh"
+
 if [[ -n "${DEBUG:-}" ]]; then
   set -x
 fi
@@ -26,19 +28,7 @@ urlencode() {
 }
 
 _ensure_git_identity() {
-  local email
-  local name
-
-  email=$(git config --get user.email || true)
-  name=$(git config --get user.name || true)
-
-  if [[ -z "${email}" && -n "${WODBOT_GIT_EMAIL:-}" ]]; then
-    git config --local user.email "${WODBOT_GIT_EMAIL}"
-  fi
-
-  if [[ -z "${name}" && -n "${WODBOT_GIT_NAME:-}" ]]; then
-    git config --local user.name "${WODBOT_GIT_NAME}"
-  fi
+  configure_wodbot_git_identity
 }
 
 _current_repo_slug() {

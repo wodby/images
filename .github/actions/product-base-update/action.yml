@@ -18,6 +18,7 @@ runs:
         PUBLICATION_WORKFLOW: ${{ inputs.publication-workflow }}
         PUBLISH: ${{ inputs.publish }}
         GH_TOKEN: ${{ github.token }}
+        IDENTITY_PATH: ${{ github.action_path }}/../../../scripts/git_identity.sh
       run: |
         args=()
         if [[ "$PUBLISH" == true ]]; then
@@ -25,8 +26,8 @@ runs:
             echo 'Publication requires the default branch outside pull requests' >&2
             exit 1
           fi
-          git config user.name 'Wodby image updates'
-          git config user.email 'images@wodby.com'
+          source "$IDENTITY_PATH"
+          configure_wodbot_git_identity
           args+=(--publish)
         fi
         python3 "$UPDATER_PATH" --branch "$DEFAULT_BRANCH" --workflow "$PUBLICATION_WORKFLOW" "${args[@]}"
