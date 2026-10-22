@@ -49,9 +49,29 @@ class SecurityTests(unittest.TestCase):
         self.assertEqual(self.fixes(new=sbom(name='curl')), [])
         self.assertEqual(self.fixes(new=sbom('0.9-r0')), [])
 
-    def test_distribution_version_changes_use_existing_release_path(self):
-        with self.assertRaisesRegex(ValueError, 'Distribution versions differ'):
-            self.fixes(new=sbom('1.0-r1', distro='3.24.3'))
+    def test_distribution_patch_increase_still_requires_package_upgrade_and_fixed_cve(self):
+        self.assertEqual(self.fixes(new=sbom('1.0-r1', distro='3.24.10')), self.fixes())
+        self.assertEqual(self.fixes(new=sbom(distro='3.24.3')), [])
+        self.assertEqual(self.fixes(new=sbom('1.0-r1', distro='3.24.3'), before=scan()), [])
+        self.assertEqual(self.fixes(new=sbom('1.0-r1', distro='3.24.3'),
+                                   after=scan('CVE-2026-1234')), [])
+
+    def test_distribution_series_changes_use_existing_release_path(self):
+        for distro in ('3.25.0', '4.0.0'):
+            with self.subTest(distro=distro), self.assertRaisesRegex(
+                    security.DistributionTransition, f'3.24.2 -> {distro}'):
+                self.fixes(new=sbom('1.0-r1', distro=distro))
+
+    def test_distribution_downgrade_is_rejected(self):
+        for distro in ('3.24.1', '3.23.9', '2.7.0'):
+            with self.subTest(distro=distro), self.assertRaisesRegex(
+                    ValueError, f'moved backwards: 3.24.2 -> {distro}'):
+                self.fixes(new=sbom('1.0-r1', distro=distro))
+
+    def test_invalid_distribution_version_is_rejected(self):
+        for distro in ('3.24', '3.24.3_rc1', 'edge', 324):
+            with self.subTest(distro=distro), self.assertRaisesRegex(ValueError, 'Invalid Alpine'):
+                self.fixes(new=sbom('1.0-r1', distro=distro))
 
     def test_empty_or_invalid_inventory_cannot_look_fixed(self):
         for bad in ({}, {'distro': {'id': 'alpine'}, 'artifacts': []}):
@@ -176,6 +196,30 @@ class PlanTests(unittest.TestCase):
     def test_no_fix_produces_no_release(self):
         self.new = self.old
         self.assertNotIn('release', self.plan())
+
+    def test_distribution_patch_increase_can_release_verified_fixes(self):
+        self.new = sbom('1.0-r1', distro='3.24.3'), scan()
+        result = self.plan()
+        self.assertEqual(result['release'], 'r1')
+        self.assertEqual(len(result['fixes']), 4)
+
+    def test_distribution_series_transition_defers_the_entire_security_release(self):
+        scan_image = self.scan
+        # Find fixes for earlier targets before encountering the dev/arm64 transition.
+        def transition_scan(image, arch):
+            result = scan_image(image, arch)
+            return (sbom('1.0-r1', distro='3.25.0'), scan()) if len(self.scans) == 8 else result
+        self.scan = transition_scan
+        result = self.plan()
+        self.assertNotIn('release', result)
+        self.assertIn('Alpine 3.24-dev (arm64)', result['reason'])
+        self.assertIn('3.24.2 -> 3.25.0', result['reason'])
+        self.assertIn('upstream-version release path', result['reason'])
+
+    def test_distribution_downgrade_fails_with_variant_architecture_and_versions(self):
+        self.new = sbom('1.0-r1', distro='3.24.1'), scan()
+        with self.assertRaisesRegex(ValueError, r'Alpine 3.24 \(amd64\).*3.24.2 -> 3.24.1'):
+            self.plan()
 
     def test_stale_mutable_images_defer_before_any_scan(self):
         with patch.object(security, 'manifests', side_effect=self.manifests), \
