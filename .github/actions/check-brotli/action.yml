@@ -1,0 +1,27 @@
+name: Verify Brotli security fixes
+description: Reject affected system, Nix and selected runtime Brotli decoders in a built image
+inputs:
+  image:
+    description: Locally built image reference or image ID
+    required: true
+  check-node:
+    description: Also verify the bundled Node.js decoder
+    default: 'false'
+  check-bun:
+    description: Also verify the bundled Bun decoder
+    default: 'false'
+runs:
+  using: composite
+  steps:
+    - name: Verify Brotli decoders
+      shell: bash
+      env:
+        BROTLI_IMAGE: ${{ inputs.image }}
+        BROTLI_CHECK_NODE: ${{ inputs.check-node }}
+        BROTLI_CHECK_BUN: ${{ inputs.check-bun }}
+        BROTLI_ACTION_PATH: ${{ github.action_path }}
+      run: |
+        args=(--image "$BROTLI_IMAGE")
+        [[ "$BROTLI_CHECK_NODE" != true ]] || args+=(--check-node)
+        [[ "$BROTLI_CHECK_BUN" != true ]] || args+=(--check-bun)
+        python3 "$BROTLI_ACTION_PATH/../../../scripts/check_brotli.py" "${args[@]}"
