@@ -105,4 +105,4 @@ STUB
 export ROLLOUT_ROOT="$fixture_root/rollout"
 bash rollout/alpine/opensmtpd.sh
 [[ $(cat rollout/trace) == $'review\ndigests\nparent' ]]
-echo 'OpenSMTPD updater tests passed.' 
+echo 'OpenSMTPD updater tests passed.'
