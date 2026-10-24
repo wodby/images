@@ -132,9 +132,11 @@ def main():
     parser.add_argument("--check-node", action="store_true")
     parser.add_argument("--check-bun", action="store_true")
     args = parser.parse_args()
-    # No startup entrypoint, credentials, mounts or network access are needed.
+    # Inspect root-owned build tools too, without starting the service or enabling
+    # writes/network access. The image's normal runtime user remains unchanged.
     result = subprocess.run([
-        "docker", "run", "--rm", "--interactive", "--network", "none", "--read-only",
+        "docker", "run", "--rm", "--interactive", "--user", "0:0",
+        "--network", "none", "--read-only",
         "--entrypoint", "/bin/sh", args.image, "-s", "--",
         str(args.check_node).lower(), str(args.check_bun).lower(),
     ], input=INVENTORY, text=True, capture_output=True, check=True)
