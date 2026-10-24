@@ -218,6 +218,18 @@ preserved. Parent lookup failures leave the checkout unchanged.
 | [wodby/solr]          | [apache/solr]           | `10`, `9`                                |
 | [wodby/zookeeper]     | [apache/zookeeper]      | `3.9`                                    |
 | [wodby/openclaw]      | [openclaw/openclaw]     | `2026`                                   |
+| [wodby/frp]           | [fatedier/frp]          | `0.69`                                   |
+
+FRP follows stable patches within 0.69 and releases only after the Linux amd64
+and arm64 archives are available. Its workflow and local build default advance
+together; new minor lines require review because FRP is pre-1.0.
+
+OpenSMTPD follows the Alpine 3.23 community package for both architectures.
+New upstream versions, portable patches (`_pN`), and packaging revisions (`-rN`)
+produce an image revision using the exact package pin in `.opensmtpd-package`.
+Package updates wait until the image supports that pin; existing parent-image
+updates continue during rollout. Major versions and Alpine branch changes
+require review.
 
 ### Docker4X projects
 
@@ -267,7 +279,6 @@ Not automated:
 - Moving gotpl to a new Go minor line
 - Rebase to a new major Alpine version
 - Switching the latest version
-- [wodby/opensmtpd] (installed from Alpine repository package)
 - [wodby/adminer] not auto-updates for the base image (php:8.4-apache)
 
 [adoptium/containers]: https://github.com/adoptium/containers
@@ -387,6 +398,10 @@ Not automated:
 [wodby/openjdk]: https://github.com/wodby/openjdk
 
 [wodby/opensmtpd]: https://github.com/wodby/opensmtpd
+
+[wodby/frp]: https://github.com/wodby/frp
+
+[fatedier/frp]: https://github.com/fatedier/frp
 
 [wodby/openclaw]: https://github.com/wodby/openclaw
 
