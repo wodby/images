@@ -118,7 +118,7 @@ its dependencies with `python -m pip install -r scripts/requirements.txt`.
 | [wodby/supabase-postgres] | [supabase/postgres] | `17` |
 | [wodby/python]    | [python]              | `3.14`, `3.13`, `3.12`, `3.11`         |
 | [wodby/go]        | [_/golang]            | `1.27`, `1.26`                         |
-| [wodby/valkey]    | [valkey/valkey]       | `9.0`, `8.1`, `8.0`, `7.2`             |
+| [wodby/valkey]    | [valkey/valkey]       | `9.1`, `9.0`, `8.1`, `8.0`, `7.2`      |
 | [wodby/redis]     | [redis]               | `8.6`, `8.4`, `8.2`, `7.4`             |
 | [wodby/ruby]      | [ruby]                | `4.0`, `3.4`, `3.3`                    |
 | [wodby/rabbitmq]  | [rabbitmq]            | `4.3`, `4.2`                           |
