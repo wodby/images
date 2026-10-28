@@ -258,7 +258,20 @@ Update runtime versions within the configured compatibility line.
 
 ### Edge runtime dependencies
 
-[wodby/edge-alpine] automatically updates NGINX 1.31, lego 4.x, s6-overlay 3.x, gotpl 0.6.x, and etcd-client 3.6 patches, and the Go library overrides applied in the lego and confd builds: golang.org/x/crypto and golang.org/x/net 0.x and google.golang.org/grpc 1.x. Confd advances only to stable releases descended from its current source pin; older releases are skipped and divergent histories are reported. Go build images remain on their configured compatibility line.
+[wodby/edge-alpine] maintains 3.x on its default branch and 2.x on
+`release/edge-2.x`, with independent patch versions. The 2.x branch publishes
+versioned Docker tags and its `2.x` alias; only the default 3.x branch updates
+Docker `latest`. The shared GitHub release publisher explicitly disables Latest
+for Edge 2.x releases.
+
+Both lines automatically update NGINX 1.31, lego 4.x, s6-overlay 3.x, gotpl
+0.6.x, and the Go library overrides applied in their Go builds:
+golang.org/x/crypto and golang.org/x/net 0.x and google.golang.org/grpc 1.x
+(lego and confd on 3.x, lego on 2.x). Only 3.x updates etcd-client 3.6 and
+bundled confd; 2.x retains its host-provided confd and etcd v2 integration.
+Confd advances only to stable releases descended from its current source pin;
+older releases are skipped and divergent histories are reported. Go build
+images remain on their configured compatibility line.
 
 Runtime component updates appear in release notes; compiler versions and digests remain in logs and source diffs. Every release waits for the Edge build, runtime tests, and vulnerability scan. Major-line migrations and conflicts with custom source patches require review.
 

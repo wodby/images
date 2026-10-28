@@ -92,7 +92,8 @@ def publish(repository, tag, expected_commit, release_format="revision"):
     status, release = api('POST', endpoint, {
         'tag_name': tag, 'name': tag, 'body': notes,
         'draft': False, 'prerelease': False, 'generate_release_notes': False,
-        'make_latest': 'legacy',
+        # Legacy Edge releases must never displace the current product line.
+        'make_latest': 'false' if repository == 'wodby/edge-alpine' and tag.startswith('2.') else 'legacy',
     })
     if status == 201:
         return published(release, tag)

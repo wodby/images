@@ -26,6 +26,7 @@ jobs:
           ./tests/test_alpine_security_updater.sh
           ./tests/test_backup_updater.sh
           ./tests/test_edge_alpine_updater.sh
+          ./tests/test_edge_maintenance_updater.sh
           ./tests/test_gotpl_updater.sh
           ./tests/test_squid_updater.sh
           ./tests/test_mysql_updater.sh
@@ -96,8 +97,9 @@ jobs:
     needs: tests
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        script: [ drupal-php,wordpress-php,matomo-php,webgrind-php,laravel-php,drupal,wordpress,xhprof,drupal-cms,edge-alpine ]
+        script: [ drupal-php,wordpress-php,matomo-php,webgrind-php,laravel-php,drupal,wordpress,xhprof,drupal-cms,edge-alpine,edge-alpine-2 ]
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions
