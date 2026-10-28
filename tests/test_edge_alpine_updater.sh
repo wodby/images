@@ -50,6 +50,7 @@ printf '%s\n' \
   'ARG GO_CRYPTO_VERSION=v0.58.0' \
   'ARG GO_NET_VERSION=v0.61.0' \
   'ARG GO_GRPC_VERSION=v1.83.2' \
+  'ARG GO_JOSE_VERSION=v4.1.4' \
   'ARG ETCD_CLIENT_VERSION=v3.6.14' \
   'ARG GO_CRYPTO_VERSION=v0.58.0' \
   'ARG GO_NET_VERSION=v0.61.0' \
@@ -85,6 +86,7 @@ _get_latest_version() {
     github.com/golang/crypto) echo '0.58.0' ;;
     github.com/golang/net) echo '0.62.0' ;;
     github.com/grpc/grpc-go) echo '1.83.2' ;;
+    github.com/go-jose/go-jose) echo '4.1.6' ;;
     github.com/wodby/gotpl) echo '0.6.9' ;;
     github.com/kelseyhightower/confd) echo '0.16.0' ;;
     *) return 1 ;;
@@ -127,6 +129,11 @@ assert_eq 2 "$(grep -Fcx 'ARG GO_CRYPTO_VERSION=v0.58.0' "${dockerfile}")"
 assert_eq 2 "$(grep -Fcx 'ARG GO_GRPC_VERSION=v1.83.2' "${dockerfile}")"
 jq -e 'select(.type == "dependency_update" and .message == "go-net: 0.61.0 -> 0.62.0")' \
   "${test_root}/events.jsonl" >/dev/null || fail "missing Go module update event"
+# go-jose is pinned in the lego stage only.
+assert_eq 1 "$(grep -c '^ARG GO_JOSE_VERSION=' "${dockerfile}")"
+assert_file_line 'ARG GO_JOSE_VERSION=v4.1.6' "${dockerfile}"
+jq -e 'select(.type == "dependency_update" and .message == "go-jose: 4.1.4 -> 4.1.6")' \
+  "${test_root}/events.jsonl" >/dev/null || fail "missing go-jose update event"
 if jq -e 'select(.message | startswith("go-crypto") or startswith("go-grpc"))' \
   "${test_root}/events.jsonl" >/dev/null; then
   fail "current Go module pins were reported as updated"
@@ -150,6 +157,56 @@ fi
     assert_eq 2 "$?"
   fi
   assert_eq 2 "$(grep -Fcx 'ARG GO_NET_VERSION=v0.62.0' "${major_dockerfile}")"
+)
+
+# Edge 2 has no confd stage or etcd client; every Go module pin lives in lego.
+(
+  edge2_dockerfile="${test_root}/Dockerfile.edge2"
+  printf '%s\n' \
+    'FROM --platform=$BUILDPLATFORM ${GO_IMAGE} AS lego-build' \
+    'ARG LEGO_VERSION=v4.35.3' \
+    'ARG LEGO_COMMIT=dddddddddddddddddddddddddddddddddddddddd' \
+    'ARG GO_CRYPTO_VERSION=v0.58.0' \
+    'ARG GO_NET_VERSION=v0.61.0' \
+    'ARG GO_GRPC_VERSION=v1.83.2' \
+    'ARG GO_JOSE_VERSION=v4.1.4' \
+    'FROM --platform=$BUILDPLATFORM ${GO_IMAGE} AS gotpl-build' \
+    'ARG GOTPL_COMMIT=dddddddddddddddddddddddddddddddddddddddd' \
+    'FROM ${NGINX_IMAGE}' \
+    'ARG S6_OVERLAY_VERSION=3.2.4.0' >"${edge2_dockerfile}"
+  _edge_runtime_updates "${edge2_dockerfile}" 2 || fail 'Edge 2 Go module pins were not updated'
+  assert_file_line 'ARG GO_NET_VERSION=v0.62.0' "${edge2_dockerfile}"
+  assert_file_line 'ARG GO_JOSE_VERSION=v4.1.6' "${edge2_dockerfile}"
+  assert_eq 1 "$(grep -c '^ARG GO_JOSE_VERSION=' "${edge2_dockerfile}")"
+  if _edge_runtime_updates "${edge2_dockerfile}" 2; then
+    fail 'current Edge 2 pins were reported as changed'
+  else
+    assert_eq 1 "$?"
+  fi
+  _get_latest_version() {
+    case "${1}" in
+      github.com/go-jose/go-jose) echo '5.0.0' ;;
+      github.com/go-acme/lego) echo '4.35.3' ;;
+      github.com/just-containers/s6-overlay) echo '3.2.4.0' ;;
+      github.com/golang/crypto) echo '0.58.0' ;;
+      github.com/golang/net) echo '0.62.0' ;;
+      github.com/grpc/grpc-go) echo '1.83.2' ;;
+      *) return 1 ;;
+    esac
+  }
+  if _edge_runtime_updates "${edge2_dockerfile}" 2; then
+    fail 'go-jose major migration was accepted'
+  else
+    assert_eq 2 "$?"
+  fi
+  assert_file_line 'ARG GO_JOSE_VERSION=v4.1.6' "${edge2_dockerfile}"
+  # A Dockerfile without the go-jose pin fails rather than silently skipping it.
+  sed -i '/^ARG GO_JOSE_VERSION=/d' "${edge2_dockerfile}"
+  if _edge_runtime_updates "${edge2_dockerfile}" 2 2>/dev/null; then
+    fail 'missing go-jose pin was accepted'
+  else
+    assert_eq 2 "$?"
+  fi
 )
 
 if _prepare_edge_alpine_update "${dockerfile}"; then
@@ -277,10 +334,10 @@ mkdir -p "${notes_dir}"
   printf '%s\n' 'ARG NGINX_IMAGE=wodby/nginx:1.31-5.48.13@sha256:new' 'ARG GO_IMAGE=golang:1.26.8-alpine3.23@sha256:new' > Dockerfile
   runtime_pins() {
     printf '%s\n' 'ARG LEGO_VERSION=v4.35.2' 'ARG S6_OVERLAY_VERSION=3.2.3.2' 'ARG ETCD_CLIENT_VERSION=v3.6.14' 'ARG GOTPL_COMMIT=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' 'ARG CONFD_COMMIT=cccccccccccccccccccccccccccccccccccccccc' \
-      'ARG GO_CRYPTO_VERSION=v0.58.0' 'ARG GO_NET_VERSION=v0.61.0' 'ARG GO_GRPC_VERSION=v1.83.2'
+      'ARG GO_CRYPTO_VERSION=v0.58.0' 'ARG GO_NET_VERSION=v0.61.0' 'ARG GO_GRPC_VERSION=v1.83.2' 'ARG GO_JOSE_VERSION=v4.1.4'
   }
   runtime_pins >> Dockerfile
-  sed -i 's/LEGO_VERSION=v4.35.2/LEGO_VERSION=v4.35.3/; s/GO_NET_VERSION=v0.61.0/GO_NET_VERSION=v0.62.0/' Dockerfile
+  sed -i 's/LEGO_VERSION=v4.35.2/LEGO_VERSION=v4.35.3/; s/GO_NET_VERSION=v0.61.0/GO_NET_VERSION=v0.62.0/; s/GO_JOSE_VERSION=v4.1.4/GO_JOSE_VERSION=v4.1.6/' Dockerfile
   git() {
     runtime_pins
     assert_eq 'show 3.0.6:Dockerfile' "$*"
@@ -297,7 +354,18 @@ mkdir -p "${notes_dir}"
   [[ "${notes}" == *'NGINX: 1.31.3 -> 1.31.6.'* ]] || fail 'missing NGINX upgrade'
   [[ "${notes}" == *'lego (certificate issuance and renewal): 4.35.2 -> 4.35.3.'* ]] || fail 'missing runtime update note'
   [[ "${notes}" == *'golang.org/x/net (lego and confd builds): 0.61.0 -> 0.62.0.'* ]] || fail 'missing Go module update note'
+  [[ "${notes}" == *'- github.com/go-jose/go-jose/v4 (lego build): 4.1.4 -> 4.1.6.'* ]] || fail 'missing go-jose update note'
   [[ "${notes}" != *'golang.org/x/crypto'* && "${notes}" != *'google.golang.org/grpc'* ]] || fail 'unchanged Go modules reported'
+  # Releases cut before the go-jose pin existed describe it as newly pinned.
+  (
+    git() {
+      runtime_pins | grep -v '^ARG GO_JOSE_VERSION='
+      printf '%s\n' 'ARG NGINX_IMAGE=wodby/nginx:1.31-5.48.7@sha256:old' 'ARG GO_IMAGE=golang:1.26.7-alpine3.23@sha256:old'
+    }
+    notes=$(_edge_release_notes 3.0.6) || fail 'release notes failed for a newly added pin'
+    [[ "${notes}" == *'- github.com/go-jose/go-jose/v4 (lego build): pinned to 4.1.6.'* ]] || fail 'missing new go-jose pin note'
+    [[ "${notes}" == *'golang.org/x/net (lego and confd builds): 0.61.0 -> 0.62.0.'* ]] || fail 'existing pin notes lost'
+  )
   [[ "${notes}" == *'Go builder image: 1.26.7-alpine3.23 -> 1.26.8-alpine3.23.'* ]] || fail 'missing builder upgrade'
   [[ "${notes}" != *'sha256:'* ]] || fail 'raw digests leaked into release notes'
   [[ "${notes}" == *'compare/3.0.6...3.0.7'* ]] || fail 'wrong release comparison'
