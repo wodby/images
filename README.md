@@ -2,6 +2,11 @@
 
 [![Build Status](https://github.com/wodby/images/workflows/Update/badge.svg)](https://github.com/wodby/images/actions)
 
+Automated commits and annotated tags use `Wodby Robot <robot@wodby.com>`,
+the Git identity associated with [wodbot](https://github.com/wodbot).
+`WODBOT_GIT_NAME` and `WODBOT_GIT_EMAIL` override this identity for update jobs.
+The updater sets both author and committer without changing global Git configuration.
+
 ## Image revisions
 
 For images that package upstream software, tags separate the upstream software
@@ -113,7 +118,7 @@ its dependencies with `python -m pip install -r scripts/requirements.txt`.
 | [wodby/supabase-postgres] | [supabase/postgres] | `17` |
 | [wodby/python]    | [python]              | `3.14`, `3.13`, `3.12`, `3.11`         |
 | [wodby/go]        | [_/golang]            | `1.27`, `1.26`                         |
-| [wodby/valkey]    | [valkey/valkey]       | `9.0`, `8.1`, `8.0`, `7.2`             |
+| [wodby/valkey]    | [valkey/valkey]       | `9.1`, `9.0`, `8.1`, `8.0`, `7.2`      |
 | [wodby/redis]     | [redis]               | `8.6`, `8.4`, `8.2`, `7.4`             |
 | [wodby/ruby]      | [ruby]                | `4.0`, `3.4`, `3.3`                    |
 | [wodby/rabbitmq]  | [rabbitmq]            | `4.3`, `4.2`                           |
@@ -213,6 +218,18 @@ preserved. Parent lookup failures leave the checkout unchanged.
 | [wodby/solr]          | [apache/solr]           | `10`, `9`                                |
 | [wodby/zookeeper]     | [apache/zookeeper]      | `3.9`                                    |
 | [wodby/openclaw]      | [openclaw/openclaw]     | `2026`                                   |
+| [wodby/frp]           | [fatedier/frp]          | `0.69`                                   |
+
+FRP follows stable patches within 0.69 and releases only after the Linux amd64
+and arm64 archives are available. Its workflow and local build default advance
+together; new minor lines require review because FRP is pre-1.0.
+
+OpenSMTPD follows the Alpine 3.23 community package for both architectures.
+New upstream versions, portable patches (`_pN`), and packaging revisions (`-rN`)
+produce an image revision using the exact package pin in `.opensmtpd-package`.
+Package updates wait until the image supports that pin; existing parent-image
+updates continue during rollout. Major versions and Alpine branch changes
+require review.
 
 ### Docker4X projects
 
@@ -247,14 +264,16 @@ versioned Docker tags and its `2.x` alias; only the default 3.x branch updates
 Docker `latest`. The shared GitHub release publisher explicitly disables Latest
 for Edge 2.x releases.
 
-Both lines automatically update NGINX 1.31, lego 4.x, s6-overlay 3.x, and gotpl
-0.6.x. Only 3.x updates etcd-client 3.6 and bundled confd; 2.x retains its
-host-provided confd and etcd v2 integration. Confd advances only to stable
-releases descended from its current source pin; older releases are skipped and
-divergent histories are reported. Go build images remain on their configured
-compatibility line.
+Both lines automatically update NGINX 1.31, lego 4.x, s6-overlay 3.x, gotpl
+0.6.x, and the Go library overrides applied in their Go builds:
+golang.org/x/crypto and golang.org/x/net 0.x and google.golang.org/grpc 1.x
+(lego and confd on 3.x, lego on 2.x). Only 3.x updates etcd-client 3.6 and
+bundled confd; 2.x retains its host-provided confd and etcd v2 integration.
+Confd advances only to stable releases descended from its current source pin;
+older releases are skipped and divergent histories are reported. Go build
+images remain on their configured compatibility line.
 
-Runtime component updates appear in release notes; compiler versions and digests remain in logs and source diffs. Every release waits for the Edge build, runtime tests, and vulnerability scan. Major-line migrations and conflicts with custom source patches require review. The explicit Go library overrides remain manual.
+Runtime component updates appear in release notes; compiler versions and digests remain in logs and source diffs. Every release waits for the Edge build, runtime tests, and vulnerability scan. Major-line migrations and conflicts with custom source patches require review.
 
 ### Workspace agents
 
@@ -273,7 +292,6 @@ Not automated:
 - Moving gotpl to a new Go minor line
 - Rebase to a new major Alpine version
 - Switching the latest version
-- [wodby/opensmtpd] (installed from Alpine repository package)
 - [wodby/adminer] not auto-updates for the base image (php:8.4-apache)
 
 [adoptium/containers]: https://github.com/adoptium/containers
@@ -393,6 +411,10 @@ Not automated:
 [wodby/openjdk]: https://github.com/wodby/openjdk
 
 [wodby/opensmtpd]: https://github.com/wodby/opensmtpd
+
+[wodby/frp]: https://github.com/wodby/frp
+
+[fatedier/frp]: https://github.com/fatedier/frp
 
 [wodby/openclaw]: https://github.com/wodby/openclaw
 

@@ -34,6 +34,9 @@ ARG GO_IMAGE=golang:1.26.9-alpine3.23@sha256:old
 ARG NGINX_IMAGE=wodby/nginx:1.31-r13@sha256:old
 ARG LEGO_VERSION=v4.35.2
 ARG LEGO_COMMIT=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+ARG GO_CRYPTO_VERSION=v0.58.0
+ARG GO_NET_VERSION=v0.61.0
+ARG GO_GRPC_VERSION=v1.83.2
 ARG S6_OVERLAY_VERSION=3.2.3.2
 ARG GOTPL_COMMIT=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
 ARG ETCD_CLIENT_VERSION=v3.6.14
@@ -79,6 +82,9 @@ _get_latest_version() {
     github.com/go-acme/lego) echo "${TEST_EDGE_LEGO_VERSION:-4.35.3}" ;;
     github.com/just-containers/s6-overlay) echo 3.2.4.0 ;;
     github.com/wodby/gotpl) echo 0.6.9 ;;
+    github.com/golang/crypto) echo 0.58.0 ;;
+    github.com/golang/net) echo 0.62.0 ;;
+    github.com/grpc/grpc-go) echo 1.83.2 ;;
     github.com/etcd-io/etcd|github.com/kelseyhightower/confd)
       [[ "$(git branch --show-current)" != release/edge-2.x ]] || fail 'legacy branch requested a v3 dependency'
       if [[ "$1" == */etcd ]]; then echo 3.6.15; else echo 0.16.0; fi ;;
@@ -102,6 +108,7 @@ assert_eq tag "$(git cat-file -t 2.7.2)"
 assert_eq "$(git rev-parse HEAD)" "$(git --git-dir="${origin}" rev-parse release/edge-2.x)"
 assert_eq "$(git rev-parse HEAD)" "$(git rev-parse '2.7.2^{commit}')"
 ! grep -Eq '^ARG (ETCD_CLIENT_VERSION|CONFD_COMMIT)=' Dockerfile || fail 'introduced etcd v3 inputs'
+grep -q '^ARG GO_NET_VERSION=v0.62.0$' Dockerfile || fail 'legacy Go library override was not updated'
 notes=$(git for-each-ref --format='%(contents)' refs/tags/2.7.2)
 [[ "$notes" == *'compare/2.7.1...2.7.2'* && "$notes" == *'lego'* ]] || fail 'wrong maintenance release notes'
 [[ "$notes" != *'etcd client'* && "$notes" != *'Updated confd'* ]] || fail 'v3 dependencies leaked into legacy notes'

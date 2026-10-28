@@ -6,6 +6,8 @@ set -o pipefail
 IMAGES_REPO_ROOT="${IMAGES_REPO_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}"
 IMAGES_HOST_ROOT="${IMAGES_HOST_ROOT:-${IMAGES_REPO_ROOT}}"
 
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/scripts/git_identity.sh"
+
 if [[ -n "${DEBUG:-}" ]]; then
   set -x
 fi
@@ -26,19 +28,7 @@ urlencode() {
 }
 
 _ensure_git_identity() {
-  local email
-  local name
-
-  email=$(git config --get user.email || true)
-  name=$(git config --get user.name || true)
-
-  if [[ -z "${email}" && -n "${WODBOT_GIT_EMAIL:-}" ]]; then
-    git config --local user.email "${WODBOT_GIT_EMAIL}"
-  fi
-
-  if [[ -z "${name}" && -n "${WODBOT_GIT_NAME:-}" ]]; then
-    git config --local user.name "${WODBOT_GIT_NAME}"
-  fi
+  configure_wodbot_git_identity
 }
 
 _current_repo_slug() {
@@ -1335,6 +1325,9 @@ _update_dockerfile_arg_image() {
 
 # Keep runtime source updates on their reviewed compatibility lines. A release
 # commit must descend from a pinned commit before replacing that source pin.
+# The Go module security pins applied in the lego and confd build stages follow
+# their GitHub mirrors, whose tags are the module versions; every stage's copy
+# of a pin is replaced together.
 _edge_runtime_updates() {
   local dockerfile="${1}"
   local release_major="${2:-3}"
@@ -1368,6 +1361,9 @@ _edge_runtime_updates() {
 lego LEGO_VERSION go-acme/lego 4 LEGO_COMMIT
 s6-overlay S6_OVERLAY_VERSION just-containers/s6-overlay 3 -
 etcd-client ETCD_CLIENT_VERSION etcd-io/etcd 3.6 -
+go-crypto GO_CRYPTO_VERSION golang/crypto 0 -
+go-net GO_NET_VERSION golang/net 0 -
+go-grpc GO_GRPC_VERSION grpc/grpc-go 1 -
 DEPENDENCIES
 
   while read -r name arg repo line; do
@@ -1563,6 +1559,9 @@ S6_OVERLAY_VERSION s6-overlay (service supervision)
 ETCD_CLIENT_VERSION etcd client (configuration updates)
 GOTPL_COMMIT gotpl (configuration templates)
 CONFD_COMMIT confd (configuration generation)
+GO_CRYPTO_VERSION golang.org/x/crypto (lego and confd builds)
+GO_NET_VERSION golang.org/x/net (lego and confd builds)
+GO_GRPC_VERSION google.golang.org/grpc (lego and confd builds)
 RUNTIME_NOTES
   printf '\nFull changes: https://github.com/wodby/edge-alpine/compare/%s...%s\n' "${previous}" "${next_release}"
 }
