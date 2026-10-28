@@ -47,7 +47,13 @@ printf '%s\n' \
   'FROM --platform=$BUILDPLATFORM ${GO_IMAGE} AS lego-build' \
   'ARG LEGO_VERSION=v4.35.2' \
   'ARG LEGO_COMMIT=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' \
+  'ARG GO_CRYPTO_VERSION=v0.58.0' \
+  'ARG GO_NET_VERSION=v0.61.0' \
+  'ARG GO_GRPC_VERSION=v1.83.2' \
   'ARG ETCD_CLIENT_VERSION=v3.6.14' \
+  'ARG GO_CRYPTO_VERSION=v0.58.0' \
+  'ARG GO_NET_VERSION=v0.61.0' \
+  'ARG GO_GRPC_VERSION=v1.83.2' \
   'ARG GOTPL_COMMIT=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' \
   'ARG CONFD_COMMIT=cccccccccccccccccccccccccccccccccccccccc' \
   'FROM ${NGINX_IMAGE}' \
@@ -76,6 +82,9 @@ _get_latest_version() {
     github.com/just-containers/s6-overlay) echo '3.2.4.0' ;;
     github.com/go-acme/lego) echo '4.35.3' ;;
     github.com/etcd-io/etcd) echo '3.6.15' ;;
+    github.com/golang/crypto) echo '0.58.0' ;;
+    github.com/golang/net) echo '0.62.0' ;;
+    github.com/grpc/grpc-go) echo '1.83.2' ;;
     github.com/wodby/gotpl) echo '0.6.9' ;;
     github.com/kelseyhightower/confd) echo '0.16.0' ;;
     *) return 1 ;;
@@ -112,6 +121,36 @@ assert_file_line 'ARG S6_OVERLAY_VERSION=3.2.4.0' "${dockerfile}"
 assert_file_line 'ARG ETCD_CLIENT_VERSION=v3.6.15' "${dockerfile}"
 assert_file_line 'ARG GOTPL_COMMIT=dddddddddddddddddddddddddddddddddddddddd' "${dockerfile}"
 assert_file_line 'ARG CONFD_COMMIT=cccccccccccccccccccccccccccccccccccccccc' "${dockerfile}"
+# Each build stage applies the Go module pins; both copies move together.
+assert_eq 2 "$(grep -Fcx 'ARG GO_NET_VERSION=v0.62.0' "${dockerfile}")"
+assert_eq 2 "$(grep -Fcx 'ARG GO_CRYPTO_VERSION=v0.58.0' "${dockerfile}")"
+assert_eq 2 "$(grep -Fcx 'ARG GO_GRPC_VERSION=v1.83.2' "${dockerfile}")"
+jq -e 'select(.type == "dependency_update" and .message == "go-net: 0.61.0 -> 0.62.0")' \
+  "${test_root}/events.jsonl" >/dev/null || fail "missing Go module update event"
+if jq -e 'select(.message | startswith("go-crypto") or startswith("go-grpc"))' \
+  "${test_root}/events.jsonl" >/dev/null; then
+  fail "current Go module pins were reported as updated"
+fi
+(
+  major_dockerfile="${test_root}/Dockerfile.go-major"
+  cp "${dockerfile}" "${major_dockerfile}"
+  _get_latest_version() {
+    case "${1}" in
+      github.com/golang/net) echo '1.0.0' ;;
+      github.com/go-acme/lego) echo '4.35.3' ;;
+      github.com/just-containers/s6-overlay) echo '3.2.4.0' ;;
+      github.com/etcd-io/etcd) echo '3.6.15' ;;
+      github.com/golang/crypto) echo '0.58.0' ;;
+      *) return 1 ;;
+    esac
+  }
+  if _edge_runtime_updates "${major_dockerfile}"; then
+    fail 'Go module major migration was accepted'
+  else
+    assert_eq 2 "$?"
+  fi
+  assert_eq 2 "$(grep -Fcx 'ARG GO_NET_VERSION=v0.62.0' "${major_dockerfile}")"
+)
 
 if _prepare_edge_alpine_update "${dockerfile}"; then
   fail "current image pins were reported as changed"
@@ -237,10 +276,11 @@ mkdir -p "${notes_dir}"
   cd "${notes_dir}"
   printf '%s\n' 'ARG NGINX_IMAGE=wodby/nginx:1.31-5.48.13@sha256:new' 'ARG GO_IMAGE=golang:1.26.8-alpine3.23@sha256:new' > Dockerfile
   runtime_pins() {
-    printf '%s\n' 'ARG LEGO_VERSION=v4.35.2' 'ARG S6_OVERLAY_VERSION=3.2.3.2' 'ARG ETCD_CLIENT_VERSION=v3.6.14' 'ARG GOTPL_COMMIT=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' 'ARG CONFD_COMMIT=cccccccccccccccccccccccccccccccccccccccc'
+    printf '%s\n' 'ARG LEGO_VERSION=v4.35.2' 'ARG S6_OVERLAY_VERSION=3.2.3.2' 'ARG ETCD_CLIENT_VERSION=v3.6.14' 'ARG GOTPL_COMMIT=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' 'ARG CONFD_COMMIT=cccccccccccccccccccccccccccccccccccccccc' \
+      'ARG GO_CRYPTO_VERSION=v0.58.0' 'ARG GO_NET_VERSION=v0.61.0' 'ARG GO_GRPC_VERSION=v1.83.2'
   }
   runtime_pins >> Dockerfile
-  sed -i 's/LEGO_VERSION=v4.35.2/LEGO_VERSION=v4.35.3/' Dockerfile
+  sed -i 's/LEGO_VERSION=v4.35.2/LEGO_VERSION=v4.35.3/; s/GO_NET_VERSION=v0.61.0/GO_NET_VERSION=v0.62.0/' Dockerfile
   git() {
     runtime_pins
     assert_eq 'show 3.0.6:Dockerfile' "$*"
@@ -256,6 +296,8 @@ mkdir -p "${notes_dir}"
   notes=$(_edge_release_notes 3.0.6)
   [[ "${notes}" == *'NGINX: 1.31.3 -> 1.31.6.'* ]] || fail 'missing NGINX upgrade'
   [[ "${notes}" == *'lego (certificate issuance and renewal): 4.35.2 -> 4.35.3.'* ]] || fail 'missing runtime update note'
+  [[ "${notes}" == *'golang.org/x/net (lego and confd builds): 0.61.0 -> 0.62.0.'* ]] || fail 'missing Go module update note'
+  [[ "${notes}" != *'golang.org/x/crypto'* && "${notes}" != *'google.golang.org/grpc'* ]] || fail 'unchanged Go modules reported'
   [[ "${notes}" == *'Go builder image: 1.26.7-alpine3.23 -> 1.26.8-alpine3.23.'* ]] || fail 'missing builder upgrade'
   [[ "${notes}" != *'sha256:'* ]] || fail 'raw digests leaked into release notes'
   [[ "${notes}" == *'compare/3.0.6...3.0.7'* ]] || fail 'wrong release comparison'
