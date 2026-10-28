@@ -48,9 +48,16 @@ git checkout -qb release/edge-2.x
 sed -i '/^ARG \(ETCD_CLIENT_VERSION\|CONFD_COMMIT\)=/d' Dockerfile
 git commit -qam 'Legacy runtime fixture'
 git tag -am 'Legacy Edge release' 2.7.1
+# Both lines pinned go-jose after their latest release, in the lego stage only.
+pin_go_jose() {
+  sed -i '/^ARG GO_GRPC_VERSION=/a ARG GO_JOSE_VERSION=v4.1.6' Dockerfile
+  git commit -qam 'Pin go-jose'
+}
+pin_go_jose
 git checkout -q master
 git commit --allow-empty -qm 'Current release advances independently'
 git tag -am 'Next current release' 3.0.28
+pin_go_jose
 git clone -q --bare "${seed}" "${origin}"
 
 # Explicit major selection wins even on a branch rooted in another major.
@@ -85,6 +92,7 @@ _get_latest_version() {
     github.com/golang/crypto) echo 0.58.0 ;;
     github.com/golang/net) echo 0.62.0 ;;
     github.com/grpc/grpc-go) echo 1.83.2 ;;
+    github.com/go-jose/go-jose) echo 4.1.6 ;;
     github.com/etcd-io/etcd|github.com/kelseyhightower/confd)
       [[ "$(git branch --show-current)" != release/edge-2.x ]] || fail 'legacy branch requested a v3 dependency'
       if [[ "$1" == */etcd ]]; then echo 3.6.15; else echo 0.16.0; fi ;;
@@ -112,6 +120,7 @@ grep -q '^ARG GO_NET_VERSION=v0.62.0$' Dockerfile || fail 'legacy Go library ove
 notes=$(git for-each-ref --format='%(contents)' refs/tags/2.7.2)
 [[ "$notes" == *'compare/2.7.1...2.7.2'* && "$notes" == *'lego'* ]] || fail 'wrong maintenance release notes'
 [[ "$notes" != *'etcd client'* && "$notes" != *'Updated confd'* ]] || fail 'v3 dependencies leaked into legacy notes'
+[[ "$notes" == *'- github.com/go-jose/go-jose/v4 (lego build): pinned to 4.1.6.'* ]] || fail 'missing new go-jose pin in legacy notes'
 legacy_head=$(git rev-parse HEAD)
 
 update_edge_alpine
@@ -120,6 +129,7 @@ assert_eq tag "$(git cat-file -t 3.0.29)"
 grep -q '^ARG ETCD_CLIENT_VERSION=v3.6.15$' Dockerfile
 notes=$(git for-each-ref --format='%(contents)' refs/tags/3.0.29)
 [[ "$notes" == *'compare/3.0.28...3.0.29'* ]] || fail 'current release used the legacy series'
+[[ "$notes" == *'- github.com/go-jose/go-jose/v4 (lego build): pinned to 4.1.6.'* ]] || fail 'missing new go-jose pin in current notes'
 current_head=$(git rev-parse HEAD)
 
 # Both release lines are idempotent once current.

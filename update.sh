@@ -1327,7 +1327,8 @@ _update_dockerfile_arg_image() {
 # commit must descend from a pinned commit before replacing that source pin.
 # The Go module security pins applied in the lego and confd build stages follow
 # their GitHub mirrors, whose tags are the module versions; every stage's copy
-# of a pin is replaced together.
+# of a pin is replaced together. A pin may live in one stage only, such as
+# go-jose, which only lego uses.
 _edge_runtime_updates() {
   local dockerfile="${1}"
   local release_major="${2:-3}"
@@ -1364,6 +1365,7 @@ etcd-client ETCD_CLIENT_VERSION etcd-io/etcd 3.6 -
 go-crypto GO_CRYPTO_VERSION golang/crypto 0 -
 go-net GO_NET_VERSION golang/net 0 -
 go-grpc GO_GRPC_VERSION grpc/grpc-go 1 -
+go-jose GO_JOSE_VERSION go-jose/go-jose 4 -
 DEPENDENCIES
 
   while read -r name arg repo line; do
@@ -1545,8 +1547,16 @@ _edge_release_notes() {
     if [[ "${previous}" == 2.* && ( "${arg}" == ETCD_CLIENT_VERSION || "${arg}" == CONFD_COMMIT ) ]]; then
       continue
     fi
-    old_value=$(_dockerfile_arg_value "${arg}" <(printf '%s\n' "${old_dockerfile}")) || return 1
     new_value=$(_dockerfile_arg_value "${arg}" Dockerfile) || return 1
+    # A pin added since the previous release has no old value to compare.
+    if ! grep -Eq "^ARG ${arg}=" <<<"${old_dockerfile}"; then
+      case "${arg}" in
+        *_COMMIT) printf -- '- Pinned %s.\n' "${label}" ;;
+        *) printf -- '- %s: pinned to %s.\n' "${label}" "${new_value#v}" ;;
+      esac
+      continue
+    fi
+    old_value=$(_dockerfile_arg_value "${arg}" <(printf '%s\n' "${old_dockerfile}")) || return 1
     if [[ "${old_value}" != "${new_value}" ]]; then
       case "${arg}" in
         *_COMMIT) printf -- '- Updated %s.\n' "${label}" ;;
@@ -1562,6 +1572,7 @@ CONFD_COMMIT confd (configuration generation)
 GO_CRYPTO_VERSION golang.org/x/crypto (lego and confd builds)
 GO_NET_VERSION golang.org/x/net (lego and confd builds)
 GO_GRPC_VERSION google.golang.org/grpc (lego and confd builds)
+GO_JOSE_VERSION github.com/go-jose/go-jose/v4 (lego build)
 RUNTIME_NOTES
   printf '\nFull changes: https://github.com/wodby/edge-alpine/compare/%s...%s\n' "${previous}" "${next_release}"
 }
