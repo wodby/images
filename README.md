@@ -219,6 +219,7 @@ preserved. Parent lookup failures leave the checkout unchanged.
 | [wodby/zookeeper]     | [apache/zookeeper]      | `3.9`                                    |
 | [wodby/openclaw]      | [openclaw/openclaw]     | `2026`                                   |
 | [wodby/t3code]        | [pingdotgg/t3code]      | `0`                                      |
+| [wodby/rustdesk]      | [rustdesk/rustdesk-server] | `1`                                   |
 | [wodby/frp]           | [fatedier/frp]          | `0.69`                                   |
 
 FRP follows stable patches within 0.69 and releases only after the Linux amd64
@@ -317,6 +318,8 @@ Not automated:
 [openclaw/openclaw]: https://github.com/openclaw/openclaw
 
 [pingdotgg/t3code]: https://github.com/pingdotgg/t3code
+
+[rustdesk/rustdesk-server]: https://github.com/rustdesk/rustdesk-server
 
 [prometheus/prometheus]: https://github.com/prometheus/prometheus
 
@@ -423,6 +426,8 @@ Not automated:
 [wodby/openclaw]: https://github.com/wodby/openclaw
 
 [wodby/t3code]: https://github.com/wodby/t3code
+
+[wodby/rustdesk]: https://github.com/wodby/rustdesk
 
 [wodby/php]: https://github.com/wodby/php
 
