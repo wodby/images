@@ -100,8 +100,10 @@ def check_repo(repo: Path) -> int:
     variants = [{}]
     for runtime in ('php', 'python', 'ruby', 'go', 'rust'):
         if name == runtime:
-            variants += [{runtime.upper() + '_DEV': 'dev'},
-                         {runtime.upper() + '_DEV': 'dev', 'WODBY_USER_ID': '501'}]
+            variants += [{runtime.upper() + '_DEV': 'dev'}]
+            # Rust publishes no macOS (uid 501) development variant.
+            if runtime != 'rust':
+                variants += [{runtime.upper() + '_DEV': 'dev', 'WODBY_USER_ID': '501'}]
     if name in ('drupal-php', 'wordpress-php', 'laravel-php'):
         variants += [{'PHP_DEV': 'dev'}, {'PHP_DEV_MACOS': 'dev-macos'}]
     if name in ('alpine', 'docker'):
