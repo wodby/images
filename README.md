@@ -119,6 +119,7 @@ its dependencies with `python -m pip install -r scripts/requirements.txt`.
 | [wodby/python]    | [python]              | `3.14`, `3.13`, `3.12`, `3.11`         |
 | [wodby/go]        | [_/golang]            | `1.27`, `1.26`                         |
 | [wodby/rust]      | [_/rust]              | `1`                                    |
+| [wodby/dotnet]    | [dotnet/aspnet]       | `10.0`                                 |
 | [wodby/valkey]    | [valkey/valkey]       | `9.1`, `9.0`, `8.1`, `8.0`, `7.2`      |
 | [wodby/redis]     | [redis]               | `8.6`, `8.4`, `8.2`, `7.4`             |
 | [wodby/ruby]      | [ruby]                | `4.0`, `3.4`, `3.3`                    |
@@ -374,6 +375,7 @@ Not automated:
 
 [_/golang]: https://hub.docker.com/_/golang
 [_/rust]: https://hub.docker.com/_/rust
+[dotnet/aspnet]: https://mcr.microsoft.com/product/dotnet/aspnet/about
 
 [valkey/valkey]: https://hub.docker.com/r/valkey/valkey
 
@@ -441,6 +443,7 @@ Not automated:
 
 [wodby/go]: https://github.com/wodby/go
 [wodby/rust]: https://github.com/wodby/rust
+[wodby/dotnet]: https://github.com/wodby/dotnet
 
 [wodby/valkey]: https://github.com/wodby/valkey
 
@@ -483,3 +486,11 @@ their version and Alpine release rules. A committed pin is a build input, not pr
 retried using the same commit and digest.
 
 Images that only track application releases keep their existing update flow.
+
+`wodby/dotnet` builds on two Microsoft images per release line: the ASP.NET Core
+runtime for ordinary images and the .NET SDK carrying the same runtime for `-dev`
+images, both from mcr.microsoft.com. Its updater takes the newest release of each
+line from Microsoft's release metadata, picks the newest Alpine version that has
+both images, and resolves both digests on that registry before editing anything.
+A new .NET release, a newer Alpine version, or a rebuilt tag releases a new image
+revision.
