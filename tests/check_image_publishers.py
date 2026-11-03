@@ -14,7 +14,7 @@ import subprocess
 # Representative versions; these are test inputs, not catalog version pins.
 VERSIONS = {
     'ADMINER_VER': '6.0.1', 'ALPINE_VER': '3.24.2', 'APACHE_VER': '2.4.66',
-    'CACHET_VER': '2.4.1', 'DRUPAL_VER': '11.4.7', 'DRUPAL_CMS_VER': '2.0.2',
+    'CACHET_VER': '2.4.1', 'DOTNET_VER': '10.0.14', 'DRUPAL_VER': '11.4.7', 'DRUPAL_CMS_VER': '2.0.2',
     'ELASTICSEARCH_VER': '7.17.1', 'FRP_VERSION': '0.61.1', 'GO_VER': '1.27.1',
     'KIBANA_VER': '7.17.1', 'NODEJS_VER': '18.0.0', 'MARIADB_VER': '11.4.8',
     'MATOMO_VER': '5.0.1', 'MEMCACHED_VER': '1.6.1', 'MYSQL_VER': '8.4.1',
@@ -92,13 +92,13 @@ def check_repo(repo: Path) -> int:
            'SCANNED_IMAGE_AMD64': 'sha256:amd64', 'SCANNED_IMAGE_ARM64': 'sha256:arm64',
            'WODBY_USER_ID': '1000', 'WODBY_GROUP_ID': '1000',
            'PHP_DEV': '', 'PHP_DEV_MACOS': '', 'PYTHON_DEV': '', 'RUBY_DEV': '',
-           'GO_DEV': '', 'RUST_DEV': '', 'ALPINE_DEV': '', 'IMAGE_REVISION': '', 'STABILITY_TAG': '',
+           'GO_DEV': '', 'RUST_DEV': '', 'DOTNET_DEV': '', 'ALPINE_DEV': '', 'IMAGE_REVISION': '', 'STABILITY_TAG': '',
            'BASE_IMAGE_REVISION': '', 'BASE_IMAGE_STABILITY_TAG': ''}
     if name in ('drupal', 'drupal-php', 'wordpress', 'wordpress-php', 'laravel-php'):
         env['PHP_VER'] = '8.5'
     workdir = repo / WORKDIRS.get(name, '.')
     variants = [{}]
-    for runtime in ('php', 'python', 'ruby', 'go', 'rust'):
+    for runtime in ('php', 'python', 'ruby', 'go', 'rust', 'dotnet'):
         if name == runtime:
             variants += [{runtime.upper() + '_DEV': 'dev'}]
             # Rust publishes no macOS (uid 501) development variant.
