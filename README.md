@@ -118,6 +118,7 @@ its dependencies with `python -m pip install -r scripts/requirements.txt`.
 | [wodby/supabase-postgres] | [supabase/postgres] | `17` |
 | [wodby/python]    | [python]              | `3.14`, `3.13`, `3.12`, `3.11`         |
 | [wodby/go]        | [_/golang]            | `1.27`, `1.26`                         |
+| [wodby/rust]      | [_/rust]              | `1`                                    |
 | [wodby/valkey]    | [valkey/valkey]       | `9.1`, `9.0`, `8.1`, `8.0`, `7.2`      |
 | [wodby/redis]     | [redis]               | `8.6`, `8.4`, `8.2`, `7.4`             |
 | [wodby/ruby]      | [ruby]                | `4.0`, `3.4`, `3.3`                    |
@@ -372,6 +373,7 @@ Not automated:
 [_/php]: https://hub.docker.com/_/php
 
 [_/golang]: https://hub.docker.com/_/golang
+[_/rust]: https://hub.docker.com/_/rust
 
 [valkey/valkey]: https://hub.docker.com/r/valkey/valkey
 
@@ -438,6 +440,7 @@ Not automated:
 [wodby/python]: https://github.com/wodby/python
 
 [wodby/go]: https://github.com/wodby/go
+[wodby/rust]: https://github.com/wodby/rust
 
 [wodby/valkey]: https://github.com/wodby/valkey
 

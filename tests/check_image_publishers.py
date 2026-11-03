@@ -21,7 +21,7 @@ VERSIONS = {
     'NGINX_VER': '1.31.1', 'NODE_VER': '26.0.1', 'OPENCLAW_VER': '2026.9.1',
     'OPENSMTPD_VER': '7.8.0', 'PHP_VER': '8.5.10', 'POSTGRES_VER': '17.6',
     'PROMETHEUS_VER': '3.13.1', 'PYTHON_VER': '3.14.1', 'RABBITMQ_VER': '4.3.1',
-    'REDIS_VER': '8.6.1', 'RUBY_VER': '4.0.1', 'SLACKIN_VER': '2.2.1',
+    'REDIS_VER': '8.6.1', 'RUBY_VER': '4.0.1', 'RUST_VER': '1.99.1', 'SLACKIN_VER': '2.2.1',
     'SOLR_VER': '10.0.1', 'SQUID_VER': '7.1', 'VALKEY_VER': '9.0.1',
     'VINYL_VER': '9.1.1', 'WEBGRIND_VER': '1.9.1', 'WORDPRESS_VER': '7.0.1',
     'XHPROF_VER': '2.3.1', 'ZOO_VER': '3.9.1',
@@ -92,13 +92,13 @@ def check_repo(repo: Path) -> int:
            'SCANNED_IMAGE_AMD64': 'sha256:amd64', 'SCANNED_IMAGE_ARM64': 'sha256:arm64',
            'WODBY_USER_ID': '1000', 'WODBY_GROUP_ID': '1000',
            'PHP_DEV': '', 'PHP_DEV_MACOS': '', 'PYTHON_DEV': '', 'RUBY_DEV': '',
-           'GO_DEV': '', 'ALPINE_DEV': '', 'IMAGE_REVISION': '', 'STABILITY_TAG': '',
+           'GO_DEV': '', 'RUST_DEV': '', 'ALPINE_DEV': '', 'IMAGE_REVISION': '', 'STABILITY_TAG': '',
            'BASE_IMAGE_REVISION': '', 'BASE_IMAGE_STABILITY_TAG': ''}
     if name in ('drupal', 'drupal-php', 'wordpress', 'wordpress-php', 'laravel-php'):
         env['PHP_VER'] = '8.5'
     workdir = repo / WORKDIRS.get(name, '.')
     variants = [{}]
-    for runtime in ('php', 'python', 'ruby', 'go'):
+    for runtime in ('php', 'python', 'ruby', 'go', 'rust'):
         if name == runtime:
             variants += [{runtime.upper() + '_DEV': 'dev'},
                          {runtime.upper() + '_DEV': 'dev', 'WODBY_USER_ID': '501'}]

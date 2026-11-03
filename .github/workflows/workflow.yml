@@ -78,7 +78,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        script: [ alpine,apache,backup,memcached,mysql,node,php,postgres,supabase-postgres,python,go,redis,valkey,ruby,rabbitmq ]
+        script: [ alpine,apache,backup,memcached,mysql,node,php,postgres,supabase-postgres,python,go,rust,redis,valkey,ruby,rabbitmq ]
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/alpine-security
