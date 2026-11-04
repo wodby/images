@@ -151,6 +151,7 @@ a GitHub Release with the same version. Failed builds can retry the existing tag
 | [wodby/drupal]        | [wodby/drupal-php]    | `8.5`, `8.4`, `8.3`, `8.2` |
 | [wodby/drupal-cms]    | [wodby/drupal-php]    | `8.4`                      |
 | [wodby/matomo]        | [wodby/php]           | `8.2`                      |
+| [wodby/moodle]        | [wodby/php]           | `8.4`                      |
 | [wodby/webgrind]      | [wodby/php]           | `8.2`                      |
 | [wodby/wordpress-php] | [wodby/php]           | `8.5`, `8.4`, `8.3`, `8.2` |
 | [wodby/wordpress]     | [wodby/wordpress-php] | `8.5`, `8.4`, `8.3`, `8.2` |
@@ -212,6 +213,7 @@ preserved. Parent lookup failures leave the checkout unchanged.
 | [wodby/drupal-cms]    | [drupal-cms]            | `2`                                      |
 | [wodby/mariadb]       | [mariadb]               | `12.3`, `11.8`, `11.4`, `10.11`, `10.6` |
 | [wodby/matomo]        | [matomo-org/matomo]     | `5`                                      |
+| [wodby/moodle]        | [moodle/moodle]         | `5.3`                                    |
 | [wodby/nginx]         | [nginx]                 | `1.31`, `1.30`                           |
 | [wodby/prometheus]    | [prometheus/prometheus] | `3.13`                                   |
 | [wodby/vinyl]         | [vinyl-cache/vinyl-cache] | `9.1`, `6.0`                             |
@@ -338,6 +340,8 @@ Not automated:
 
 [matomo-org/matomo]: https://github.com/matomo-org/matomo
 
+[moodle/moodle]: https://github.com/moodle/moodle
+
 [memcached]: https://github.com/docker-library/memcached
 
 [nginx]: https://github.com/docker-library/nginx
@@ -422,6 +426,8 @@ Not automated:
 [wodby/mariadb]: https://github.com/wodby/mariadb
 
 [wodby/matomo]: https://github.com/wodby/matomo
+
+[wodby/moodle]: https://github.com/wodby/moodle
 
 [wodby/memcached]: https://github.com/wodby/memcached
 

@@ -102,7 +102,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        script: [ drupal-php,wordpress-php,matomo-php,webgrind-php,laravel-php,drupal,wordpress,xhprof,drupal-cms,edge-alpine,edge-alpine-2 ]
+        script: [ drupal-php,wordpress-php,matomo-php,moodle-php,webgrind-php,laravel-php,drupal,wordpress,xhprof,drupal-cms,edge-alpine,edge-alpine-2 ]
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions
@@ -120,7 +120,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        script: [ adminer,cachet,drupal,mariadb,matomo,nginx,webgrind,wordpress,xhprof,drupal-cms,solr,zookeeper,openclaw,t3code,rustdesk,netbird,prometheus,vinyl,workspace-agents,frp ]
+        script: [ adminer,cachet,drupal,mariadb,matomo,moodle,nginx,webgrind,wordpress,xhprof,drupal-cms,solr,zookeeper,openclaw,t3code,rustdesk,netbird,prometheus,vinyl,workspace-agents,frp ]
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions
