@@ -120,6 +120,7 @@ its dependencies with `python -m pip install -r scripts/requirements.txt`.
 | [wodby/go]        | [_/golang]            | `1.27`, `1.26`                         |
 | [wodby/rust]      | [_/rust]              | `1`                                    |
 | [wodby/dotnet]    | [dotnet/aspnet]       | `10.0`                                 |
+| [wodby/odoo]      | [_/odoo]              | `20.0`, `19.0`, `18.0`                 |
 | [wodby/valkey]    | [valkey/valkey]       | `9.1`, `9.0`, `8.1`, `8.0`, `7.2`      |
 | [wodby/redis]     | [redis]               | `8.6`, `8.4`, `8.2`, `7.4`             |
 | [wodby/ruby]      | [ruby]                | `4.0`, `3.4`, `3.3`                    |
@@ -376,6 +377,7 @@ Not automated:
 [_/golang]: https://hub.docker.com/_/golang
 [_/rust]: https://hub.docker.com/_/rust
 [dotnet/aspnet]: https://mcr.microsoft.com/product/dotnet/aspnet/about
+[_/odoo]: https://hub.docker.com/_/odoo
 
 [valkey/valkey]: https://hub.docker.com/r/valkey/valkey
 
@@ -444,6 +446,7 @@ Not automated:
 [wodby/go]: https://github.com/wodby/go
 [wodby/rust]: https://github.com/wodby/rust
 [wodby/dotnet]: https://github.com/wodby/dotnet
+[wodby/odoo]: https://github.com/wodby/odoo
 
 [wodby/valkey]: https://github.com/wodby/valkey
 
@@ -494,3 +497,8 @@ line from Microsoft's release metadata, picks the newest Alpine version that has
 both images, and resolves both digests on that registry before editing anything.
 A new .NET release, a newer Alpine version, or a rebuilt tag releases a new image
 revision.
+
+`wodby/odoo` builds on Odoo's official image, which publishes one series per
+major version and dates its builds (`20.0-20261102`). Its updater takes the
+newest dated tag of each series and resolves every digest before editing
+anything. A new Odoo build or a rebuilt tag releases a new image revision.

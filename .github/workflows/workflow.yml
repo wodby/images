@@ -39,6 +39,7 @@ jobs:
           ./tests/test_frp_updater.sh
           ./tests/test_opensmtpd_updater.sh
           ./tests/test_dotnet_updater.sh
+          ./tests/test_odoo_updater.sh
   tooling:
     runs-on: ubuntu-latest
     strategy:
@@ -79,7 +80,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        script: [ alpine,apache,backup,memcached,mysql,node,php,postgres,supabase-postgres,python,go,rust,dotnet,redis,valkey,ruby,rabbitmq ]
+        script: [ alpine,apache,backup,memcached,mysql,node,php,postgres,supabase-postgres,python,go,rust,dotnet,odoo,redis,valkey,ruby,rabbitmq ]
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/alpine-security
