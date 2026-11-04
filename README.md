@@ -226,6 +226,15 @@ preserved. Parent lookup failures leave the checkout unchanged.
 | [wodby/t3code]        | [pingdotgg/t3code]      | `0`                                      |
 | [wodby/rustdesk]      | [rustdesk/rustdesk-server] | `1`                                   |
 | [wodby/frp]           | [fatedier/frp]          | `0.69`                                   |
+| [wodby/netbird]       | [netbirdio/netbird]     | `0`                                      |
+
+NetBird follows NetBird's whole 0.x line and the dashboard's v2.x line, as
+NetBird's own self-hosting guide does. Its updater takes the newest server
+release that also has a relay image and the newest dashboard release, and
+resolves every digest in `base-images.mk` (the Debian base and NetBird's server,
+relay and dashboard images) before editing anything. A new release of either, or
+a rebuilt tag of any input, releases a new image revision; the image's tests
+connect two NetBird clients through the server before it is published.
 
 FRP follows stable patches within 0.69 and releases only after the Linux amd64
 and arm64 archives are available. Its workflow and local build default advance
@@ -325,6 +334,7 @@ Not automated:
 [pingdotgg/t3code]: https://github.com/pingdotgg/t3code
 
 [rustdesk/rustdesk-server]: https://github.com/rustdesk/rustdesk-server
+[netbirdio/netbird]: https://github.com/netbirdio/netbird
 
 [prometheus/prometheus]: https://github.com/prometheus/prometheus
 
@@ -440,6 +450,7 @@ Not automated:
 [wodby/t3code]: https://github.com/wodby/t3code
 
 [wodby/rustdesk]: https://github.com/wodby/rustdesk
+[wodby/netbird]: https://github.com/wodby/netbird
 
 [wodby/php]: https://github.com/wodby/php
 
