@@ -147,10 +147,12 @@ a GitHub Release with the same version. Failed builds can retry the existing tag
 | Image                 | Upstream (base image) | Versions                   |
 |-----------------------|-----------------------|----------------------------|
 | [wodby/edge-alpine]   | [wodby/nginx]         | `1.31`                     |
+| [wodby/adminer]       | [wodby/php]           | `8.4-apache`               |
 | [wodby/drupal-php]    | [wodby/php]           | `8.5`, `8.4`, `8.3`, `8.2` |
 | [wodby/drupal]        | [wodby/drupal-php]    | `8.5`, `8.4`, `8.3`, `8.2` |
 | [wodby/drupal-cms]    | [wodby/drupal-php]    | `8.4`                      |
-| [wodby/matomo]        | [wodby/php]           | `8.2`                      |
+| [wodby/matomo]        | [wodby/php]           | `8.2`, `8.4-apache`        |
+| [wodby/mautic]        | [wodby/php]           | `8.4-apache`               |
 | [wodby/moodle]        | [wodby/php]           | `8.4`                      |
 | [wodby/webgrind]      | [wodby/php]           | `8.2`                      |
 | [wodby/wordpress-php] | [wodby/php]           | `8.5`, `8.4`, `8.3`, `8.2` |
@@ -213,6 +215,7 @@ preserved. Parent lookup failures leave the checkout unchanged.
 | [wodby/drupal-cms]    | [drupal-cms]            | `2`                                      |
 | [wodby/mariadb]       | [mariadb]               | `12.3`, `11.8`, `11.4`, `10.11`, `10.6` |
 | [wodby/matomo]        | [matomo-org/matomo]     | `5`                                      |
+| [wodby/mautic]        | [mautic/mautic]         | `7`                                      |
 | [wodby/moodle]        | [moodle/moodle]         | `5.3`                                    |
 | [wodby/nginx]         | [nginx]                 | `1.31`, `1.30`                           |
 | [wodby/prometheus]    | [prometheus/prometheus] | `3.13`                                   |
@@ -309,7 +312,6 @@ Not automated:
 - Moving gotpl to a new Go minor line
 - Rebase to a new major Alpine version
 - Switching the latest version
-- [wodby/adminer] not auto-updates for the base image (php:8.4-apache)
 
 [adoptium/containers]: https://github.com/adoptium/containers
 
@@ -339,6 +341,8 @@ Not automated:
 [prometheus/prometheus]: https://github.com/prometheus/prometheus
 
 [matomo-org/matomo]: https://github.com/matomo-org/matomo
+
+[mautic/mautic]: https://github.com/mautic/mautic
 
 [moodle/moodle]: https://github.com/moodle/moodle
 
@@ -426,6 +430,8 @@ Not automated:
 [wodby/mariadb]: https://github.com/wodby/mariadb
 
 [wodby/matomo]: https://github.com/wodby/matomo
+
+[wodby/mautic]: https://github.com/wodby/mautic
 
 [wodby/moodle]: https://github.com/wodby/moodle
 
