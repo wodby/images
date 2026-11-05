@@ -14,7 +14,7 @@ import subprocess
 # Representative versions; these are test inputs, not catalog version pins.
 VERSIONS = {
     'ADMINER_VER': '6.0.1', 'ALPINE_VER': '3.24.2', 'APACHE_VER': '2.4.66',
-    'CACHET_VER': '2.4.1', 'DOTNET_VER': '10.0.14', 'DRUPAL_VER': '11.4.7', 'DRUPAL_CMS_VER': '2.0.2',
+    'CACHET_VER': '2.4.1', 'DISCOURSE_VER': '2026.10.0', 'DOTNET_VER': '10.0.14', 'DRUPAL_VER': '11.4.7', 'DRUPAL_CMS_VER': '2.0.2',
     'ELASTICSEARCH_VER': '7.17.1', 'FRP_VERSION': '0.61.1', 'GO_VER': '1.27.1',
     'KIBANA_VER': '7.17.1', 'NODEJS_VER': '18.0.0', 'MARIADB_VER': '11.4.8',
     'MATOMO_VER': '5.0.1', 'MAUTIC_VER': '7.2.2', 'MOODLE_VER': '5.3.0', 'MEMCACHED_VER': '1.6.1', 'MYSQL_VER': '8.4.1',
