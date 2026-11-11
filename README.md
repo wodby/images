@@ -153,6 +153,7 @@ a GitHub Release with the same version. Failed builds can retry the existing tag
 | [wodby/drupal]        | [wodby/drupal-php]    | `8.5`, `8.4`, `8.3`, `8.2` |
 | [wodby/drupal-cms]    | [wodby/drupal-php]    | `8.4`                      |
 | [wodby/matomo]        | [wodby/php]           | `8.2`, `8.4-apache`        |
+| [wodby/matomo-php]    | [wodby/php]           | `8.4-apache`               |
 | [wodby/mautic]        | [wodby/php]           | `8.4-apache`               |
 | [wodby/moodle]        | [wodby/php]           | `8.4`                      |
 | [wodby/webgrind]      | [wodby/php]           | `8.2`                      |
@@ -432,6 +433,7 @@ Not automated:
 [wodby/mariadb]: https://github.com/wodby/mariadb
 
 [wodby/matomo]: https://github.com/wodby/matomo
+[wodby/matomo-php]: https://github.com/wodby/matomo-php
 
 [wodby/mautic]: https://github.com/wodby/mautic
 
