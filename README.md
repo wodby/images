@@ -284,17 +284,34 @@ versioned Docker tags and its `2.x` alias; only the default 3.x branch updates
 Docker `latest`. The shared GitHub release publisher explicitly disables Latest
 for Edge 2.x releases.
 
-Both lines automatically update NGINX 1.31, lego 4.x, s6-overlay 3.x, gotpl
-0.6.x, and the Go library overrides applied in their Go builds:
-golang.org/x/crypto and golang.org/x/net 0.x and google.golang.org/grpc 1.x
-(lego and confd on 3.x, lego on 2.x), and github.com/go-jose/go-jose/v4 4.x
-(lego only). Only 3.x updates etcd-client 3.6 and
-bundled confd; 2.x retains its host-provided confd and etcd v2 integration.
-Confd advances only to stable releases descended from its current source pin;
-older releases are skipped and divergent histories are reported. Go build
-images remain on their configured compatibility line.
+Every day, both branches take updates of NGINX 1.31, the Go 1.26 builder image,
+lego on its current major line (5.x on 3.x, 4.x on 2.x), s6-overlay 3.x, and
+gotpl 0.6.x. Only 3.x builds confd: the maintained `abtreece/confd` fork, on its
+current 0.x minor line, because the fork breaks its CLI in minor releases. 2.x
+keeps its host-provided confd and etcd v2 integration. A newer lego major or
+confd minor is reported for review and never adopted automatically; gotpl
+advances only to releases descended from its current source pin.
 
-Runtime component updates appear in release notes; compiler versions and digests remain in logs and source diffs. Every release waits for the Edge build, runtime tests, and vulnerability scan. Major-line migrations and conflicts with custom source patches require review.
+Branch updates are not releases. Customers update Edge release by release, and
+each update restarts the node's ingress, so the updater tags a release only for
+security:
+
+- It scans the latest release of the line and the branch image (`latest` for
+  3.x, `2.x` for 2.x) with Grype, using the repository's Grype configuration,
+  and considers High and Critical vulnerabilities that have a fix.
+- A vulnerability counts when the branch image no longer has it, or when the
+  updater can raise the vulnerable Go module in the lego or confd build to its
+  fixed version through `LEGO_GO_MODULES` or `CONFD_GO_MODULES`.
+- With at least one counted vulnerability, it tags the branch as the next patch
+  release. The release notes list the fixed vulnerabilities, followed by every
+  dependency change since the previous release.
+- Vulnerabilities that neither applies to, such as the Go standard library or a
+  fix on a new major line, are reported for review.
+
+Overrides are dropped once the pinned lego or confd release requires the same or
+a newer version of the module, or no longer uses it. Validation runs skip the
+scan. Every release still waits for the Edge build, runtime tests, and
+vulnerability scan in its repository.
 
 ### Workspace agents
 

@@ -32,6 +32,12 @@ assert_file_line() {
   grep -Fqx "${expected}" "${file}" || fail "missing '${expected}' in ${file}"
 }
 
+assert_event() {
+  local filter="${1}"
+
+  jq -e "select(${filter})" "${IMAGES_UPDATE_REPORT_FILE}" >/dev/null || fail "missing event: ${filter}"
+}
+
 assert_eq "true" "$(_version_is_newer 3.2.4 3.2.3 && echo true)"
 if _version_is_newer 3.2.3 3.2.3; then
   fail "equal versions were treated as newer"
@@ -40,23 +46,24 @@ if _version_is_newer 3.2.2 3.2.3; then
   fail "older version was treated as newer"
 fi
 
+export IMAGES_UPDATE_REPORT_FILE="${test_root}/events.jsonl"
+export IMAGES_UPDATE_DIR="descendants"
+export IMAGES_UPDATE_SCRIPT="edge-alpine"
+
 dockerfile="${test_root}/Dockerfile"
 printf '%s\n' \
   'ARG GO_IMAGE=golang:1.26.4-alpine3.23@sha256:old-go' \
   'ARG NGINX_IMAGE=wodby/nginx:1.31-5.48.4@sha256:old-nginx' \
   'FROM --platform=$BUILDPLATFORM ${GO_IMAGE} AS lego-build' \
-  'ARG LEGO_VERSION=v4.35.2' \
+  'ARG LEGO_VERSION=v5.6.0' \
   'ARG LEGO_COMMIT=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' \
-  'ARG GO_CRYPTO_VERSION=v0.58.0' \
-  'ARG GO_NET_VERSION=v0.61.0' \
-  'ARG GO_GRPC_VERSION=v1.83.2' \
-  'ARG GO_JOSE_VERSION=v4.1.4' \
-  'ARG ETCD_CLIENT_VERSION=v3.6.14' \
-  'ARG GO_CRYPTO_VERSION=v0.58.0' \
-  'ARG GO_NET_VERSION=v0.61.0' \
-  'ARG GO_GRPC_VERSION=v1.83.2' \
-  'ARG GOTPL_COMMIT=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' \
+  'ARG LEGO_GO_MODULES=""' \
+  'FROM --platform=$BUILDPLATFORM ${GO_IMAGE} AS confd-build' \
+  'ARG CONFD_VERSION=v0.41.3' \
   'ARG CONFD_COMMIT=cccccccccccccccccccccccccccccccccccccccc' \
+  'ARG CONFD_GO_MODULES="golang.org/x/net@v0.62.0 google.golang.org/grpc@v1.85.0"' \
+  'FROM --platform=$BUILDPLATFORM ${GO_IMAGE} AS gotpl-build' \
+  'ARG GOTPL_COMMIT=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' \
   'FROM ${NGINX_IMAGE}' \
   'ARG S6_OVERLAY_VERSION=3.2.3.2' >"${dockerfile}"
 
@@ -78,154 +85,95 @@ _get_image_digest() {
   esac
 }
 
+# Versions per compatibility line; an empty line asks for the newest release.
 _get_latest_version() {
-  case "${1}" in
-    github.com/just-containers/s6-overlay) echo '3.2.4.0' ;;
-    github.com/go-acme/lego) echo '4.35.3' ;;
-    github.com/etcd-io/etcd) echo '3.6.15' ;;
-    github.com/golang/crypto) echo '0.58.0' ;;
-    github.com/golang/net) echo '0.62.0' ;;
-    github.com/grpc/grpc-go) echo '1.83.2' ;;
-    github.com/go-jose/go-jose) echo '4.1.6' ;;
-    github.com/wodby/gotpl) echo '0.6.9' ;;
-    github.com/kelseyhightower/confd) echo '0.16.0' ;;
-    *) return 1 ;;
-  esac
-}
-_github_api() {
-  case "${1}" in
-    repos/go-acme/lego/commits/v4.35.3|repos/wodby/gotpl/commits/0.6.9) echo '{"sha":"dddddddddddddddddddddddddddddddddddddddd"}' ;;
-    repos/kelseyhightower/confd/commits/v0.16.0) echo '{"sha":"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"}' ;;
-    repos/wodby/gotpl/compare/*) echo '{"status":"ahead"}' ;;
-    repos/kelseyhightower/confd/compare/*) echo '{"status":"behind"}' ;;
+  case "${1}:${2}" in
+    github.com/just-containers/s6-overlay:3|github.com/just-containers/s6-overlay:) echo '3.2.4.0' ;;
+    github.com/go-acme/lego:5) echo '5.6.1' ;;
+    github.com/go-acme/lego:4) echo '4.35.2' ;;
+    github.com/go-acme/lego:) echo '6.0.0' ;;
+    github.com/abtreece/confd:0.41) echo '0.41.4' ;;
+    github.com/abtreece/confd:) echo '0.42.0' ;;
+    github.com/wodby/gotpl:0.6) echo '0.6.9' ;;
     *) return 1 ;;
   esac
 }
 
-export IMAGES_UPDATE_REPORT_FILE="${test_root}/events.jsonl"
-export IMAGES_UPDATE_DIR="descendants"
-export IMAGES_UPDATE_SCRIPT="edge-alpine"
+go_mod() {
+  local requirements="${1}"
+  jq -nc --arg content "$(printf 'module example\n\ngo 1.26\n\nrequire (\n%b)\n' "${requirements}" | base64)" '{content: $content}'
+}
+
+_github_api() {
+  case "${1}" in
+    repos/go-acme/lego/commits/v5.6.1|repos/wodby/gotpl/commits/0.6.9) echo '{"sha":"dddddddddddddddddddddddddddddddddddddddd"}' ;;
+    repos/abtreece/confd/commits/v0.41.4) echo '{"sha":"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"}' ;;
+    repos/wodby/gotpl/compare/*) echo '{"status":"ahead"}' ;;
+    # confd caught up with the x/net override but still requires an older grpc.
+    'repos/abtreece/confd/contents/go.mod?ref=v0.41.4')
+      go_mod '\tgolang.org/x/net v0.63.0 // indirect\n\tgoogle.golang.org/grpc v1.84.0 // indirect\n' ;;
+    *) return 1 ;;
+  esac
+}
 
 _prepare_edge_alpine_update "${dockerfile}" || fail "expected image pin updates"
 assert_file_line 'ARG GO_IMAGE=golang:1.26.5-alpine3.23@sha256:new-go' "${dockerfile}"
 assert_file_line 'ARG NGINX_IMAGE=wodby/nginx:1.31-5.48.5@sha256:new-nginx' "${dockerfile}"
-jq -e '
-  select(
-    .type == "dependency_update"
-    and .repo == "wodby/edge-alpine"
-    and .message == "s6-overlay: 3.2.3.2 -> 3.2.4.0"
-  )
-' "${test_root}/events.jsonl" >/dev/null || fail "missing s6 update event"
-
-assert_file_line 'ARG LEGO_VERSION=v4.35.3' "${dockerfile}"
+assert_file_line 'ARG LEGO_VERSION=v5.6.1' "${dockerfile}"
 assert_file_line 'ARG LEGO_COMMIT=dddddddddddddddddddddddddddddddddddddddd' "${dockerfile}"
+assert_file_line 'ARG CONFD_VERSION=v0.41.4' "${dockerfile}"
+assert_file_line 'ARG CONFD_COMMIT=eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee' "${dockerfile}"
 assert_file_line 'ARG S6_OVERLAY_VERSION=3.2.4.0' "${dockerfile}"
-assert_file_line 'ARG ETCD_CLIENT_VERSION=v3.6.15' "${dockerfile}"
 assert_file_line 'ARG GOTPL_COMMIT=dddddddddddddddddddddddddddddddddddddddd' "${dockerfile}"
-assert_file_line 'ARG CONFD_COMMIT=cccccccccccccccccccccccccccccccccccccccc' "${dockerfile}"
-# Each build stage applies the Go module pins; both copies move together.
-assert_eq 2 "$(grep -Fcx 'ARG GO_NET_VERSION=v0.62.0' "${dockerfile}")"
-assert_eq 2 "$(grep -Fcx 'ARG GO_CRYPTO_VERSION=v0.58.0' "${dockerfile}")"
-assert_eq 2 "$(grep -Fcx 'ARG GO_GRPC_VERSION=v1.83.2' "${dockerfile}")"
-jq -e 'select(.type == "dependency_update" and .message == "go-net: 0.61.0 -> 0.62.0")' \
-  "${test_root}/events.jsonl" >/dev/null || fail "missing Go module update event"
-# go-jose is pinned in the lego stage only.
-assert_eq 1 "$(grep -c '^ARG GO_JOSE_VERSION=' "${dockerfile}")"
-assert_file_line 'ARG GO_JOSE_VERSION=v4.1.6' "${dockerfile}"
-jq -e 'select(.type == "dependency_update" and .message == "go-jose: 4.1.4 -> 4.1.6")' \
-  "${test_root}/events.jsonl" >/dev/null || fail "missing go-jose update event"
-if jq -e 'select(.message | startswith("go-crypto") or startswith("go-grpc"))' \
-  "${test_root}/events.jsonl" >/dev/null; then
-  fail "current Go module pins were reported as updated"
+# The override confd now meets is dropped; the one it does not meet stays.
+assert_file_line 'ARG CONFD_GO_MODULES="google.golang.org/grpc@v1.85.0"' "${dockerfile}"
+assert_file_line 'ARG LEGO_GO_MODULES=""' "${dockerfile}"
+assert_event '.type == "dependency_update" and .message == "s6-overlay: 3.2.3.2 -> 3.2.4.0"'
+assert_event '.type == "dependency_update" and .message == "lego: 5.6.0 -> 5.6.1"'
+assert_event '.type == "dependency_update" and .message == "confd: 0.41.3 -> 0.41.4"'
+assert_event '.type == "dependency_update" and (.message | startswith("golang.org/x/net (confd build): override 0.62.0 removed"))'
+# Newer lines are reported, never adopted.
+assert_event '.type == "manual_review" and (.message | startswith("lego 6.0.0 is available"))'
+assert_event '.type == "manual_review" and (.message | startswith("confd 0.42.0 is available"))'
+if jq -e 'select(.message | startswith("s6-overlay 3.2.4.0 is available"))' "${IMAGES_UPDATE_REPORT_FILE}" >/dev/null; then
+  fail "a release on the current line was reported as a new line"
 fi
-(
-  major_dockerfile="${test_root}/Dockerfile.go-major"
-  cp "${dockerfile}" "${major_dockerfile}"
-  _get_latest_version() {
-    case "${1}" in
-      github.com/golang/net) echo '1.0.0' ;;
-      github.com/go-acme/lego) echo '4.35.3' ;;
-      github.com/just-containers/s6-overlay) echo '3.2.4.0' ;;
-      github.com/etcd-io/etcd) echo '3.6.15' ;;
-      github.com/golang/crypto) echo '0.58.0' ;;
-      *) return 1 ;;
-    esac
-  }
-  if _edge_runtime_updates "${major_dockerfile}"; then
-    fail 'Go module major migration was accepted'
-  else
-    assert_eq 2 "$?"
-  fi
-  assert_eq 2 "$(grep -Fcx 'ARG GO_NET_VERSION=v0.62.0' "${major_dockerfile}")"
-)
 
-# Edge 2 has no confd stage or etcd client; every Go module pin lives in lego.
-(
-  edge2_dockerfile="${test_root}/Dockerfile.edge2"
-  printf '%s\n' \
-    'FROM --platform=$BUILDPLATFORM ${GO_IMAGE} AS lego-build' \
-    'ARG LEGO_VERSION=v4.35.3' \
-    'ARG LEGO_COMMIT=dddddddddddddddddddddddddddddddddddddddd' \
-    'ARG GO_CRYPTO_VERSION=v0.58.0' \
-    'ARG GO_NET_VERSION=v0.61.0' \
-    'ARG GO_GRPC_VERSION=v1.83.2' \
-    'ARG GO_JOSE_VERSION=v4.1.4' \
-    'FROM --platform=$BUILDPLATFORM ${GO_IMAGE} AS gotpl-build' \
-    'ARG GOTPL_COMMIT=dddddddddddddddddddddddddddddddddddddddd' \
-    'FROM ${NGINX_IMAGE}' \
-    'ARG S6_OVERLAY_VERSION=3.2.4.0' >"${edge2_dockerfile}"
-  _edge_runtime_updates "${edge2_dockerfile}" 2 || fail 'Edge 2 Go module pins were not updated'
-  assert_file_line 'ARG GO_NET_VERSION=v0.62.0' "${edge2_dockerfile}"
-  assert_file_line 'ARG GO_JOSE_VERSION=v4.1.6' "${edge2_dockerfile}"
-  assert_eq 1 "$(grep -c '^ARG GO_JOSE_VERSION=' "${edge2_dockerfile}")"
-  if _edge_runtime_updates "${edge2_dockerfile}" 2; then
-    fail 'current Edge 2 pins were reported as changed'
-  else
-    assert_eq 1 "$?"
-  fi
-  _get_latest_version() {
-    case "${1}" in
-      github.com/go-jose/go-jose) echo '5.0.0' ;;
-      github.com/go-acme/lego) echo '4.35.3' ;;
-      github.com/just-containers/s6-overlay) echo '3.2.4.0' ;;
-      github.com/golang/crypto) echo '0.58.0' ;;
-      github.com/golang/net) echo '0.62.0' ;;
-      github.com/grpc/grpc-go) echo '1.83.2' ;;
-      *) return 1 ;;
-    esac
-  }
-  if _edge_runtime_updates "${edge2_dockerfile}" 2; then
-    fail 'go-jose major migration was accepted'
-  else
-    assert_eq 2 "$?"
-  fi
-  assert_file_line 'ARG GO_JOSE_VERSION=v4.1.6' "${edge2_dockerfile}"
-  # A Dockerfile without the go-jose pin fails rather than silently skipping it.
-  sed -i '/^ARG GO_JOSE_VERSION=/d' "${edge2_dockerfile}"
-  if _edge_runtime_updates "${edge2_dockerfile}" 2 2>/dev/null; then
-    fail 'missing go-jose pin was accepted'
-  else
-    assert_eq 2 "$?"
-  fi
-)
-
+# Once current, nothing changes.
+_github_api() {
+  case "${1}" in
+    repos/wodby/gotpl/commits/0.6.9) echo '{"sha":"dddddddddddddddddddddddddddddddddddddddd"}' ;;
+    'repos/abtreece/confd/contents/go.mod?ref=v0.41.4') go_mod '\tgoogle.golang.org/grpc v1.84.0\n' ;;
+    *) return 1 ;;
+  esac
+}
 if _prepare_edge_alpine_update "${dockerfile}"; then
   fail "current image pins were reported as changed"
 else
   assert_eq "1" "$?"
 fi
 
-# Runtime-only releases still trigger an Edge rebuild when image pins are current.
-sed -i 's/LEGO_VERSION=v4.35.3/LEGO_VERSION=v4.35.2/' "${dockerfile}"
-_prepare_edge_alpine_update "${dockerfile}" || fail 'runtime-only update was skipped'
-assert_file_line 'ARG LEGO_VERSION=v4.35.3' "${dockerfile}"
+# An override for a module the release no longer uses is dropped.
 (
-  _get_latest_version() { echo 5.0.0; }
+  _github_api() { go_mod '\tgolang.org/x/text v0.38.0\n'; }
+  _edge_prune_module_pins "${dockerfile}" || fail 'unused override was kept'
+  assert_file_line 'ARG CONFD_GO_MODULES=""' "${dockerfile}"
+)
+
+# Releases outside the current line are refused, not adopted.
+(
+  _get_latest_version() {
+    case "${1}:${2}" in
+      github.com/go-acme/lego:5) echo '6.0.0' ;;
+      *) echo '3.2.4.0' ;;
+    esac
+  }
   if _edge_runtime_updates "${dockerfile}"; then
     fail 'major migration was accepted'
   else
     assert_eq 2 "$?"
   fi
+  assert_file_line 'ARG LEGO_VERSION=v5.6.1' "${dockerfile}"
 )
 (
   _github_api() {
@@ -241,69 +189,204 @@ assert_file_line 'ARG LEGO_VERSION=v4.35.3' "${dockerfile}"
   fi
   assert_file_line 'ARG GOTPL_COMMIT=dddddddddddddddddddddddddddddddddddddddd' "${dockerfile}"
 )
-jq -e 'select(.type == "manual_review" and (.message | contains("diverges")))' "${IMAGES_UPDATE_REPORT_FILE}" >/dev/null || fail 'missing divergent source report'
+assert_event '.type == "manual_review" and (.message | contains("diverges"))'
 
-# Revision pins resolve through the same digest path and never fall back to SemVer.
+# Edge 2 has no confd build and stays on lego 4.
 (
-  revision_dockerfile="${test_root}/Dockerfile.revision"
-  cp "${dockerfile}" "${revision_dockerfile}"
-  _get_image_release() { assert_eq 'wodby/nginx 1.31-' "$*"; echo r1; }
-  _get_image_tags() { echo '1.26.5-alpine3.23'; }
-  _get_image_digest() {
-    case "$1:$2" in
-      wodby/nginx:1.31-r1) echo sha256:revision ;;
-      golang:1.26.5-alpine3.23) echo sha256:new-go ;;
-      *) fail "unexpected image digest request: $*" ;;
+  edge2_dockerfile="${test_root}/Dockerfile.edge2"
+  printf '%s\n' \
+    'FROM --platform=$BUILDPLATFORM ${GO_IMAGE} AS lego-build' \
+    'ARG LEGO_VERSION=v4.35.2' \
+    'ARG LEGO_COMMIT=dddddddddddddddddddddddddddddddddddddddd' \
+    'ARG LEGO_GO_MODULES="golang.org/x/net@v0.62.0"' \
+    'FROM --platform=$BUILDPLATFORM ${GO_IMAGE} AS gotpl-build' \
+    'ARG GOTPL_COMMIT=dddddddddddddddddddddddddddddddddddddddd' \
+    'FROM ${NGINX_IMAGE}' \
+    'ARG S6_OVERLAY_VERSION=3.2.4.0' >"${edge2_dockerfile}"
+  _get_latest_version() {
+    case "${1}:${2}" in
+      github.com/abtreece/confd:*) fail 'Edge 2 requested confd' ;;
+      github.com/go-acme/lego:4) echo '4.35.2' ;;
+      github.com/go-acme/lego:) echo '5.6.1' ;;
+      github.com/wodby/gotpl:*) echo '0.6.9' ;;
+      *) echo '3.2.4.0' ;;
     esac
   }
-  _prepare_edge_alpine_update "${revision_dockerfile}"
-  assert_file_line 'ARG NGINX_IMAGE=wodby/nginx:1.31-r1@sha256:revision' "${revision_dockerfile}"
-  _get_image_release() { echo 99.9.9; }
-  _get_image_digest() { echo sha256:legacy; }
-  if _prepare_edge_alpine_update "${revision_dockerfile}"; then
-    fail 'revision pin fell back to legacy SemVer'
+  _github_api() {
+    case "${1}" in
+      repos/wodby/gotpl/commits/*) echo '{"sha":"dddddddddddddddddddddddddddddddddddddddd"}' ;;
+      'repos/go-acme/lego/contents/go.mod?ref=v4.35.2') go_mod '\tgolang.org/x/net v0.53.0\n' ;;
+      *) fail "unexpected GitHub request: $1" ;;
+    esac
+  }
+  if _edge_runtime_updates "${edge2_dockerfile}" 2; then
+    fail 'current Edge 2 pins were reported as changed'
+  else
+    assert_eq 1 "$?"
+  fi
+  if _edge_prune_module_pins "${edge2_dockerfile}" 2; then
+    fail 'an override lego 4 still needs was dropped'
+  fi
+  assert_file_line 'ARG LEGO_GO_MODULES="golang.org/x/net@v0.62.0"' "${edge2_dockerfile}"
+)
+
+# Override parsing, including releases cut before the overrides ARGs existed.
+(
+  legacy="${test_root}/Dockerfile.legacy"
+  printf '%s\n' 'ARG GO_CRYPTO_VERSION=v0.58.0' 'ARG GO_NET_VERSION=v0.61.0' \
+    'ARG GO_GRPC_VERSION=v1.83.2' 'ARG GO_JOSE_VERSION=v4.1.4' \
+    'ARG GO_CRYPTO_VERSION=v0.58.0' 'ARG GO_NET_VERSION=v0.61.0' 'ARG GO_GRPC_VERSION=v1.83.2' >"${legacy}"
+  assert_eq $'golang.org/x/crypto@v0.58.0\ngolang.org/x/net@v0.61.0\ngoogle.golang.org/grpc@v1.83.2\ngithub.com/go-jose/go-jose/v4@v4.1.4' \
+    "$(_edge_module_pins LEGO_GO_MODULES "${legacy}")"
+  assert_eq $'golang.org/x/crypto@v0.58.0\ngolang.org/x/net@v0.61.0\ngoogle.golang.org/grpc@v1.83.2' \
+    "$(_edge_module_pins CONFD_GO_MODULES <(cat "${legacy}"))"
+  printf '%s\n' 'ARG LEGO_GO_MODULES="golang.org/x/net@0.62.0"' >"${legacy}"
+  if _edge_module_pins LEGO_GO_MODULES "${legacy}" 2>/dev/null; then
+    fail 'invalid override accepted'
   else
     assert_eq 2 "$?"
   fi
-  assert_file_line 'ARG NGINX_IMAGE=wodby/nginx:1.31-r1@sha256:revision' "${revision_dockerfile}"
+  printf '%s\n' 'ARG LEGO_GO_MODULES=""' >"${legacy}"
+  _edge_write_module_pins LEGO_GO_MODULES "${legacy}" golang.org/x/net@v0.62.0 '' golang.org/x/crypto@v0.59.0
+  assert_file_line 'ARG LEGO_GO_MODULES="golang.org/x/crypto@v0.59.0 golang.org/x/net@v0.62.0"' "${legacy}"
+  assert_eq 0.62.0 "$(_edge_pinned_version golang.org/x/net golang.org/x/crypto@v0.59.0 golang.org/x/net@v0.62.0)"
+  assert_eq '' "$(_edge_pinned_version golang.org/x/ne golang.org/x/net@v0.62.0)"
 )
 
-_get_image_release() {
-  case "${1}" in
-    wodby/nginx) echo '5.48.4' ;;
-    golang) echo '1.26.4-alpine3.23' ;;
-    *) return 1 ;;
-  esac
-}
+# Grype output becomes one finding per line: High and Critical only, versions
+# without the v prefix, and the repository's Grype configuration applied.
+(
+  export IMAGES_REPO_ROOT="${test_root}/images"
+  mkdir -p "${IMAGES_REPO_ROOT}/.image-security-tools/db" "${test_root}/scan-repo"
+  cat >"${IMAGES_REPO_ROOT}/.image-security-tools/grype" <<'GRYPE'
+#!/usr/bin/env bash
+printf '%s\n' "$*" >"${GRYPE_ARGS_FILE}"
+cat <<'JSON'
+{"matches": [
+  {"vulnerability": {"id": "CVE-1", "severity": "High", "fix": {"versions": ["v0.63.0"]}},
+   "artifact": {"name": "golang.org/x/net", "version": "v0.62.0", "type": "go-module",
+                "locations": [{"path": "/opt/wodby/tools/bin/confd"}]}},
+  {"vulnerability": {"id": "CVE-2", "severity": "Medium", "fix": {"versions": ["1.0.1"]}},
+   "artifact": {"name": "busybox", "version": "1.0.0", "type": "apk", "locations": [{"path": "/lib/apk/db/installed"}]}},
+  {"vulnerability": {"id": "CVE-3", "severity": "Critical", "fix": {"versions": ["1.0.1"]}},
+   "artifact": {"name": "busybox", "version": "1.0.0", "type": "apk", "locations": [{"path": "/lib/apk/db/installed"}]}}
+]}
+JSON
+GRYPE
+  chmod +x "${IMAGES_REPO_ROOT}/.image-security-tools/grype"
+  export GRYPE_ARGS_FILE="${test_root}/grype-args"
+  cd "${test_root}/scan-repo"
+  touch .grype.yaml
+  findings=$(_edge_security_findings docker.io/wodby/edge-alpine:3.1.0)
+  assert_eq 2 "$(wc -l <<<"${findings}" | tr -d ' ')"
+  assert_eq 'CVE-1 0.62.0 0.63.0 /opt/wodby/tools/bin/confd' \
+    "$(head -n1 <<<"${findings}" | jq -r '[.id, .version, .fixes[0], .paths[0]] | join(" ")')"
+  assert_eq 'CVE-3 Critical apk' "$(tail -n1 <<<"${findings}" | jq -r '[.id, .severity, .type] | join(" ")')"
+  grep -Fq 'registry:docker.io/wodby/edge-alpine:3.1.0 --platform linux/amd64 --by-cve --only-fixed --config .grype.yaml -o json' \
+    "${GRYPE_ARGS_FILE}" || fail "unexpected Grype arguments: $(cat "${GRYPE_ARGS_FILE}")"
+  rm -rf "${IMAGES_REPO_ROOT}/.image-security-tools"
+  if _edge_security_findings docker.io/wodby/edge-alpine:3.1.0 2>/dev/null; then
+    fail 'missing scanner accepted'
+  else
+    assert_eq 2 "$?"
+  fi
+)
 
-_get_image_tags() { _get_image_release "$@"; }
-
-_get_image_digest() {
-  echo 'sha256:older'
-}
-
-if _prepare_edge_alpine_update "${dockerfile}"; then
-  fail "older image pins were accepted"
-else
-  assert_eq "2" "$?"
+assert_eq 0.63.0 "$(_edge_fix_version 0.62.0 '["0.61.0","0.64.0","0.63.0"]')"
+if _edge_fix_version 0.62.0 '["1.0.0"]'; then
+  fail 'a fix on another major line was accepted'
 fi
-assert_file_line 'ARG GO_IMAGE=golang:1.26.5-alpine3.23@sha256:new-go' "${dockerfile}"
-assert_file_line 'ARG NGINX_IMAGE=wodby/nginx:1.31-5.48.5@sha256:new-nginx' "${dockerfile}"
 
-invalid_dockerfile="${test_root}/Dockerfile.invalid"
-printf '%s\n' \
-  'ARG GO_IMAGE=golang:1.26.4-alpine3.23@sha256:old-go' \
-  'ARG LEGO_VERSION=v4.35.2' \
-  'ARG LEGO_COMMIT=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' \
-  'ARG ETCD_CLIENT_VERSION=v3.6.14' \
-  'ARG GOTPL_COMMIT=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' \
-  'ARG CONFD_COMMIT=cccccccccccccccccccccccccccccccccccccccc' \
-  'ARG S6_OVERLAY_VERSION=3.2.3.2' >"${invalid_dockerfile}"
-if _prepare_edge_alpine_update "${invalid_dockerfile}"; then
-  fail "invalid Dockerfile unexpectedly succeeded"
-else
-  assert_eq "2" "$?"
-fi
+# Security plan: which findings the release would fix, and the overrides it adds.
+plan_dockerfile="${test_root}/Dockerfile.plan"
+printf '%s\n' 'ARG LEGO_VERSION=v5.6.1' 'ARG LEGO_GO_MODULES=""' 'ARG CONFD_VERSION=v0.41.4' \
+  'ARG CONFD_GO_MODULES="golang.org/x/crypto@v0.59.0 golang.org/x/net@v0.62.0"' >"${plan_dockerfile}"
+finding() {
+  jq -nc --arg id "$1" --arg package "$2" --arg version "$3" --arg type "$4" --arg path "$5" --arg fix "$6" \
+    '{id: $id, severity: "High", package: $package, version: $version, type: $type, fixes: [$fix], paths: [$path]}'
+}
+(
+  _get_image_digest() { echo sha256:published; }
+  # Neither pinned release requires the fixed versions yet.
+  _github_api() {
+    case "${1}" in
+      'repos/go-acme/lego/contents/go.mod?ref=v5.6.1') go_mod '\tgithub.com/go-jose/go-jose/v4 v4.1.6\n' ;;
+      'repos/abtreece/confd/contents/go.mod?ref=v0.41.4') go_mod '\tgolang.org/x/net v0.60.0\n' ;;
+      *) fail "unexpected GitHub request: $1" ;;
+    esac
+  }
+  _edge_security_findings() {
+    case "${1}" in
+      docker.io/wodby/edge-alpine:3.1.0)
+        finding CVE-NET golang.org/x/net 0.62.0 go-module /opt/wodby/tools/bin/confd 0.63.0
+        finding CVE-JOSE github.com/go-jose/go-jose/v4 4.1.9 go-module /opt/wodby/bin/lego 4.1.10
+        finding CVE-APK busybox 1.37.0-r1 apk /lib/apk/db/installed 1.37.0-r2
+        finding CVE-GO stdlib 1.26.11 go-module /opt/wodby/bin/lego 1.26.12
+        finding CVE-MAJOR golang.org/x/text 0.38.0 go-module /opt/wodby/bin/lego 1.0.0 ;;
+      docker.io/wodby/edge-alpine:latest)
+        finding CVE-NET golang.org/x/net 0.62.0 go-module /opt/wodby/tools/bin/confd 0.63.0
+        finding CVE-JOSE github.com/go-jose/go-jose/v4 4.1.9 go-module /opt/wodby/bin/lego 4.1.10
+        finding CVE-GO stdlib 1.26.11 go-module /opt/wodby/bin/lego 1.26.12
+        finding CVE-MAJOR golang.org/x/text 0.38.0 go-module /opt/wodby/bin/lego 1.0.0 ;;
+      *) fail "unexpected scan: $1" ;;
+    esac
+  }
+  notes=$(_edge_security_plan 3.1.0 3 latest "${plan_dockerfile}") || fail 'fixable findings did not plan a release'
+  assert_eq $'- CVE-APK (High): busybox 1.37.0-r1.\n- CVE-JOSE (High): github.com/go-jose/go-jose/v4 4.1.9 in the lego build, raised to 4.1.10.\n- CVE-NET (High): golang.org/x/net 0.62.0 in the confd build, raised to 0.63.0.' "${notes}"
+  assert_file_line 'ARG LEGO_GO_MODULES="github.com/go-jose/go-jose/v4@v4.1.10"' "${plan_dockerfile}"
+  assert_file_line 'ARG CONFD_GO_MODULES="golang.org/x/crypto@v0.59.0 golang.org/x/net@v0.63.0"' "${plan_dockerfile}"
+  # stdlib is fixed by the Go builder image, and x/text 1.0.0 is a new major line.
+  assert_event '.type == "manual_review" and (.message | contains("CVE-GO in stdlib 1.26.11 and CVE-MAJOR in golang.org/x/text 0.38.0"))'
+
+  # The overrides are already in place on the next run: the plan still releases.
+  notes=$(_edge_security_plan 3.1.0 3 latest "${plan_dockerfile}") || fail 'existing overrides did not plan a release'
+  assert_file_line 'ARG CONFD_GO_MODULES="golang.org/x/crypto@v0.59.0 golang.org/x/net@v0.63.0"' "${plan_dockerfile}"
+
+  # A release that already requires the fixed version needs no override, and
+  # one below its requirement would downgrade the module.
+  (
+    satisfied_plan="${test_root}/Dockerfile.satisfied"
+    printf '%s\n' 'ARG LEGO_VERSION=v5.6.1' 'ARG LEGO_GO_MODULES=""' 'ARG CONFD_VERSION=v0.41.4' 'ARG CONFD_GO_MODULES=""' >"${satisfied_plan}"
+    _github_api() { go_mod '\tgolang.org/x/net v0.64.0\n'; }
+    _edge_security_findings() {
+      finding CVE-NET golang.org/x/net 0.62.0 go-module /opt/wodby/tools/bin/confd 0.63.0
+    }
+    notes=$(_edge_security_plan 3.1.0 3 latest "${satisfied_plan}") || fail 'a fix the branch release requires was not counted'
+    assert_eq '- CVE-NET (High): golang.org/x/net 0.62.0 in the confd build, fixed by confd 0.41.4.' "${notes}"
+    assert_file_line 'ARG CONFD_GO_MODULES=""' "${satisfied_plan}"
+  )
+
+  # Edge 2 has no confd build to raise.
+  edge2_plan="${test_root}/Dockerfile.plan2"
+  printf '%s\n' 'ARG LEGO_VERSION=v4.35.2' 'ARG LEGO_GO_MODULES=""' >"${edge2_plan}"
+  _edge_security_findings() {
+    finding CVE-NET golang.org/x/net 0.62.0 go-module /opt/wodby/tools/bin/confd 0.63.0
+  }
+  if _edge_security_plan 2.7.13 2 2.x "${edge2_plan}"; then
+    fail 'Edge 2 planned a confd override'
+  fi
+  assert_file_line 'ARG LEGO_GO_MODULES=""' "${edge2_plan}"
+
+  _edge_security_findings() { :; }
+  if _edge_security_plan 3.1.0 3 latest "${plan_dockerfile}"; then
+    fail 'a release without findings was planned'
+  else
+    assert_eq 1 "$?"
+  fi
+  _edge_security_findings() { return 2; }
+  if _edge_security_plan 3.1.0 3 latest "${plan_dockerfile}"; then
+    fail 'a failed scan was ignored'
+  else
+    assert_eq 2 "$?"
+  fi
+  _get_image_digest() { [[ "${2}" != 3.1.0 ]] || exit 1; echo sha256:published; }
+  if _edge_security_plan 3.1.0 3 latest "${plan_dockerfile}"; then
+    fail 'an unpublished release was scanned'
+  else
+    assert_eq 1 "$?"
+  fi
+  assert_event '.type == "manual_review" and .message == "wodby/edge-alpine:3.1.0 is not published; skipped the security check"'
+)
 
 # Resolve the real patch version from both legacy and revision parent releases.
 for release in 5.48.13 r0 r23; do
@@ -319,155 +402,185 @@ for tag in 1.31-r00 1.31-r01 1.31-r1-rc1 1.30-r0 1.31; do
     fail "invalid NGINX tag was accepted: ${tag}"
   fi
 done
-_github_api() { echo '{"content":""}'; }
-for release in 5.48.13 r0; do
-  if _edge_nginx_version "wodby/nginx:1.31-${release}"; then
-    fail 'missing NGINX version was accepted'
-  fi
-done
 
-# Release comparisons must include changes accumulated since the previous tag.
+# Release notes include everything since the previous tag.
 notes_dir="${test_root}/notes"
 mkdir -p "${notes_dir}"
 (
   cd "${notes_dir}"
-  printf '%s\n' 'ARG NGINX_IMAGE=wodby/nginx:1.31-5.48.13@sha256:new' 'ARG GO_IMAGE=golang:1.26.8-alpine3.23@sha256:new' > Dockerfile
-  runtime_pins() {
-    printf '%s\n' 'ARG LEGO_VERSION=v4.35.2' 'ARG S6_OVERLAY_VERSION=3.2.3.2' 'ARG ETCD_CLIENT_VERSION=v3.6.14' 'ARG GOTPL_COMMIT=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' 'ARG CONFD_COMMIT=cccccccccccccccccccccccccccccccccccccccc' \
-      'ARG GO_CRYPTO_VERSION=v0.58.0' 'ARG GO_NET_VERSION=v0.61.0' 'ARG GO_GRPC_VERSION=v1.83.2' 'ARG GO_JOSE_VERSION=v4.1.4'
+  previous_pins() {
+    printf '%s\n' 'ARG NGINX_IMAGE=wodby/nginx:1.31-5.48.7@sha256:old' 'ARG GO_IMAGE=golang:1.26.7-alpine3.23@sha256:old' \
+      'ARG LEGO_VERSION=v5.6.0' 'ARG LEGO_GO_MODULES=""' 'ARG S6_OVERLAY_VERSION=3.2.3.2' \
+      'ARG GOTPL_COMMIT=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' 'ARG CONFD_VERSION=v0.41.3' \
+      'ARG CONFD_GO_MODULES="golang.org/x/crypto@v0.59.0 golang.org/x/net@v0.62.0"'
   }
-  runtime_pins >> Dockerfile
-  sed -i 's/LEGO_VERSION=v4.35.2/LEGO_VERSION=v4.35.3/; s/GO_NET_VERSION=v0.61.0/GO_NET_VERSION=v0.62.0/; s/GO_JOSE_VERSION=v4.1.4/GO_JOSE_VERSION=v4.1.6/' Dockerfile
+  previous_pins | sed 's/LEGO_VERSION=v5.6.0/LEGO_VERSION=v5.6.1/; s/1.31-5.48.7@sha256:old/1.31-5.48.13@sha256:new/' \
+    | sed 's|CONFD_GO_MODULES=.*|CONFD_GO_MODULES="golang.org/x/net@v0.63.0 google.golang.org/grpc@v1.85.0"|' \
+    | sed 's|LEGO_GO_MODULES=""|LEGO_GO_MODULES="github.com/go-jose/go-jose/v4@v4.1.10"|' >Dockerfile
   git() {
-    runtime_pins
-    assert_eq 'show 3.0.6:Dockerfile' "$*"
-    printf '%s\n' 'ARG NGINX_IMAGE=wodby/nginx:1.31-5.48.7@sha256:old' 'ARG GO_IMAGE=golang:1.26.7-alpine3.23@sha256:old'
+    assert_eq 'show 3.1.0:Dockerfile' "$*"
+    previous_pins
   }
-  _next_release_tag() { echo 3.0.7; }
+  _next_release_tag() { echo 3.1.1; }
   _edge_nginx_version() {
     case "${1}" in
       *5.48.7*) echo 1.31.3 ;;
       *) echo 1.31.6 ;;
     esac
   }
-  notes=$(_edge_release_notes 3.0.6)
+  notes=$(_edge_release_notes 3.1.0 '- CVE-NET (High): golang.org/x/net 0.62.0 in the confd build, raised to 0.63.0.')
+  [[ "${notes}" == 'Changes since 3.1.0'$'\n\n''Fixes these vulnerabilities:'$'\n''- CVE-NET (High)'* ]] || fail "missing security section: ${notes}"
   [[ "${notes}" == *'NGINX: 1.31.3 -> 1.31.6.'* ]] || fail 'missing NGINX upgrade'
-  [[ "${notes}" == *'lego (certificate issuance and renewal): 4.35.2 -> 4.35.3.'* ]] || fail 'missing runtime update note'
-  [[ "${notes}" == *'golang.org/x/net (lego and confd builds): 0.61.0 -> 0.62.0.'* ]] || fail 'missing Go module update note'
-  [[ "${notes}" == *'- github.com/go-jose/go-jose/v4 (lego build): 4.1.4 -> 4.1.6.'* ]] || fail 'missing go-jose update note'
-  [[ "${notes}" != *'golang.org/x/crypto'* && "${notes}" != *'google.golang.org/grpc'* ]] || fail 'unchanged Go modules reported'
-  # Releases cut before the go-jose pin existed describe it as newly pinned.
-  (
-    git() {
-      runtime_pins | grep -v '^ARG GO_JOSE_VERSION='
-      printf '%s\n' 'ARG NGINX_IMAGE=wodby/nginx:1.31-5.48.7@sha256:old' 'ARG GO_IMAGE=golang:1.26.7-alpine3.23@sha256:old'
-    }
-    notes=$(_edge_release_notes 3.0.6) || fail 'release notes failed for a newly added pin'
-    [[ "${notes}" == *'- github.com/go-jose/go-jose/v4 (lego build): pinned to 4.1.6.'* ]] || fail 'missing new go-jose pin note'
-    [[ "${notes}" == *'golang.org/x/net (lego and confd builds): 0.61.0 -> 0.62.0.'* ]] || fail 'existing pin notes lost'
-  )
-  [[ "${notes}" == *'Go builder image: 1.26.7-alpine3.23 -> 1.26.8-alpine3.23.'* ]] || fail 'missing builder upgrade'
+  [[ "${notes}" == *'- lego (certificate issuance and renewal): 5.6.0 -> 5.6.1.'* ]] || fail 'missing runtime update note'
+  [[ "${notes}" == *'- golang.org/x/net (confd build): 0.62.0 -> 0.63.0.'* ]] || fail 'missing changed override'
+  [[ "${notes}" == *'- google.golang.org/grpc (confd build): raised to 1.85.0.'* ]] || fail 'missing new override'
+  [[ "${notes}" == *'- golang.org/x/crypto (confd build): override removed, confd now requires a fixed version.'* ]] || fail 'missing removed override'
+  [[ "${notes}" == *'- github.com/go-jose/go-jose/v4 (lego build): raised to 4.1.10.'* ]] || fail 'missing lego override'
+  [[ "${notes}" != *'confd (configuration generation)'* && "${notes}" != *'Go builder'* ]] || fail 'unchanged components reported'
   [[ "${notes}" != *'sha256:'* ]] || fail 'raw digests leaked into release notes'
-  [[ "${notes}" == *'compare/3.0.6...3.0.7'* ]] || fail 'wrong release comparison'
-  _edge_nginx_version() { echo 1.31.6; }
-  notes=$(_edge_release_notes 3.0.6)
-  [[ "${notes}" != *'NGINX remains'* && "${notes}" != *'- NGINX:'* ]] || fail 'unchanged NGINX reported'
-  [[ "${notes}" == *'NGINX base image: wodby/nginx:1.31-5.48.7 -> wodby/nginx:1.31-5.48.13.'* ]] || fail 'missing base image upgrade'
-  _edge_nginx_version() { return 1; }
-  if _edge_release_notes 3.0.6; then
-    fail 'release notes accepted an unknown NGINX version'
-  fi
+  [[ "${notes}" == *'compare/3.1.0...3.1.1' ]] || fail 'wrong release comparison'
 
-  # Reproduce a release whose only change is the Go builder digest.
-  cp Dockerfile previous.Dockerfile
-  git() { cat previous.Dockerfile; }
-  sed -i 's/GO_IMAGE=.*$/GO_IMAGE=golang:1.26.8-alpine3.23@sha256:refreshed/' Dockerfile
-  if _edge_update_requires_release; then fail 'Go digest refresh requires a release'; fi
-  notes=$(_edge_release_notes 3.0.6)
-  [[ "${notes}" == *'Refresh Go builder image 1.26.8-alpine3.23 (image digest changed).'* ]] || fail 'missing builder refresh'
-  [[ "${notes}" != *'NGINX'* && "${notes}" != *'lego'* ]] || fail 'unchanged components reported'
+  # Releases cut before the overrides ARGs compare against their per-module pins.
+  git() {
+    printf '%s\n' 'ARG NGINX_IMAGE=wodby/nginx:1.31-5.48.13@sha256:new' 'ARG GO_IMAGE=golang:1.26.7-alpine3.23@sha256:old' \
+      'ARG LEGO_VERSION=v4.35.2' 'ARG GO_NET_VERSION=v0.62.0' 'ARG GO_JOSE_VERSION=v4.1.9' \
+      'ARG S6_OVERLAY_VERSION=3.2.3.2' 'ARG GOTPL_COMMIT=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' \
+      'ARG CONFD_COMMIT=cccccccccccccccccccccccccccccccccccccccc' 'ARG GO_NET_VERSION=v0.62.0'
+  }
+  notes=$(_edge_release_notes 3.0.41)
+  [[ "${notes}" == *'- lego (certificate issuance and renewal): 4.35.2 -> 5.6.1.'* ]] || fail 'missing lego major note'
+  [[ "${notes}" == *'- confd (configuration generation): pinned to 0.41.3.'* ]] || fail 'missing new confd note'
+  [[ "${notes}" == *'- golang.org/x/net (confd build): 0.62.0 -> 0.63.0.'* ]] || fail 'legacy override not compared'
+  [[ "${notes}" == *'- github.com/go-jose/go-jose/v4 (lego build): 4.1.9 -> 4.1.10.'* ]] || fail 'legacy lego override not compared'
+  [[ "${notes}" != *'Fixes these vulnerabilities'* ]] || fail 'empty security section printed'
 
-  cp previous.Dockerfile Dockerfile
-  sed -i 's/NGINX_IMAGE=.*$/NGINX_IMAGE=wodby\/nginx:1.31-5.48.13@sha256:refreshed/' Dockerfile
-  _edge_nginx_version() { echo 1.31.6; }
-  notes=$(_edge_release_notes 3.0.6)
-  [[ "${notes}" == *'Refresh NGINX base image wodby/nginx:1.31-5.48.13 (image digest changed).'* ]] || fail 'missing NGINX digest refresh'
-  [[ "${notes}" != *'Go builder'* && "${notes}" != *'- NGINX:'* ]] || fail 'unchanged versions reported'
-  if _edge_update_requires_release; then fail 'NGINX digest refresh requires a release'; fi
-  sed -i 's/1.26.8/1.26.9/' Dockerfile
-  _edge_update_requires_release || fail 'version update did not require a release'
-  cp previous.Dockerfile Dockerfile
-  sed -i 's/LEGO_VERSION=v4.35.3/LEGO_VERSION=v4.35.4/' Dockerfile
-  _edge_update_requires_release || fail 'runtime update did not require a release'
+  # Digest-only refreshes are not dependency changes.
+  previous_pins >Dockerfile
+  git() { previous_pins; }
+  sed -i 's/GO_IMAGE=.*$/GO_IMAGE=golang:1.26.7-alpine3.23@sha256:refreshed/' Dockerfile
+  if _edge_update_requires_release; then fail 'Go digest refresh counted as a dependency change'; fi
+  assert_eq '- Refresh Go builder image 1.26.7-alpine3.23 (image digest changed).' "$(_edge_change_lines HEAD)"
+  sed -i 's/1.26.7/1.26.8/' Dockerfile
+  _edge_update_requires_release || fail 'version update did not count as a dependency change'
   git() { return 1; }
   if _edge_update_requires_release; then
     fail 'missing previous Dockerfile accepted'
   else
     assert_eq 2 "$?"
   fi
-
 )
 
+# Orchestration: daily updates land on the branch; only security findings tag.
 trace="${test_root}/trace"
 orchestration_dir="${test_root}/orchestration"
 mkdir -p "${orchestration_dir}"
 
 _git_clone() {
-  echo clone >>"${trace}"
+  echo "clone ${2:-master}" >>"${trace}"
   cd "${orchestration_dir}"
 }
-_prepare_edge_alpine_update() {
-  echo prepare >>"${trace}"
+_prepare_edge_alpine_update() { echo prepare >>"${trace}"; }
+_latest_release_tag() { echo 3.1.0; }
+_edge_security_plan() {
+  echo "plan $*" >>"${trace}"
+  echo '- CVE-1 (High): busybox 1.37.0-r1.'
 }
-_edge_update_requires_release() { return 0; }
-_latest_release_tag() { echo 3.0.6; }
-_edge_release_notes() { echo "NGINX: 1.31.3 -> 1.31.6"; }
+_edge_release_notes() {
+  assert_eq '3.1.0 - CVE-1 (High): busybox 1.37.0-r1.' "$*"
+  echo 'Release notes'
+}
 _git_commit() {
-  assert_eq "NGINX: 1.31.3 -> 1.31.6" "${2}"
-  echo commit >>"${trace}"
+  echo "commit ${2}" >>"${trace}"
 }
 git() {
-  case "${1}" in
-    push) echo push >>"${trace}" ;;
+  case "${1}:${2:-}" in
+    push:*) echo push >>"${trace}" ;;
+    diff:--quiet) return "${TEST_DOCKERFILE_UNCHANGED:-1}" ;;
     *) fail "unexpected git command: $*" ;;
   esac
 }
-# Any status lookup is an error, even when publishing is enabled.
 _github_api() { fail "unexpected GitHub API request: $*"; }
-_wait_for_github_workflow() { fail "unexpected build workflow check"; }
-export IMAGES_UPDATE_PUSH=1
 _release_tag() {
-  assert_eq "NGINX: 1.31.3 -> 1.31.6" "${1}"
+  assert_eq 'Release notes  3' "$*"
   echo release >>"${trace}"
 }
 
 update_edge_alpine
-assert_eq $'clone\nprepare\ncommit\npush\nrelease' "$(cat "${trace}")"
+assert_eq $'clone master\nprepare\nplan 3.1.0 3 latest\ncommit Release notes\npush\nrelease' "$(cat "${trace}")"
 
-# Digest-only updates commit and push without generating notes or releasing.
+# A branch that equals the release has nothing to tag, whatever the findings.
 (
   : >"${trace}"
-  _edge_update_requires_release() { return 1; }
-  _latest_release_tag() { fail "digest refresh looked up release tags"; }
-  _edge_release_notes() { fail "digest refresh generated release notes"; }
-  _git_commit() {
-    assert_eq "Refresh pinned image digests" "${2}"
-    echo commit >>"${trace}"
+  git() {
+    case "${1}:${2:-}:${3:-}" in
+      diff:--quiet:3.1.0) return 0 ;;
+      diff:--quiet:--) return 0 ;;
+      *) fail "unexpected git command: $*" ;;
+    esac
   }
   update_edge_alpine
-  assert_eq $'clone\nprepare\ncommit\npush' "$(cat "${trace}")"
-  : >"${trace}"
-  _edge_update_requires_release() { return 2; }
-  if update_edge_alpine; then fail 'release classification failure ignored'; fi
-  assert_eq $'clone\nprepare' "$(cat "${trace}")"
+  assert_eq $'clone master\nprepare\nplan 3.1.0 3 latest' "$(cat "${trace}")"
+  assert_event '.type == "manual_review" and (.message | contains("has no changes to release"))'
 )
 
-# Update failures must still fail the job and prevent release publication.
+# Without findings, dependency updates are committed and pushed without a tag.
+(
+  : >"${trace}"
+  _edge_security_plan() { echo "plan $*" >>"${trace}"; return 1; }
+  _edge_release_notes() { fail 'release notes without a release'; }
+  _release_tag() { fail 'released without a security finding'; }
+  _edge_update_requires_release() { return 0; }
+  _edge_change_lines() { assert_eq HEAD "$1"; echo '- lego (certificate issuance and renewal): 5.6.0 -> 5.6.1.'; }
+  update_edge_alpine 2
+  assert_eq $'clone release/edge-2.x\nprepare\nplan 3.1.0 2 2.x\ncommit Update Edge dependencies\n\n- lego (certificate issuance and renewal): 5.6.0 -> 5.6.1.\npush' "$(cat "${trace}")"
+
+  : >"${trace}"
+  _edge_update_requires_release() { return 1; }
+  _edge_change_lines() { fail 'digest refresh listed changes'; }
+  update_edge_alpine
+  assert_eq $'clone master\nprepare\nplan 3.1.0 3 latest\ncommit Refresh pinned image digests\npush' "$(cat "${trace}")"
+
+  : >"${trace}"
+  TEST_DOCKERFILE_UNCHANGED=0 update_edge_alpine
+  assert_eq $'clone master\nprepare\nplan 3.1.0 3 latest' "$(cat "${trace}")"
+
+  : >"${trace}"
+  _edge_update_requires_release() { return 2; }
+  if update_edge_alpine; then fail 'change classification failure ignored'; fi
+)
+
+# Scan failures fail the job before anything is committed.
+(
+  : >"${trace}"
+  _edge_security_plan() { echo "plan $*" >>"${trace}"; return 2; }
+  if update_edge_alpine; then fail 'scan failure was ignored'; fi
+  assert_eq $'clone master\nprepare\nplan 3.1.0 3 latest' "$(cat "${trace}")"
+)
+
+# Validation runs never scan.
+(
+  : >"${trace}"
+  export IMAGES_UPDATE_PUSH=0
+  _edge_security_plan() { fail 'validation run scanned images'; }
+  _edge_update_requires_release() { return 0; }
+  _edge_change_lines() { echo '- change'; }
+  update_edge_alpine
+  assert_eq $'clone master\nprepare\ncommit Update Edge dependencies\n\n- change' "$(cat "${trace}")"
+)
+
+# Push failures must still fail the job and prevent release publication.
 : >"${trace}"
-git() { echo push >>"${trace}"; return 1; }
+git() {
+  case "${1}" in
+    push) echo push >>"${trace}"; return 1 ;;
+    diff) return 1 ;;
+  esac
+}
 if update_edge_alpine; then
   fail "push failure was ignored"
 fi
-assert_eq $'clone\nprepare\ncommit\npush' "$(cat "${trace}")"
+assert_eq $'clone master\nprepare\nplan 3.1.0 3 latest\ncommit Release notes\npush' "$(cat "${trace}")"
+
+if (update_edge_alpine 4); then fail 'unsupported major accepted'; fi
 
 echo "edge-alpine updater tests passed"

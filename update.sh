@@ -1323,28 +1323,31 @@ _update_dockerfile_arg_image() {
   echo "Updated ${name} from ${current} to ${expected}"
 }
 
-# Keep runtime source updates on their reviewed compatibility lines. A release
+# Keep runtime source updates on their reviewed compatibility lines. lego stays
+# on its current major and confd on its current 0.x minor (the fork breaks its
+# CLI in minor releases); a newer line is reported for review instead. A release
 # commit must descend from a pinned commit before replacing that source pin.
-# The Go module security pins applied in the lego and confd build stages follow
-# their GitHub mirrors, whose tags are the module versions; every stage's copy
-# of a pin is replaced together. A pin may live in one stage only, such as
-# go-jose, which only lego uses.
 _edge_runtime_updates() {
   local dockerfile="${1}"
   local release_major="${2:-3}"
-  local name arg repo line current latest commit_arg commit comparison sha old_sha
+  local name arg repo line current latest newest commit_arg commit comparison sha old_sha
   local changed=1
   while read -r name arg repo line commit_arg; do
-    # Edge 2 uses host etcd v2 and confd; never introduce their v3 replacements.
-    [[ "${release_major}:${name}" == 2:etcd-client ]] && continue
+    # Edge 2 uses the host's etcd v2 and confd; it has no confd build.
+    [[ "${release_major}:${name}" == 2:confd ]] && continue
     current=$(_dockerfile_arg_value "${arg}" "${dockerfile}") || return 2
     current="${current#v}"
+    case "${line}" in
+      major) line="${current%%.*}" ;;
+      minor) line="${current%.*}" ;;
+    esac
     latest=$(_get_latest_version "github.com/${repo}" "${line}" "${name}") || return 2
     [[ "${latest}" =~ ^[0-9]+(\.[0-9]+)+$ && "${latest}" == "${line}."* ]] || {
       echo >&2 "Refusing ${name} release outside compatibility line ${line}: ${latest}"
       return 2
     }
     _edge_require_current_or_newer "${name}" "${latest}" "${current}" || return 2
+    _edge_report_newer_line "${name}" "${repo}" "${line}" "${latest}"
     [[ "${current}" != "${latest}" ]] || continue
     if [[ "${commit_arg}" != - ]]; then
       _dockerfile_arg_value "${commit_arg}" "${dockerfile}" >/dev/null || return 2
@@ -1359,27 +1362,19 @@ _edge_runtime_updates() {
     _report_event dependency_update wodby/edge-alpine "${name}: ${current} -> ${latest}" "${latest}" "${current}"
     changed=0
   done <<'DEPENDENCIES'
-lego LEGO_VERSION go-acme/lego 4 LEGO_COMMIT
+lego LEGO_VERSION go-acme/lego major LEGO_COMMIT
 s6-overlay S6_OVERLAY_VERSION just-containers/s6-overlay 3 -
-etcd-client ETCD_CLIENT_VERSION etcd-io/etcd 3.6 -
-go-crypto GO_CRYPTO_VERSION golang/crypto 0 -
-go-net GO_NET_VERSION golang/net 0 -
-go-grpc GO_GRPC_VERSION grpc/grpc-go 1 -
-go-jose GO_JOSE_VERSION go-jose/go-jose 4 -
+confd CONFD_VERSION abtreece/confd minor CONFD_COMMIT
 DEPENDENCIES
 
   while read -r name arg repo line; do
-    [[ "${release_major}:${name}" == 2:confd ]] && continue
     old_sha=$(_dockerfile_arg_value "${arg}" "${dockerfile}") || return 2
     latest=$(_get_latest_version "github.com/${repo}" "${line}" "${name}") || return 2
     [[ "${latest}" =~ ^[0-9]+(\.[0-9]+)+$ && "${latest}" == "${line}."* ]] || {
       echo >&2 "Refusing ${name} release outside compatibility line ${line}: ${latest}"
       return 2
     }
-    case "${name}" in
-      gotpl) commit=$(_github_api "repos/${repo}/commits/${latest}") || return 2 ;;
-      confd) commit=$(_github_api "repos/${repo}/commits/v${latest}") || return 2 ;;
-    esac
+    commit=$(_github_api "repos/${repo}/commits/${latest}") || return 2
     sha=$(jq -er '.sha | select(test("^[0-9a-f]{40}$"))' <<<"${commit}") || return 2
     [[ "${sha}" != "${old_sha}" ]] || continue
     comparison=$(_github_api "repos/${repo}/compare/${old_sha}...${sha}") || return 2
@@ -1397,9 +1392,241 @@ DEPENDENCIES
     esac
   done <<'SOURCES'
 gotpl GOTPL_COMMIT wodby/gotpl 0.6
-confd CONFD_COMMIT kelseyhightower/confd 0
 SOURCES
   return "${changed}"
+}
+
+# Report a newer major (lego) or minor (confd) line; moving to it needs a
+# reviewed Edge change, so the updater never does it on its own.
+_edge_report_newer_line() {
+  local name="${1}" repo="${2}" line="${3}" latest="${4}" newest
+  newest=$(_get_latest_version "github.com/${repo}" "" "${name}" 2>/dev/null) || return 0
+  [[ "${newest}" != "${line}."* ]] || return 0
+  _version_is_newer "${newest}" "${latest}" || return 0
+  _report_event manual_review wodby/edge-alpine \
+    "${name} ${newest} is available; Edge stays on ${line}.x until the move is reviewed" "${newest}" "${latest}"
+}
+
+# Go module overrides, per build stage: the ARG holding them, the ARG naming the
+# upstream release whose go.mod they raise, the upstream repository, and the
+# binary they end up in. Edge 2 has no confd build.
+_edge_module_pin_stages() {
+  echo "LEGO_GO_MODULES LEGO_VERSION go-acme/lego /opt/wodby/bin/lego lego"
+  [[ "${1:-3}" == 2 ]] || echo "CONFD_GO_MODULES CONFD_VERSION abtreece/confd /opt/wodby/tools/bin/confd confd"
+}
+
+# Print the module@version overrides of one ARG, one per line. Releases cut
+# before the overrides ARGs existed pinned each module in its own ARG.
+_edge_module_pins() {
+  local arg="${1}" dockerfile="${2:-Dockerfile}" content value pin legacy
+  # Read once: callers also pass process substitutions.
+  content=$(cat "${dockerfile}") || return 2
+  if ! grep -Eq "^ARG ${arg}=" <<<"${content}"; then
+    while read -r legacy pin; do
+      [[ "${arg}" == LEGO_GO_MODULES || "${legacy}" != GO_JOSE_VERSION ]] || continue
+      value=$(sed -n -E "s/^ARG ${legacy}=(v[0-9.]+)$/\\1/p" <<<"${content}" | head -n1)
+      [[ -z "${value}" ]] || echo "${pin}@${value}"
+    done <<'LEGACY'
+GO_CRYPTO_VERSION golang.org/x/crypto
+GO_NET_VERSION golang.org/x/net
+GO_GRPC_VERSION google.golang.org/grpc
+GO_JOSE_VERSION github.com/go-jose/go-jose/v4
+LEGACY
+    return 0
+  fi
+  value=$(sed -n -E "s/^ARG ${arg}=(.*)$/\\1/p" <<<"${content}" | head -n1)
+  value="${value#\"}"
+  value="${value%\"}"
+  for pin in ${value}; do
+    [[ "${pin}" =~ ^[a-z0-9][a-z0-9./_-]*@v[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
+      echo >&2 "Invalid Go module override in ${arg}: ${pin}"
+      return 2
+    }
+    echo "${pin}"
+  done
+}
+
+# Load the overrides of one ARG into the named array; fails on invalid entries.
+_edge_load_module_pins() {
+  local -n _pins="${1}"
+  local output
+  output=$(_edge_module_pins "${2}" "${3}") || return 2
+  _pins=()
+  [[ -z "${output}" ]] || mapfile -t _pins <<<"${output}"
+}
+
+# The overridden version of one module, without the v prefix, or nothing.
+_edge_pinned_version() {
+  local module="${1}"
+  shift
+  printf '%s\n' "$@" | awk -F@ -v module="${module}" '$1 == module { sub(/^v/, "", $2); print $2; exit }'
+}
+
+_edge_write_module_pins() {
+  local arg="${1}" dockerfile="${2}"
+  shift 2
+  local value
+  value=$(printf '%s\n' "$@" | sed '/^$/d' | sort -u | paste -sd' ' -)
+  sed -i -E "s|^ARG ${arg}=.*$|ARG ${arg}=\"${value}\"|" "${dockerfile}"
+}
+
+# The version an upstream release's go.mod requires for a module, or nothing.
+_edge_upstream_requirement() {
+  local repo="${1}" ref="${2}" module="${3}" response
+  response=$(_github_api "repos/${repo}/contents/go.mod?ref=${ref}") || return 2
+  jq -er '.content' <<<"${response}" | base64 -d \
+    | awk -v module="${module}" '
+        $1 == "require" && $2 == "(" { block = 1; next }
+        block && $1 == ")" { block = 0; next }
+        block && $1 == module { print $2; exit }
+        $1 == "require" && $2 == module { print $3; exit }'
+}
+
+# Drop overrides that the pinned upstream release already meets, or no longer
+# uses: once upstream catches up, `go get` would only downgrade the module.
+_edge_prune_module_pins() {
+  local dockerfile="${1}" release_major="${2:-3}"
+  local arg source_arg repo binary label ref pin module version required changed=1
+  local -a pins kept
+  while read -r arg source_arg repo binary label; do
+    grep -Eq "^ARG ${arg}=" "${dockerfile}" || continue
+    _edge_load_module_pins pins "${arg}" "${dockerfile}" || return 2
+    [[ "${#pins[@]}" -gt 0 ]] || continue
+    ref=$(_dockerfile_arg_value "${source_arg}" "${dockerfile}") || return 2
+    kept=()
+    for pin in "${pins[@]}"; do
+      module="${pin%@*}"
+      version="${pin#*@}"
+      required=$(_edge_upstream_requirement "${repo}" "${ref}" "${module}") || return 2
+      if [[ -n "${required}" ]] && _version_is_newer "${version#v}" "${required#v}"; then
+        kept+=("${pin}")
+        continue
+      fi
+      _report_event dependency_update wodby/edge-alpine \
+        "${module} (${label} build): override ${version#v} removed; ${label} ${ref#v} requires ${required:-no version of it}" "" "${version#v}"
+      changed=0
+    done
+    [[ "${#kept[@]}" -eq "${#pins[@]}" ]] || _edge_write_module_pins "${arg}" "${dockerfile}" "${kept[@]}"
+  done < <(_edge_module_pin_stages "${release_major}")
+  return "${changed}"
+}
+
+# High and Critical vulnerabilities with an available fix in a published image,
+# one JSON object per line. The repository's Grype configuration applies, so
+# accepted findings are ignored the same way the release build ignores them.
+_edge_security_findings() {
+  local image="${1}"
+  local tools="${IMAGES_REPO_ROOT}/.image-security-tools"
+  local scan
+  local -a config_args=()
+  [[ -x "${tools}/grype" && -d "${tools}/db" ]] || {
+    echo >&2 "The Grype scanner and database are not prepared in ${tools}"
+    return 2
+  }
+  [[ ! -f .grype.yaml ]] || config_args=(--config .grype.yaml)
+  scan=$(GRYPE_DB_CACHE_DIR="${tools}/db" GRYPE_DB_AUTO_UPDATE=false \
+    GRYPE_CHECK_FOR_APP_UPDATE=false GRYPE_SEARCH_SCOPE=squashed \
+    "${tools}/grype" "registry:${image}" --platform linux/amd64 --by-cve --only-fixed \
+    "${config_args[@]}" -o json) || {
+    echo >&2 "Failed to scan ${image}"
+    return 2
+  }
+  jq -c '
+    [.matches[]
+      | select(.vulnerability.severity == "High" or .vulnerability.severity == "Critical")
+      | {id: .vulnerability.id, severity: .vulnerability.severity,
+         package: .artifact.name, version: (.artifact.version | ltrimstr("v")), type: .artifact.type,
+         fixes: [(.vulnerability.fix.versions // [])[] | ltrimstr("v")],
+         paths: [(.artifact.locations // [])[].path]}]
+    | unique_by([.id, .package, .version]) | .[]' <<<"${scan}"
+}
+
+# The lowest fix version newer than the installed one on the same major line.
+_edge_fix_version() {
+  local installed="${1}" fixes="${2}" fix
+  while read -r fix; do
+    [[ "${fix%%.*}" == "${installed%%.*}" ]] || continue
+    if _version_is_newer "${fix}" "${installed}"; then
+      echo "${fix}"
+      return 0
+    fi
+  done < <(jq -r '.[]' <<<"${fixes}" | sort -V)
+  return 1
+}
+
+# Decide whether the latest release of a line needs a security release. A
+# finding counts when the branch image no longer has it, or when this run can
+# raise the vulnerable Go module in the lego or confd build. Prints one release
+# note line per counted finding. Returns 0 to release, 1 when there is nothing
+# to release (unresolved findings are reported for review), 2 on errors.
+_edge_security_plan() {
+  local previous="${1}" release_major="${2}" branch_image="${3}" dockerfile="${4:-Dockerfile}"
+  local released current finding id severity package version fixes binary fix pinned arg label tag pin
+  local source_arg repo ref required
+  local -a pins kept unresolved=() notes=()
+  local pin_status
+  # A release whose build failed has no image; the build failure needs a person.
+  for tag in "${previous}" "${branch_image}"; do
+    if ! (_get_image_digest wodby/edge-alpine "${tag}") >/dev/null 2>&1; then
+      _report_event manual_review wodby/edge-alpine \
+        "wodby/edge-alpine:${tag} is not published; skipped the security check" "" "${previous}"
+      return 1
+    fi
+  done
+  released=$(_edge_security_findings "docker.io/wodby/edge-alpine:${previous}") || return 2
+  [[ -n "${released}" ]] || return 1
+  current=$(_edge_security_findings "docker.io/wodby/edge-alpine:${branch_image}") || return 2
+  while IFS= read -r finding; do
+    id=$(jq -r '.id' <<<"${finding}")
+    severity=$(jq -r '.severity' <<<"${finding}")
+    package=$(jq -r '.package' <<<"${finding}")
+    version=$(jq -r '.version' <<<"${finding}")
+    fixes=$(jq -c '.fixes' <<<"${finding}")
+    if ! jq -e --arg id "${id}" --arg package "${package}" \
+      'select(.id == $id and .package == $package)' <<<"${current}" >/dev/null 2>&1; then
+      notes+=("- ${id} (${severity}): ${package} ${version}.")
+      continue
+    fi
+    pin_status=1
+    # Go standard library findings are fixed by the Go builder image instead.
+    if [[ "$(jq -r '.type' <<<"${finding}")" == go-module && "${package}" != stdlib ]] \
+      && fix=$(_edge_fix_version "${version}" "${fixes}"); then
+      while read -r arg source_arg repo binary label; do
+        jq -e --arg binary "${binary}" '.paths | index($binary)' <<<"${finding}" >/dev/null || continue
+        grep -Eq "^ARG ${arg}=" "${dockerfile}" || continue
+        # The branch may already build a release that requires the fixed version;
+        # an override below that requirement would downgrade the module.
+        ref=$(_dockerfile_arg_value "${source_arg}" "${dockerfile}") || return 2
+        required=$(_edge_upstream_requirement "${repo}" "${ref}" "${package}") || return 2
+        if [[ -n "${required}" ]] && ! _version_is_newer "${fix}" "${required#v}"; then
+          notes+=("- ${id} (${severity}): ${package} ${version} in the ${label} build, fixed by ${label} ${ref#v}.")
+          pin_status=0
+          continue
+        fi
+        _edge_load_module_pins pins "${arg}" "${dockerfile}" || return 2
+        pinned=$(_edge_pinned_version "${package}" "${pins[@]}")
+        if [[ -z "${pinned}" ]] || _version_is_newer "${fix}" "${pinned}"; then
+          kept=()
+          for pin in "${pins[@]}"; do
+            [[ "${pin%@*}" == "${package}" ]] || kept+=("${pin}")
+          done
+          _edge_write_module_pins "${arg}" "${dockerfile}" "${kept[@]}" "${package}@v${fix}"
+          _report_event dependency_update wodby/edge-alpine \
+            "${package} (${label} build): override ${fix} for ${id}" "${fix}" "${version}"
+        fi
+        notes+=("- ${id} (${severity}): ${package} ${version} in the ${label} build, raised to ${fix}.")
+        pin_status=0
+      done < <(_edge_module_pin_stages "${release_major}")
+    fi
+    [[ "${pin_status}" -eq 0 ]] || unresolved+=("${id} in ${package} ${version}")
+  done <<<"${released}"
+
+  if [[ "${#unresolved[@]}" -gt 0 ]]; then
+    _report_event manual_review wodby/edge-alpine \
+      "Edge ${previous} has fixable vulnerabilities that ${branch_image} does not fix yet: $(_join_words "${unresolved[@]}")" "" "${previous}"
+  fi
+  [[ "${#notes[@]}" -gt 0 ]] || return 1
+  printf '%s\n' "${notes[@]}" | sort -u
 }
 
 _prepare_edge_alpine_update() {
@@ -1481,6 +1708,14 @@ _prepare_edge_alpine_update() {
     [[ "${update_status}" -eq 1 ]] || return 2
   fi
 
+  # After source updates, so overrides are checked against the new releases.
+  if _edge_prune_module_pins "${dockerfile}" "${release_major}"; then
+    updated=1
+  else
+    update_status=$?
+    [[ "${update_status}" -eq 1 ]] || return 2
+  fi
+
   [[ -n "${updated}" ]]
 }
 
@@ -1502,19 +1737,20 @@ _edge_nginx_version() {
   echo "${version}"
 }
 
-# Compare with the last release so notes include all accumulated pin changes.
-_edge_release_notes() {
-  local previous="${1}"
+# One line per component that differs between a ref's Dockerfile and the
+# working Dockerfile.
+_edge_change_lines() {
+  local ref="${1}"
   local old_dockerfile
-  local next_release
   local old_nginx new_nginx old_version new_version
   local old_go new_go old_tag new_tag
+  local arg label old_value new_value
+  local pins_arg source_arg binary stage module old_pin new_pin
+  local -a old_pins new_pins
 
-  next_release=$(_next_release_tag "" "${previous%%.*}") || return 1
-  old_dockerfile=$(git show "${previous}:Dockerfile") || return 1
+  old_dockerfile=$(git show "${ref}:Dockerfile") || return 1
   old_nginx=$(_dockerfile_arg_value NGINX_IMAGE <(printf '%s\n' "${old_dockerfile}")) || return 1
   new_nginx=$(_dockerfile_arg_value NGINX_IMAGE Dockerfile) || return 1
-  printf 'Changes since %s\n\n' "${previous}"
   if [[ "${old_nginx}" != "${new_nginx}" ]]; then
     old_version=$(_edge_nginx_version "${old_nginx}") || return 1
     new_version=$(_edge_nginx_version "${new_nginx}") || return 1
@@ -1542,11 +1778,8 @@ _edge_release_notes() {
       printf -- '- Refresh Go builder image %s (image digest changed).\n' "${new_tag}"
     fi
   fi
-  local arg label old_value new_value
   while read -r arg label; do
-    if [[ "${previous}" == 2.* && ( "${arg}" == ETCD_CLIENT_VERSION || "${arg}" == CONFD_COMMIT ) ]]; then
-      continue
-    fi
+    grep -Eq "^ARG ${arg}=" Dockerfile || continue
     new_value=$(_dockerfile_arg_value "${arg}" Dockerfile) || return 1
     # A pin added since the previous release has no old value to compare.
     if ! grep -Eq "^ARG ${arg}=" <<<"${old_dockerfile}"; then
@@ -1566,19 +1799,47 @@ _edge_release_notes() {
   done <<'RUNTIME_NOTES'
 LEGO_VERSION lego (certificate issuance and renewal)
 S6_OVERLAY_VERSION s6-overlay (service supervision)
-ETCD_CLIENT_VERSION etcd client (configuration updates)
 GOTPL_COMMIT gotpl (configuration templates)
-CONFD_COMMIT confd (configuration generation)
-GO_CRYPTO_VERSION golang.org/x/crypto (lego and confd builds)
-GO_NET_VERSION golang.org/x/net (lego and confd builds)
-GO_GRPC_VERSION google.golang.org/grpc (lego and confd builds)
-GO_JOSE_VERSION github.com/go-jose/go-jose/v4 (lego build)
+CONFD_VERSION confd (configuration generation)
 RUNTIME_NOTES
-  printf '\nFull changes: https://github.com/wodby/edge-alpine/compare/%s...%s\n' "${previous}" "${next_release}"
+
+  while read -r pins_arg source_arg _ binary stage; do
+    grep -Eq "^ARG ${pins_arg}=" Dockerfile || continue
+    _edge_load_module_pins old_pins "${pins_arg}" <(printf '%s\n' "${old_dockerfile}") || return 1
+    _edge_load_module_pins new_pins "${pins_arg}" Dockerfile || return 1
+    for module in $(printf '%s\n' "${old_pins[@]%@*}" "${new_pins[@]%@*}" | sed '/^$/d' | sort -u); do
+      old_pin=$(_edge_pinned_version "${module}" "${old_pins[@]}")
+      new_pin=$(_edge_pinned_version "${module}" "${new_pins[@]}")
+      if [[ -z "${old_pin}" ]]; then
+        printf -- '- %s (%s build): raised to %s.\n' "${module}" "${stage}" "${new_pin}"
+      elif [[ -z "${new_pin}" ]]; then
+        printf -- '- %s (%s build): override removed, %s now requires a fixed version.\n' "${module}" "${stage}" "${stage}"
+      elif [[ "${old_pin}" != "${new_pin}" ]]; then
+        printf -- '- %s (%s build): %s -> %s.\n' "${module}" "${stage}" "${old_pin}" "${new_pin}"
+      fi
+    done
+  done < <(_edge_module_pin_stages "$([[ "${ref}" == 2.* ]] && echo 2 || echo 3)")
 }
 
-# Image digest refreshes should rebuild master without creating a release tag.
-# Preserve every other Dockerfile change when deciding whether to release.
+# Compare with the last release so notes include all accumulated changes.
+_edge_release_notes() {
+  local previous="${1}"
+  local security="${2:-}"
+  local next_release changes
+
+  next_release=$(_next_release_tag "" "${previous%%.*}") || return 1
+  changes=$(_edge_change_lines "${previous}") || return 1
+  printf 'Changes since %s\n\n' "${previous}"
+  if [[ -n "${security}" ]]; then
+    printf 'Fixes these vulnerabilities:\n%s\n\n' "${security}"
+  fi
+  if [[ -n "${changes}" ]]; then
+    printf '%s\n\n' "${changes}"
+  fi
+  printf 'Full changes: https://github.com/wodby/edge-alpine/compare/%s...%s\n' "${previous}" "${next_release}"
+}
+
+# Image digest refreshes alone do not describe a dependency change.
 _edge_update_requires_release() {
   local previous current
   previous=$(git show HEAD:Dockerfile) || return 2
@@ -1587,16 +1848,24 @@ _edge_update_requires_release() {
   [[ "${previous}" != "${current}" ]]
 }
 
+# Keep each Edge branch current every day, but tag a release only when the
+# latest release has a fixable High or Critical vulnerability that the branch
+# fixes, or that this run fixes by raising a Go module in the lego or confd
+# build. Customers update Edge release by release, and each update restarts it.
 update_edge_alpine() {
   local repo="wodby/edge-alpine"
   local release_major="${1:-3}"
+  local branch_image
   local prepare_status
+  local plan_status
   local previous_release
-  local release_notes
+  local security_notes=""
+  local message
+  local changes
 
   case "${release_major}" in
-    2) _git_clone "${repo}" release/edge-2.x || return 1 ;;
-    3) _git_clone "${repo}" || return 1 ;;
+    2) _git_clone "${repo}" release/edge-2.x || return 1; branch_image=2.x ;;
+    3) _git_clone "${repo}" || return 1; branch_image=latest ;;
     *) echo >&2 "Unsupported Edge release line: ${release_major}"; return 1 ;;
   esac
 
@@ -1604,32 +1873,52 @@ update_edge_alpine() {
     :
   else
     prepare_status=$?
-    if [[ "${prepare_status}" -eq 1 ]]; then
-      echo "Edge Alpine image pins are already current"
-      return 0
+    if [[ "${prepare_status}" -ne 1 ]]; then
+      echo >&2 "Failed to prepare Edge Alpine dependency updates"
+      return "${prepare_status}"
     fi
-
-    echo >&2 "Failed to prepare Edge Alpine dependency updates"
-    return "${prepare_status}"
-  fi
-
-  if _edge_update_requires_release; then
-    :
-  else
-    prepare_status=$?
-    [[ "${prepare_status}" -eq 1 ]] || return "${prepare_status}"
-    _git_commit ./ "Refresh pinned image digests" || return 1
-    _git_push origin || return 1
-    return 0
+    echo "Edge Alpine image pins are already current"
   fi
 
   previous_release=$(_latest_release_tag "${release_major}") || return 1
-  release_notes=$(_edge_release_notes "${previous_release}") || return 1
-  _git_commit ./ "${release_notes}" || return 1
-  _git_push origin || return 1
+  if _publishing_enabled; then
+    if security_notes=$(_edge_security_plan "${previous_release}" "${release_major}" "${branch_image}"); then
+      plan_status=0
+    else
+      plan_status=$?
+      [[ "${plan_status}" -eq 1 ]] || return "${plan_status}"
+    fi
+  else
+    echo "Skipping the Edge security check in validation runs"
+    plan_status=1
+  fi
 
-  # Build outcomes belong to the image repository; updates do not wait for CI.
-  _release_tag "${release_notes}" "" "${release_major}" || return 1
+  if [[ "${plan_status}" -eq 0 ]] && git diff --quiet "${previous_release}" -- .; then
+    _report_event manual_review "${repo}" \
+      "Edge ${previous_release} has fixable vulnerabilities, but its branch has no changes to release" "" "${previous_release}"
+    plan_status=1
+  fi
+
+  if [[ "${plan_status}" -eq 0 ]]; then
+    message=$(_edge_release_notes "${previous_release}" "${security_notes}") || return 1
+    _git_commit ./ "${message}" || return 1
+    _git_push origin || return 1
+    # Build outcomes belong to the image repository; updates do not wait for CI.
+    _release_tag "${message}" "" "${release_major}" || return 1
+    return 0
+  fi
+
+  git diff --quiet -- Dockerfile && return 0
+  if _edge_update_requires_release; then
+    changes=$(_edge_change_lines HEAD) || return 1
+    message=$(printf 'Update Edge dependencies\n\n%s\n' "${changes}")
+  else
+    prepare_status=$?
+    [[ "${prepare_status}" -eq 1 ]] || return "${prepare_status}"
+    message="Refresh pinned image digests"
+  fi
+  _git_commit ./ "${message}" || return 1
+  _git_push origin || return 1
 }
 
 # Pins in workspace agents' versions.env, as "VARIABLE Label" lines.
