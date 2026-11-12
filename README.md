@@ -94,11 +94,17 @@ its dependencies with `python -m pip install -r scripts/requirements.txt`.
 | [wodby/vinyl]     | `3.22`, `3.23` |
 | [wodby/squid]     | `3.24`         |
 
+Images that render configuration templates pin their own [wodby/gotpl] release with
+`ARG GOTPL_VERSION` in each Dockerfile; `wodby/alpine` does not include gotpl. The
+updater moves every pin to the newest gotpl release that has amd64 and arm64 builds,
+in one commit without a release. The next image release ships it and adds
+`gotpl updated from X to Y` to its notes. A gotpl update still unreleased after 7 days
+is released on its own. Images without the pin are not affected.
+
 ### Images based on official images (or forks)
 
 - Minor/patch version update
 - Rebuild against updated base image
-- Rebuild `wodby/alpine` against complete new gotpl releases
 - New image revision released on version update
 - New image revision released on Alpine Linux update
 - New `wodby/alpine` revision when tested package upgrades fix known CVEs. All
