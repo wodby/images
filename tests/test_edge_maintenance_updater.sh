@@ -34,10 +34,9 @@ ARG GO_IMAGE=golang:1.26.9-alpine3.23@sha256:old
 ARG NGINX_IMAGE=wodby/nginx:1.31-r13@sha256:old
 ARG LEGO_VERSION=v5.6.0
 ARG LEGO_COMMIT=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-ARG LEGO_GO_MODULES=""
-ARG CONFD_VERSION=v0.41.3
+ARG LEGO_GO_MODULES="golang.org/x/net@v0.62.0"
+ARG CONFD_VERSION=v0.17.0
 ARG CONFD_COMMIT=cccccccccccccccccccccccccccccccccccccccc
-ARG CONFD_GO_MODULES="golang.org/x/net@v0.62.0"
 ARG S6_OVERLAY_VERSION=3.2.3.2
 ARG GOTPL_COMMIT=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
 DOCKERFILE
@@ -89,9 +88,9 @@ _get_latest_version() {
     github.com/go-acme/lego:5|github.com/go-acme/lego:) echo 5.6.1 ;;
     github.com/just-containers/s6-overlay:*) echo 3.2.4.0 ;;
     github.com/wodby/gotpl:*) echo 0.6.9 ;;
-    github.com/abtreece/confd:*)
+    github.com/wodby/confd:*)
       [[ "$(git branch --show-current)" != release/edge-2.x ]] || fail 'legacy branch requested confd'
-      echo 0.41.3 ;;
+      echo 0.17.0 ;;
     *) fail "unexpected dependency: $*" ;;
   esac
 }
@@ -103,7 +102,6 @@ _github_api() {
     repos/go-acme/lego/commits/v*|repos/wodby/gotpl/commits/0.6.9) printf '{"sha":"%040d"}\n' 4 ;;
     repos/wodby/gotpl/compare/*) echo '{"status":"ahead"}' ;;
     repos/go-acme/lego/contents/go.mod*) go_mod 'golang.org/x/net v0.53.0' ;;
-    repos/abtreece/confd/contents/go.mod*) go_mod 'golang.org/x/net v0.60.0' ;;
     *) fail "unexpected GitHub request: $*" ;;
   esac
 }
@@ -114,14 +112,20 @@ finding() {
     '{id: $id, severity: "High", package: $package, version: $version, type: $type, fixes: [$fix], paths: [$path]}'
 }
 # The first release of each line has findings; later releases are clean. The
-# branch images fix the Alpine package but not the confd module.
+# branch images fix the Alpine package but not the x/net module: in lego on 3.x,
+# which the updater can raise, and in a confd binary on 2.x, which it cannot.
 _edge_security_findings() {
   case "$1" in
-    docker.io/wodby/edge-alpine:2.7.1|docker.io/wodby/edge-alpine:3.1.0)
+    docker.io/wodby/edge-alpine:2.7.1)
       finding CVE-APK busybox 1.37.0-r1 apk /lib/apk/db/installed 1.37.0-r2
       finding CVE-NET golang.org/x/net 0.62.0 go-module /opt/wodby/tools/bin/confd 0.63.0 ;;
-    docker.io/wodby/edge-alpine:latest|docker.io/wodby/edge-alpine:2.x)
+    docker.io/wodby/edge-alpine:2.x)
       finding CVE-NET golang.org/x/net 0.62.0 go-module /opt/wodby/tools/bin/confd 0.63.0 ;;
+    docker.io/wodby/edge-alpine:3.1.0)
+      finding CVE-APK busybox 1.37.0-r1 apk /lib/apk/db/installed 1.37.0-r2
+      finding CVE-NET golang.org/x/net 0.62.0 go-module /opt/wodby/bin/lego 0.63.0 ;;
+    docker.io/wodby/edge-alpine:latest)
+      finding CVE-NET golang.org/x/net 0.62.0 go-module /opt/wodby/bin/lego 0.63.0 ;;
     *) ;;
   esac
 }
@@ -143,12 +147,12 @@ legacy_head=$(git rev-parse HEAD)
 update_edge_alpine
 assert_eq master "$(git branch --show-current)"
 assert_eq tag "$(git cat-file -t 3.1.1)"
-grep -q '^ARG CONFD_GO_MODULES="golang.org/x/net@v0.63.0"$' Dockerfile || fail 'confd override was not raised'
+grep -q '^ARG LEGO_GO_MODULES="golang.org/x/net@v0.63.0"$' Dockerfile || fail 'lego override was not raised'
 grep -q '^ARG LEGO_VERSION=v5.6.1$' Dockerfile || fail 'lego was not updated on its line'
 notes=$(git for-each-ref --format='%(contents)' refs/tags/3.1.1)
 [[ "$notes" == *'compare/3.1.0...3.1.1'* ]] || fail 'current release used the legacy series'
-[[ "$notes" == *'- CVE-NET (High): golang.org/x/net 0.62.0 in the confd build, raised to 0.63.0.'* ]] || fail 'missing raised module'
-[[ "$notes" == *'- golang.org/x/net (confd build): 0.62.0 -> 0.63.0.'* ]] || fail 'missing override change'
+[[ "$notes" == *'- CVE-NET (High): golang.org/x/net 0.62.0 in the lego build, raised to 0.63.0.'* ]] || fail 'missing raised module'
+[[ "$notes" == *'- golang.org/x/net (lego build): 0.62.0 -> 0.63.0.'* ]] || fail 'missing override change'
 current_head=$(git rev-parse HEAD)
 
 # Both release lines are idempotent once current and clean.

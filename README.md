@@ -286,11 +286,11 @@ for Edge 2.x releases.
 
 Every day, both branches take updates of NGINX 1.31, the Go 1.26 builder image,
 lego on its current major line (5.x on 3.x, 4.x on 2.x), s6-overlay 3.x, and
-gotpl 0.6.x. Only 3.x builds confd: the maintained `abtreece/confd` fork, on its
-current 0.x minor line, because the fork breaks its CLI in minor releases. 2.x
-keeps its host-provided confd and etcd v2 integration. A newer lego major or
-confd minor is reported for review and never adopted automatically; gotpl
-advances only to releases descended from its current source pin.
+gotpl 0.6.x. Only 3.x builds confd: Wodby's fork [wodby/confd], on its current
+minor line. 2.x keeps its host-provided confd and etcd v2 integration. A newer
+lego major or confd minor is reported for review and never adopted
+automatically; gotpl advances only to releases descended from its current source
+pin.
 
 Branch updates are not releases. Customers update Edge release by release, and
 each update restarts the node's ingress, so the updater tags a release only for
@@ -300,16 +300,17 @@ security:
   3.x, `2.x` for 2.x) with Grype, using the repository's Grype configuration,
   and considers High and Critical vulnerabilities that have a fix.
 - A vulnerability counts when the branch image no longer has it, or when the
-  updater can raise the vulnerable Go module in the lego or confd build to its
-  fixed version through `LEGO_GO_MODULES` or `CONFD_GO_MODULES`.
+  updater can raise the vulnerable Go module in the lego build to its fixed
+  version through `LEGO_GO_MODULES`. confd's dependencies are fixed by releasing
+  [wodby/confd], which the branch then picks up.
 - With at least one counted vulnerability, it tags the branch as the next patch
   release. The release notes list the fixed vulnerabilities, followed by every
   dependency change since the previous release.
-- Vulnerabilities that neither applies to, such as the Go standard library or a
-  fix on a new major line, are reported for review.
+- Vulnerabilities that neither applies to, such as the Go standard library, a
+  confd dependency or a fix on a new major line, are reported for review.
 
-Overrides are dropped once the pinned lego or confd release requires the same or
-a newer version of the module, or no longer uses it. Validation runs skip the
+Overrides are dropped once the pinned lego release requires the same or a newer
+version of the module, or no longer uses it. Validation runs skip the
 scan. Every release still waits for the Edge build, runtime tests, and
 vulnerability scan in its repository.
 
@@ -439,6 +440,7 @@ Not automated:
 [wodby/drupal-php]: https://github.com/wodby/drupal-php
 
 [wodby/edge-alpine]: https://github.com/wodby/edge-alpine
+[wodby/confd]: https://github.com/wodby/confd
 
 [wodby/laravel-php]: https://github.com/wodby/laravel-php
 

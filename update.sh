@@ -1324,9 +1324,9 @@ _update_dockerfile_arg_image() {
 }
 
 # Keep runtime source updates on their reviewed compatibility lines. lego stays
-# on its current major and confd on its current 0.x minor (the fork breaks its
-# CLI in minor releases); a newer line is reported for review instead. A release
-# commit must descend from a pinned commit before replacing that source pin.
+# on its current major and Wodby's confd fork on its current minor; a newer line
+# is reported for review instead. A release commit must descend from a pinned
+# commit before replacing that source pin.
 _edge_runtime_updates() {
   local dockerfile="${1}"
   local release_major="${2:-3}"
@@ -1364,7 +1364,7 @@ _edge_runtime_updates() {
   done <<'DEPENDENCIES'
 lego LEGO_VERSION go-acme/lego major LEGO_COMMIT
 s6-overlay S6_OVERLAY_VERSION just-containers/s6-overlay 3 -
-confd CONFD_VERSION abtreece/confd minor CONFD_COMMIT
+confd CONFD_VERSION wodby/confd minor CONFD_COMMIT
 DEPENDENCIES
 
   while read -r name arg repo line; do
@@ -1409,21 +1409,21 @@ _edge_report_newer_line() {
 
 # Go module overrides, per build stage: the ARG holding them, the ARG naming the
 # upstream release whose go.mod they raise, the upstream repository, and the
-# binary they end up in. Edge 2 has no confd build.
+# binary they end up in. confd has none: its dependencies are updated in
+# wodby/confd itself.
 _edge_module_pin_stages() {
   echo "LEGO_GO_MODULES LEGO_VERSION go-acme/lego /opt/wodby/bin/lego lego"
-  [[ "${1:-3}" == 2 ]] || echo "CONFD_GO_MODULES CONFD_VERSION abtreece/confd /opt/wodby/tools/bin/confd confd"
 }
 
 # Print the module@version overrides of one ARG, one per line. Releases cut
-# before the overrides ARGs existed pinned each module in its own ARG.
+# before LEGO_GO_MODULES existed pinned each module in its own ARG.
 _edge_module_pins() {
   local arg="${1}" dockerfile="${2:-Dockerfile}" content value pin legacy
   # Read once: callers also pass process substitutions.
   content=$(cat "${dockerfile}") || return 2
   if ! grep -Eq "^ARG ${arg}=" <<<"${content}"; then
     while read -r legacy pin; do
-      [[ "${arg}" == LEGO_GO_MODULES || "${legacy}" != GO_JOSE_VERSION ]] || continue
+      [[ "${arg}" == LEGO_GO_MODULES ]] || continue
       value=$(sed -n -E "s/^ARG ${legacy}=(v[0-9.]+)$/\\1/p" <<<"${content}" | head -n1)
       [[ -z "${value}" ]] || echo "${pin}@${value}"
     done <<'LEGACY'
@@ -1556,7 +1556,7 @@ _edge_fix_version() {
 
 # Decide whether the latest release of a line needs a security release. A
 # finding counts when the branch image no longer has it, or when this run can
-# raise the vulnerable Go module in the lego or confd build. Prints one release
+# raise the vulnerable Go module in the lego build. Prints one release
 # note line per counted finding. Returns 0 to release, 1 when there is nothing
 # to release (unresolved findings are reported for review), 2 on errors.
 _edge_security_plan() {
@@ -1818,7 +1818,7 @@ RUNTIME_NOTES
         printf -- '- %s (%s build): %s -> %s.\n' "${module}" "${stage}" "${old_pin}" "${new_pin}"
       fi
     done
-  done < <(_edge_module_pin_stages "$([[ "${ref}" == 2.* ]] && echo 2 || echo 3)")
+  done < <(_edge_module_pin_stages)
 }
 
 # Compare with the last release so notes include all accumulated changes.
@@ -1850,8 +1850,7 @@ _edge_update_requires_release() {
 
 # Keep each Edge branch current every day, but tag a release only when the
 # latest release has a fixable High or Critical vulnerability that the branch
-# fixes, or that this run fixes by raising a Go module in the lego or confd
-# build. Customers update Edge release by release, and each update restarts it.
+# fixes, or that this run fixes by raising a Go module in the lego build. Customers update Edge release by release, and each update restarts it.
 update_edge_alpine() {
   local repo="wodby/edge-alpine"
   local release_major="${1:-3}"

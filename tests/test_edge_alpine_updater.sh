@@ -57,11 +57,10 @@ printf '%s\n' \
   'FROM --platform=$BUILDPLATFORM ${GO_IMAGE} AS lego-build' \
   'ARG LEGO_VERSION=v5.6.0' \
   'ARG LEGO_COMMIT=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' \
-  'ARG LEGO_GO_MODULES=""' \
+  'ARG LEGO_GO_MODULES="golang.org/x/net@v0.62.0 google.golang.org/grpc@v1.85.0"' \
   'FROM --platform=$BUILDPLATFORM ${GO_IMAGE} AS confd-build' \
-  'ARG CONFD_VERSION=v0.41.3' \
+  'ARG CONFD_VERSION=v0.17.0' \
   'ARG CONFD_COMMIT=cccccccccccccccccccccccccccccccccccccccc' \
-  'ARG CONFD_GO_MODULES="golang.org/x/net@v0.62.0 google.golang.org/grpc@v1.85.0"' \
   'FROM --platform=$BUILDPLATFORM ${GO_IMAGE} AS gotpl-build' \
   'ARG GOTPL_COMMIT=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' \
   'FROM ${NGINX_IMAGE}' \
@@ -92,8 +91,8 @@ _get_latest_version() {
     github.com/go-acme/lego:5) echo '5.6.1' ;;
     github.com/go-acme/lego:4) echo '4.35.2' ;;
     github.com/go-acme/lego:) echo '6.0.0' ;;
-    github.com/abtreece/confd:0.41) echo '0.41.4' ;;
-    github.com/abtreece/confd:) echo '0.42.0' ;;
+    github.com/wodby/confd:0.17) echo '0.17.1' ;;
+    github.com/wodby/confd:) echo '0.18.0' ;;
     github.com/wodby/gotpl:0.6) echo '0.6.9' ;;
     *) return 1 ;;
   esac
@@ -107,10 +106,10 @@ go_mod() {
 _github_api() {
   case "${1}" in
     repos/go-acme/lego/commits/v5.6.1|repos/wodby/gotpl/commits/0.6.9) echo '{"sha":"dddddddddddddddddddddddddddddddddddddddd"}' ;;
-    repos/abtreece/confd/commits/v0.41.4) echo '{"sha":"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"}' ;;
+    repos/wodby/confd/commits/v0.17.1) echo '{"sha":"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"}' ;;
     repos/wodby/gotpl/compare/*) echo '{"status":"ahead"}' ;;
-    # confd caught up with the x/net override but still requires an older grpc.
-    'repos/abtreece/confd/contents/go.mod?ref=v0.41.4')
+    # lego caught up with the x/net override but still requires an older grpc.
+    'repos/go-acme/lego/contents/go.mod?ref=v5.6.1')
       go_mod '\tgolang.org/x/net v0.63.0 // indirect\n\tgoogle.golang.org/grpc v1.84.0 // indirect\n' ;;
     *) return 1 ;;
   esac
@@ -121,20 +120,19 @@ assert_file_line 'ARG GO_IMAGE=golang:1.26.5-alpine3.23@sha256:new-go' "${docker
 assert_file_line 'ARG NGINX_IMAGE=wodby/nginx:1.31-5.48.5@sha256:new-nginx' "${dockerfile}"
 assert_file_line 'ARG LEGO_VERSION=v5.6.1' "${dockerfile}"
 assert_file_line 'ARG LEGO_COMMIT=dddddddddddddddddddddddddddddddddddddddd' "${dockerfile}"
-assert_file_line 'ARG CONFD_VERSION=v0.41.4' "${dockerfile}"
+assert_file_line 'ARG CONFD_VERSION=v0.17.1' "${dockerfile}"
 assert_file_line 'ARG CONFD_COMMIT=eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee' "${dockerfile}"
 assert_file_line 'ARG S6_OVERLAY_VERSION=3.2.4.0' "${dockerfile}"
 assert_file_line 'ARG GOTPL_COMMIT=dddddddddddddddddddddddddddddddddddddddd' "${dockerfile}"
-# The override confd now meets is dropped; the one it does not meet stays.
-assert_file_line 'ARG CONFD_GO_MODULES="google.golang.org/grpc@v1.85.0"' "${dockerfile}"
-assert_file_line 'ARG LEGO_GO_MODULES=""' "${dockerfile}"
+# The override lego now meets is dropped; the one it does not meet stays.
+assert_file_line 'ARG LEGO_GO_MODULES="google.golang.org/grpc@v1.85.0"' "${dockerfile}"
 assert_event '.type == "dependency_update" and .message == "s6-overlay: 3.2.3.2 -> 3.2.4.0"'
 assert_event '.type == "dependency_update" and .message == "lego: 5.6.0 -> 5.6.1"'
-assert_event '.type == "dependency_update" and .message == "confd: 0.41.3 -> 0.41.4"'
-assert_event '.type == "dependency_update" and (.message | startswith("golang.org/x/net (confd build): override 0.62.0 removed"))'
+assert_event '.type == "dependency_update" and .message == "confd: 0.17.0 -> 0.17.1"'
+assert_event '.type == "dependency_update" and (.message | startswith("golang.org/x/net (lego build): override 0.62.0 removed"))'
 # Newer lines are reported, never adopted.
 assert_event '.type == "manual_review" and (.message | startswith("lego 6.0.0 is available"))'
-assert_event '.type == "manual_review" and (.message | startswith("confd 0.42.0 is available"))'
+assert_event '.type == "manual_review" and (.message | startswith("confd 0.18.0 is available"))'
 if jq -e 'select(.message | startswith("s6-overlay 3.2.4.0 is available"))' "${IMAGES_UPDATE_REPORT_FILE}" >/dev/null; then
   fail "a release on the current line was reported as a new line"
 fi
@@ -143,7 +141,7 @@ fi
 _github_api() {
   case "${1}" in
     repos/wodby/gotpl/commits/0.6.9) echo '{"sha":"dddddddddddddddddddddddddddddddddddddddd"}' ;;
-    'repos/abtreece/confd/contents/go.mod?ref=v0.41.4') go_mod '\tgoogle.golang.org/grpc v1.84.0\n' ;;
+    'repos/go-acme/lego/contents/go.mod?ref=v5.6.1') go_mod '\tgoogle.golang.org/grpc v1.84.0\n' ;;
     *) return 1 ;;
   esac
 }
@@ -157,7 +155,7 @@ fi
 (
   _github_api() { go_mod '\tgolang.org/x/text v0.38.0\n'; }
   _edge_prune_module_pins "${dockerfile}" || fail 'unused override was kept'
-  assert_file_line 'ARG CONFD_GO_MODULES=""' "${dockerfile}"
+  assert_file_line 'ARG LEGO_GO_MODULES=""' "${dockerfile}"
 )
 
 # Releases outside the current line are refused, not adopted.
@@ -205,7 +203,7 @@ assert_event '.type == "manual_review" and (.message | contains("diverges"))'
     'ARG S6_OVERLAY_VERSION=3.2.4.0' >"${edge2_dockerfile}"
   _get_latest_version() {
     case "${1}:${2}" in
-      github.com/abtreece/confd:*) fail 'Edge 2 requested confd' ;;
+      github.com/wodby/confd:*) fail 'Edge 2 requested confd' ;;
       github.com/go-acme/lego:4) echo '4.35.2' ;;
       github.com/go-acme/lego:) echo '5.6.1' ;;
       github.com/wodby/gotpl:*) echo '0.6.9' ;;
@@ -238,8 +236,8 @@ assert_event '.type == "manual_review" and (.message | contains("diverges"))'
     'ARG GO_CRYPTO_VERSION=v0.58.0' 'ARG GO_NET_VERSION=v0.61.0' 'ARG GO_GRPC_VERSION=v1.83.2' >"${legacy}"
   assert_eq $'golang.org/x/crypto@v0.58.0\ngolang.org/x/net@v0.61.0\ngoogle.golang.org/grpc@v1.83.2\ngithub.com/go-jose/go-jose/v4@v4.1.4' \
     "$(_edge_module_pins LEGO_GO_MODULES "${legacy}")"
-  assert_eq $'golang.org/x/crypto@v0.58.0\ngolang.org/x/net@v0.61.0\ngoogle.golang.org/grpc@v1.83.2' \
-    "$(_edge_module_pins CONFD_GO_MODULES <(cat "${legacy}"))"
+  # confd's old overrides have no successor: its fork carries its own dependencies.
+  assert_eq '' "$(_edge_module_pins CONFD_GO_MODULES <(cat "${legacy}"))"
   printf '%s\n' 'ARG LEGO_GO_MODULES="golang.org/x/net@0.62.0"' >"${legacy}"
   if _edge_module_pins LEGO_GO_MODULES "${legacy}" 2>/dev/null; then
     fail 'invalid override accepted'
@@ -299,71 +297,72 @@ fi
 
 # Security plan: which findings the release would fix, and the overrides it adds.
 plan_dockerfile="${test_root}/Dockerfile.plan"
-printf '%s\n' 'ARG LEGO_VERSION=v5.6.1' 'ARG LEGO_GO_MODULES=""' 'ARG CONFD_VERSION=v0.41.4' \
-  'ARG CONFD_GO_MODULES="golang.org/x/crypto@v0.59.0 golang.org/x/net@v0.62.0"' >"${plan_dockerfile}"
+printf '%s\n' 'ARG LEGO_VERSION=v5.6.1' 'ARG LEGO_GO_MODULES="golang.org/x/crypto@v0.59.0 golang.org/x/net@v0.62.0"' \
+  'ARG CONFD_VERSION=v0.17.0' >"${plan_dockerfile}"
 finding() {
   jq -nc --arg id "$1" --arg package "$2" --arg version "$3" --arg type "$4" --arg path "$5" --arg fix "$6" \
     '{id: $id, severity: "High", package: $package, version: $version, type: $type, fixes: [$fix], paths: [$path]}'
 }
 (
   _get_image_digest() { echo sha256:published; }
-  # Neither pinned release requires the fixed versions yet.
+  # The pinned lego release does not require the fixed versions yet.
   _github_api() {
     case "${1}" in
-      'repos/go-acme/lego/contents/go.mod?ref=v5.6.1') go_mod '\tgithub.com/go-jose/go-jose/v4 v4.1.6\n' ;;
-      'repos/abtreece/confd/contents/go.mod?ref=v0.41.4') go_mod '\tgolang.org/x/net v0.60.0\n' ;;
+      'repos/go-acme/lego/contents/go.mod?ref=v5.6.1') go_mod '\tgithub.com/go-jose/go-jose/v4 v4.1.6\n\tgolang.org/x/net v0.60.0\n' ;;
       *) fail "unexpected GitHub request: $1" ;;
     esac
   }
   _edge_security_findings() {
     case "${1}" in
       docker.io/wodby/edge-alpine:3.1.0)
-        finding CVE-NET golang.org/x/net 0.62.0 go-module /opt/wodby/tools/bin/confd 0.63.0
+        finding CVE-NET golang.org/x/net 0.62.0 go-module /opt/wodby/bin/lego 0.63.0
         finding CVE-JOSE github.com/go-jose/go-jose/v4 4.1.9 go-module /opt/wodby/bin/lego 4.1.10
         finding CVE-APK busybox 1.37.0-r1 apk /lib/apk/db/installed 1.37.0-r2
         finding CVE-GO stdlib 1.26.11 go-module /opt/wodby/bin/lego 1.26.12
-        finding CVE-MAJOR golang.org/x/text 0.38.0 go-module /opt/wodby/bin/lego 1.0.0 ;;
+        finding CVE-MAJOR golang.org/x/text 0.38.0 go-module /opt/wodby/bin/lego 1.0.0
+        finding CVE-CONFD google.golang.org/grpc 1.84.0 go-module /opt/wodby/tools/bin/confd 1.85.0 ;;
       docker.io/wodby/edge-alpine:latest)
-        finding CVE-NET golang.org/x/net 0.62.0 go-module /opt/wodby/tools/bin/confd 0.63.0
+        finding CVE-NET golang.org/x/net 0.62.0 go-module /opt/wodby/bin/lego 0.63.0
         finding CVE-JOSE github.com/go-jose/go-jose/v4 4.1.9 go-module /opt/wodby/bin/lego 4.1.10
         finding CVE-GO stdlib 1.26.11 go-module /opt/wodby/bin/lego 1.26.12
-        finding CVE-MAJOR golang.org/x/text 0.38.0 go-module /opt/wodby/bin/lego 1.0.0 ;;
+        finding CVE-MAJOR golang.org/x/text 0.38.0 go-module /opt/wodby/bin/lego 1.0.0
+        finding CVE-CONFD google.golang.org/grpc 1.84.0 go-module /opt/wodby/tools/bin/confd 1.85.0 ;;
       *) fail "unexpected scan: $1" ;;
     esac
   }
   notes=$(_edge_security_plan 3.1.0 3 latest "${plan_dockerfile}") || fail 'fixable findings did not plan a release'
-  assert_eq $'- CVE-APK (High): busybox 1.37.0-r1.\n- CVE-JOSE (High): github.com/go-jose/go-jose/v4 4.1.9 in the lego build, raised to 4.1.10.\n- CVE-NET (High): golang.org/x/net 0.62.0 in the confd build, raised to 0.63.0.' "${notes}"
-  assert_file_line 'ARG LEGO_GO_MODULES="github.com/go-jose/go-jose/v4@v4.1.10"' "${plan_dockerfile}"
-  assert_file_line 'ARG CONFD_GO_MODULES="golang.org/x/crypto@v0.59.0 golang.org/x/net@v0.63.0"' "${plan_dockerfile}"
-  # stdlib is fixed by the Go builder image, and x/text 1.0.0 is a new major line.
-  assert_event '.type == "manual_review" and (.message | contains("CVE-GO in stdlib 1.26.11 and CVE-MAJOR in golang.org/x/text 0.38.0"))'
+  assert_eq $'- CVE-APK (High): busybox 1.37.0-r1.\n- CVE-JOSE (High): github.com/go-jose/go-jose/v4 4.1.9 in the lego build, raised to 4.1.10.\n- CVE-NET (High): golang.org/x/net 0.62.0 in the lego build, raised to 0.63.0.' "${notes}"
+  assert_file_line 'ARG LEGO_GO_MODULES="github.com/go-jose/go-jose/v4@v4.1.10 golang.org/x/crypto@v0.59.0 golang.org/x/net@v0.63.0"' "${plan_dockerfile}"
+  # stdlib is fixed by the Go builder image, x/text 1.0.0 is a new major line, and
+  # confd's dependencies are fixed in wodby/confd.
+  assert_event '.type == "manual_review" and (.message | contains("CVE-GO in stdlib 1.26.11, CVE-MAJOR in golang.org/x/text 0.38.0 and CVE-CONFD in google.golang.org/grpc 1.84.0"))'
 
   # The overrides are already in place on the next run: the plan still releases.
   notes=$(_edge_security_plan 3.1.0 3 latest "${plan_dockerfile}") || fail 'existing overrides did not plan a release'
-  assert_file_line 'ARG CONFD_GO_MODULES="golang.org/x/crypto@v0.59.0 golang.org/x/net@v0.63.0"' "${plan_dockerfile}"
+  assert_file_line 'ARG LEGO_GO_MODULES="github.com/go-jose/go-jose/v4@v4.1.10 golang.org/x/crypto@v0.59.0 golang.org/x/net@v0.63.0"' "${plan_dockerfile}"
 
   # A release that already requires the fixed version needs no override, and
   # one below its requirement would downgrade the module.
   (
     satisfied_plan="${test_root}/Dockerfile.satisfied"
-    printf '%s\n' 'ARG LEGO_VERSION=v5.6.1' 'ARG LEGO_GO_MODULES=""' 'ARG CONFD_VERSION=v0.41.4' 'ARG CONFD_GO_MODULES=""' >"${satisfied_plan}"
+    printf '%s\n' 'ARG LEGO_VERSION=v5.6.1' 'ARG LEGO_GO_MODULES=""' >"${satisfied_plan}"
     _github_api() { go_mod '\tgolang.org/x/net v0.64.0\n'; }
     _edge_security_findings() {
-      finding CVE-NET golang.org/x/net 0.62.0 go-module /opt/wodby/tools/bin/confd 0.63.0
+      finding CVE-NET golang.org/x/net 0.62.0 go-module /opt/wodby/bin/lego 0.63.0
     }
     notes=$(_edge_security_plan 3.1.0 3 latest "${satisfied_plan}") || fail 'a fix the branch release requires was not counted'
-    assert_eq '- CVE-NET (High): golang.org/x/net 0.62.0 in the confd build, fixed by confd 0.41.4.' "${notes}"
-    assert_file_line 'ARG CONFD_GO_MODULES=""' "${satisfied_plan}"
+    assert_eq '- CVE-NET (High): golang.org/x/net 0.62.0 in the lego build, fixed by lego 5.6.1.' "${notes}"
+    assert_file_line 'ARG LEGO_GO_MODULES=""' "${satisfied_plan}"
   )
 
-  # Edge 2 has no confd build to raise.
+  # A confd finding never becomes an override, on either line.
   edge2_plan="${test_root}/Dockerfile.plan2"
   printf '%s\n' 'ARG LEGO_VERSION=v4.35.2' 'ARG LEGO_GO_MODULES=""' >"${edge2_plan}"
   _edge_security_findings() {
     finding CVE-NET golang.org/x/net 0.62.0 go-module /opt/wodby/tools/bin/confd 0.63.0
   }
   if _edge_security_plan 2.7.13 2 2.x "${edge2_plan}"; then
-    fail 'Edge 2 planned a confd override'
+    fail 'a confd override was planned'
   fi
   assert_file_line 'ARG LEGO_GO_MODULES=""' "${edge2_plan}"
 
@@ -410,13 +409,11 @@ mkdir -p "${notes_dir}"
   cd "${notes_dir}"
   previous_pins() {
     printf '%s\n' 'ARG NGINX_IMAGE=wodby/nginx:1.31-5.48.7@sha256:old' 'ARG GO_IMAGE=golang:1.26.7-alpine3.23@sha256:old' \
-      'ARG LEGO_VERSION=v5.6.0' 'ARG LEGO_GO_MODULES=""' 'ARG S6_OVERLAY_VERSION=3.2.3.2' \
-      'ARG GOTPL_COMMIT=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' 'ARG CONFD_VERSION=v0.41.3' \
-      'ARG CONFD_GO_MODULES="golang.org/x/crypto@v0.59.0 golang.org/x/net@v0.62.0"'
+      'ARG LEGO_VERSION=v5.6.0' 'ARG LEGO_GO_MODULES="golang.org/x/crypto@v0.59.0 golang.org/x/net@v0.62.0"' 'ARG S6_OVERLAY_VERSION=3.2.3.2' \
+      'ARG GOTPL_COMMIT=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' 'ARG CONFD_VERSION=v0.17.0'
   }
   previous_pins | sed 's/LEGO_VERSION=v5.6.0/LEGO_VERSION=v5.6.1/; s/1.31-5.48.7@sha256:old/1.31-5.48.13@sha256:new/' \
-    | sed 's|CONFD_GO_MODULES=.*|CONFD_GO_MODULES="golang.org/x/net@v0.63.0 google.golang.org/grpc@v1.85.0"|' \
-    | sed 's|LEGO_GO_MODULES=""|LEGO_GO_MODULES="github.com/go-jose/go-jose/v4@v4.1.10"|' >Dockerfile
+    | sed 's|LEGO_GO_MODULES=.*|LEGO_GO_MODULES="github.com/go-jose/go-jose/v4@v4.1.10 golang.org/x/net@v0.63.0 google.golang.org/grpc@v1.85.0"|' >Dockerfile
   git() {
     assert_eq 'show 3.1.0:Dockerfile' "$*"
     previous_pins
@@ -428,13 +425,13 @@ mkdir -p "${notes_dir}"
       *) echo 1.31.6 ;;
     esac
   }
-  notes=$(_edge_release_notes 3.1.0 '- CVE-NET (High): golang.org/x/net 0.62.0 in the confd build, raised to 0.63.0.')
+  notes=$(_edge_release_notes 3.1.0 '- CVE-NET (High): golang.org/x/net 0.62.0 in the lego build, raised to 0.63.0.')
   [[ "${notes}" == 'Changes since 3.1.0'$'\n\n''Fixes these vulnerabilities:'$'\n''- CVE-NET (High)'* ]] || fail "missing security section: ${notes}"
   [[ "${notes}" == *'NGINX: 1.31.3 -> 1.31.6.'* ]] || fail 'missing NGINX upgrade'
   [[ "${notes}" == *'- lego (certificate issuance and renewal): 5.6.0 -> 5.6.1.'* ]] || fail 'missing runtime update note'
-  [[ "${notes}" == *'- golang.org/x/net (confd build): 0.62.0 -> 0.63.0.'* ]] || fail 'missing changed override'
-  [[ "${notes}" == *'- google.golang.org/grpc (confd build): raised to 1.85.0.'* ]] || fail 'missing new override'
-  [[ "${notes}" == *'- golang.org/x/crypto (confd build): override removed, confd now requires a fixed version.'* ]] || fail 'missing removed override'
+  [[ "${notes}" == *'- golang.org/x/net (lego build): 0.62.0 -> 0.63.0.'* ]] || fail 'missing changed override'
+  [[ "${notes}" == *'- google.golang.org/grpc (lego build): raised to 1.85.0.'* ]] || fail 'missing new override'
+  [[ "${notes}" == *'- golang.org/x/crypto (lego build): override removed, lego now requires a fixed version.'* ]] || fail 'missing removed override'
   [[ "${notes}" == *'- github.com/go-jose/go-jose/v4 (lego build): raised to 4.1.10.'* ]] || fail 'missing lego override'
   [[ "${notes}" != *'confd (configuration generation)'* && "${notes}" != *'Go builder'* ]] || fail 'unchanged components reported'
   [[ "${notes}" != *'sha256:'* ]] || fail 'raw digests leaked into release notes'
@@ -449,8 +446,9 @@ mkdir -p "${notes_dir}"
   }
   notes=$(_edge_release_notes 3.0.41)
   [[ "${notes}" == *'- lego (certificate issuance and renewal): 4.35.2 -> 5.6.1.'* ]] || fail 'missing lego major note'
-  [[ "${notes}" == *'- confd (configuration generation): pinned to 0.41.3.'* ]] || fail 'missing new confd note'
-  [[ "${notes}" == *'- golang.org/x/net (confd build): 0.62.0 -> 0.63.0.'* ]] || fail 'legacy override not compared'
+  [[ "${notes}" == *'- confd (configuration generation): pinned to 0.17.0.'* ]] || fail 'missing new confd note'
+  [[ "${notes}" == *'- golang.org/x/net (lego build): 0.62.0 -> 0.63.0.'* ]] || fail 'legacy override not compared'
+  [[ "${notes}" != *'(confd build)'* ]] || fail 'confd overrides reported'
   [[ "${notes}" == *'- github.com/go-jose/go-jose/v4 (lego build): 4.1.9 -> 4.1.10.'* ]] || fail 'legacy lego override not compared'
   [[ "${notes}" != *'Fixes these vulnerabilities'* ]] || fail 'empty security section printed'
 
