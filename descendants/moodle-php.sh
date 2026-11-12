@@ -4,4 +4,4 @@ set -e
 
 . ../update.sh
 
-update_from_parent_image "wodby/moodle" "8.4"
+update_from_parent_image "wodby/moodle-php" "8.4"
