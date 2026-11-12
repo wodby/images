@@ -106,6 +106,9 @@ jobs:
         script: [ drupal-php,wordpress-php,matomo,matomo-php,moodle-php,adminer-php,mautic-php,webgrind-php,laravel-php,drupal,wordpress,xhprof,drupal-cms,edge-alpine,edge-alpine-2 ]
     steps:
       - uses: actions/checkout@v7
+      # Edge releases only for vulnerabilities found in its published images.
+      - uses: ./.github/actions/alpine-security
+        if: startsWith(matrix.script, 'edge-alpine') && github.event_name != 'pull_request'
       - uses: ./.github/actions
         with:
           dir: descendants
