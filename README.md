@@ -162,6 +162,7 @@ a GitHub Release with the same version. Failed builds can retry the existing tag
 | [wodby/matomo-php]    | [wodby/php]           | `8.4-apache`               |
 | [wodby/mautic]        | [wodby/php]           | `8.4-apache`               |
 | [wodby/moodle]        | [wodby/php]           | `8.4`                      |
+| [wodby/moodle-php]    | [wodby/php]           | `8.4`                      |
 | [wodby/webgrind]      | [wodby/php]           | `8.2`                      |
 | [wodby/wordpress-php] | [wodby/php]           | `8.5`, `8.4`, `8.3`, `8.2` |
 | [wodby/wordpress]     | [wodby/wordpress-php] | `8.5`, `8.4`, `8.3`, `8.2` |
@@ -463,6 +464,7 @@ Not automated:
 [wodby/mautic]: https://github.com/wodby/mautic
 
 [wodby/moodle]: https://github.com/wodby/moodle
+[wodby/moodle-php]: https://github.com/wodby/moodle-php
 
 [wodby/memcached]: https://github.com/wodby/memcached
 
