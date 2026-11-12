@@ -430,7 +430,14 @@ _release_tag() {
   local message="${1}"
   local minor_update="${2}"
   local release_major="${3:-}"
+  local gotpl_note
   local tag
+
+  # Name a gotpl update that was committed without a release of its own.
+  gotpl_note=$(_pending_gotpl_note) || return 1
+  if [[ -n "${gotpl_note}" && "${message}" != *"${gotpl_note}"* ]]; then
+    message+=$'\n\n'"${gotpl_note}"
+  fi
 
   tag=$(_next_release_tag "${minor_update}" "${release_major}") || return 1
 
@@ -1793,13 +1800,21 @@ update_base_alpine() {
   local version="${2}"
   local release_tag="${3}"
   local base_image="wodby/alpine"
+  local gotpl_status=0
 
   _git_clone "${image}"
 
   _require_base_image_pins || return 0
 
+  # Commit a gotpl update first so a base image release can ship it. A gotpl
+  # failure must not hold back base image updates, so it is reported last.
+  _update_image_gotpl || gotpl_status=$?
   _update_digests "${version}" "${base_image}"
   _update_base_alpine_image "${version}" "${base_image}" "${release_tag}"
+  if [[ -n "${release_tag}" ]]; then
+    _release_due_gotpl_update || return 1
+  fi
+  return "${gotpl_status}"
 }
 
 update_from_upstream() {
@@ -1905,50 +1920,131 @@ update_docker4x() {
   done
 }
 
-_prepare_alpine_gotpl_update() {
-  local dockerfile="${1:-Dockerfile}"
-  local latest="${2}"
-  local current
+# gotpl releases follow every Go patch release. Images that use gotpl pin it
+# themselves; a pending update waits this many days for another image release
+# to carry it before it is released on its own.
+GOTPL_RELEASE_DELAY_DAYS="${GOTPL_RELEASE_DELAY_DAYS:-7}"
 
-  current=$(_dockerfile_arg_value "GOTPL_VERSION" "${dockerfile}") || return 2
+# Dockerfiles that install their own pinned gotpl release, relative to the image repository root.
+# Images that inherit gotpl or do not use it have none, so the gotpl helpers do nothing for them.
+_gotpl_dockerfiles() {
+  local dockerfile
 
-  if [[ "${current}" == "${latest}" ]]; then
-    echo "Alpine is already pinned to gotpl ${current}"
-    return 1
-  fi
-
-  if ! _version_is_newer "${latest}" "${current}"; then
-    echo >&2 "Refusing to downgrade Alpine gotpl from ${current} to ${latest}"
-    return 2
-  fi
-
-  sed -i -E "s/^ARG GOTPL_VERSION=.*/ARG GOTPL_VERSION=${latest}/" "${dockerfile}"
-  echo "Updated Alpine gotpl from ${current} to ${latest}"
+  while IFS= read -r dockerfile; do
+    if grep -q '^ARG GOTPL_VERSION=' "${dockerfile}"; then
+      echo "${dockerfile#./}"
+    fi
+  done < <(find . -path ./.git -prune -o -type f -name Dockerfile -print | sort)
 }
 
-update_alpine_gotpl() {
+# Pin every gotpl Dockerfile to the newest complete gotpl release. The update is
+# committed without a release: the next image release ships it, see
+# _pending_gotpl_note and _release_due_gotpl_update.
+_update_image_gotpl() {
+  local -a dockerfiles
+  local dockerfile
   local current
   local latest
-  local prepare_status
+  local changed=""
 
-  current=$(_dockerfile_arg_value "GOTPL_VERSION" Dockerfile) || return 1
-  latest=$(_get_latest_complete_gotpl_release) || return 1
-
-  if _prepare_alpine_gotpl_update Dockerfile "${latest}"; then
-    :
-  else
-    prepare_status=$?
-    if [[ "${prepare_status}" -eq 1 ]]; then
-      return 0
-    fi
-    return "${prepare_status}"
+  mapfile -t dockerfiles < <(_gotpl_dockerfiles)
+  if [[ "${#dockerfiles[@]}" -eq 0 ]]; then
+    return 0
   fi
 
-  _git_commit ./ "Update gotpl to ${latest}" || return 1
-  _git_push origin || return 1
+  latest=$(_get_latest_complete_gotpl_release) || return 1
 
-  # Build outcomes belong to the image repository; updates do not wait for CI.
-  _release_tag "gotpl updated from ${current} to ${latest}" "" || return 1
+  # Check every pin before editing so a refused downgrade leaves the checkout unchanged.
+  for dockerfile in "${dockerfiles[@]}"; do
+    current=$(_dockerfile_arg_value "GOTPL_VERSION" "${dockerfile}") || return 1
+    if [[ "${current}" != "${latest}" ]] && ! _version_is_newer "${latest}" "${current}"; then
+      echo >&2 "Refusing to downgrade gotpl in ${dockerfile} from ${current} to ${latest}"
+      return 1
+    fi
+  done
+
+  for dockerfile in "${dockerfiles[@]}"; do
+    current=$(_dockerfile_arg_value "GOTPL_VERSION" "${dockerfile}") || return 1
+    if [[ "${current}" != "${latest}" ]]; then
+      sed -i -E "s/^ARG GOTPL_VERSION=.*/ARG GOTPL_VERSION=${latest}/" "${dockerfile}"
+      echo "Updated gotpl in ${dockerfile} from ${current} to ${latest}"
+      changed=1
+    fi
+  done
+
+  if [[ -z "${changed}" ]]; then
+    echo "gotpl is already pinned to ${latest}"
+    return 0
+  fi
+
+  if ! _git_commit ./ "Update gotpl to ${latest}"; then
+    git checkout HEAD -- "${dockerfiles[@]}"
+    return 1
+  fi
+}
+
+# The newest release of the current repository, in its release format.
+_current_release_tag() {
+  if _uses_image_revisions; then
+    _latest_image_revision
+  else
+    _latest_release_tag 2>/dev/null || true
+  fi
+}
+
+# Print the release note for a gotpl update committed since the newest release,
+# or nothing when that release already ships the pinned version. A Dockerfile
+# that did not pin gotpl at that release has nothing to announce.
+_pending_gotpl_note() {
+  local dockerfile
+  local tag
+  local released
+  local current
+
+  dockerfile=$(_gotpl_dockerfiles | sed -n 1p)
+  if [[ -z "${dockerfile}" ]]; then
+    return 0
+  fi
+
+  tag=$(_current_release_tag)
+  if [[ -z "${tag}" ]]; then
+    return 0
+  fi
+
+  released=$(git show "${tag}:${dockerfile}" 2>/dev/null | sed -n -E 's/^ARG GOTPL_VERSION=(.+)$/\1/p' | sed -n 1p || true)
+  current=$(_dockerfile_arg_value "GOTPL_VERSION" "${dockerfile}") || return 1
+
+  if [[ -n "${released}" && "${released}" != "${current}" ]]; then
+    echo "gotpl updated from ${released} to ${current}"
+  fi
+}
+
+# Release a pending gotpl update on its own once it has waited
+# GOTPL_RELEASE_DELAY_DAYS for another image release to carry it.
+_release_due_gotpl_update() {
+  local note
+  local tag
+  local oldest
+  local -a dockerfiles
+
+  note=$(_pending_gotpl_note) || return 1
+  if [[ -z "${note}" ]]; then
+    return 0
+  fi
+
+  tag=$(_current_release_tag)
+  mapfile -t dockerfiles < <(_gotpl_dockerfiles)
+  oldest=$(git log --format=%ct -G '^ARG GOTPL_VERSION=' "${tag}..HEAD" -- "${dockerfiles[@]}" | tail -n1) || return 1
+  if [[ -z "${oldest}" ]]; then
+    return 0
+  fi
+
+  if (( $(date +%s) - oldest < GOTPL_RELEASE_DELAY_DAYS * 86400 )); then
+    echo "Waiting for the next image release to ship the pending update: ${note}"
+    return 0
+  fi
+
+  _release_tag "${note}" ""
 }
 
 update_gotpl_go() {

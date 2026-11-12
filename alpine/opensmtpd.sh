@@ -72,6 +72,10 @@ if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
   _git_clone wodby/opensmtpd
   _require_base_image_pins || exit 0
   _require_parent_image_revision || exit 0
+  # Commit a gotpl update first so the next release ships it. A gotpl failure
+  # must not hold back package or base image updates, so it is reported last.
+  gotpl_status=0
+  _update_image_gotpl || gotpl_status=$?
   # Ship before the image contract lands without editing an older checkout.
   if [[ ! -f .opensmtpd-package ]] || ! grep -qxF 'ALPINE_VER ?= 3.23' Makefile; then
     _report_event manual_review wodby/opensmtpd 'Waiting for the OpenSMTPD package pin on Alpine 3.23 before enabling automatic package updates'
@@ -80,4 +84,6 @@ if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
   fi
   _update_digests '3.23' wodby/alpine
   _update_base_alpine_image '3.23' wodby/alpine true
+  _release_due_gotpl_update
+  exit "${gotpl_status}"
 fi

@@ -101,8 +101,10 @@ _require_parent_image_revision() { return 0; }
 _report_event() { printf 'review\n' >> "$ROLLOUT_ROOT/trace"; }
 _update_digests() { [[ "$*" == '3.23 wodby/alpine' ]]; printf 'digests\n' >> "$ROLLOUT_ROOT/trace"; }
 _update_base_alpine_image() { [[ "$*" == '3.23 wodby/alpine true' ]]; printf 'parent\n' >> "$ROLLOUT_ROOT/trace"; }
+_update_image_gotpl() { printf 'gotpl\n' >> "$ROLLOUT_ROOT/trace"; }
+_release_due_gotpl_update() { printf 'due\n' >> "$ROLLOUT_ROOT/trace"; }
 STUB
 export ROLLOUT_ROOT="$fixture_root/rollout"
 bash rollout/alpine/opensmtpd.sh
-[[ $(cat rollout/trace) == $'review\ndigests\nparent' ]]
+[[ $(cat rollout/trace) == $'gotpl\nreview\ndigests\nparent\ndue' ]]
 echo 'OpenSMTPD updater tests passed.'
