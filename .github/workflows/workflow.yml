@@ -103,7 +103,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        script: [ drupal-php,wordpress-php,matomo,matomo-php,moodle,moodle-php,adminer-php,mautic-php,webgrind-php,laravel-php,drupal,wordpress,xhprof,drupal-cms,edge-alpine,edge-alpine-2 ]
+        script: [ drupal-php,wordpress-php,matomo,matomo-php,moodle,moodle-php,adminer-php,mautic,mautic-php,webgrind-php,laravel-php,drupal,wordpress,xhprof,drupal-cms,edge-alpine,edge-alpine-2 ]
     steps:
       - uses: actions/checkout@v7
       # Edge releases only for vulnerabilities found in its published images.
