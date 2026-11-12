@@ -4,4 +4,4 @@ set -e
 
 . ../update.sh
 
-update_from_parent_image "wodby/matomo" "8.2"
+update_from_parent_image "wodby/matomo-php" "8.4-apache"
