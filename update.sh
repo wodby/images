@@ -422,6 +422,15 @@ _image_release_is_newer() {
 }
 
 _release_tag() {
+  # A batch collects the notes of one updater run into a single release.
+  if [[ -n "${_RELEASE_BATCH:-}" ]]; then
+    _RELEASE_BATCH_NOTES+=("${1}")
+    if [[ -n "${2:-}" ]]; then
+      _RELEASE_BATCH_MINOR=1
+    fi
+    return 0
+  fi
+
   if ! _publishing_enabled; then
     echo "Skipping release tag because publishing is disabled"
     return 0
@@ -445,6 +454,39 @@ _release_tag() {
   git tag -m "${message}" "${tag}"
   _git_push origin "${tag}"
   _report_event "release_tag" "$(_current_repo_slug)" "${message}" "${tag}"
+}
+
+# Start collecting release notes instead of tagging each update separately, so
+# changes found in the same run, such as a new Alpine version and the packages
+# it brings, ship as one release. Product releases with a major line are not
+# supported in a batch.
+_release_batch_start() {
+  _RELEASE_BATCH=1
+  _RELEASE_BATCH_NOTES=()
+  _RELEASE_BATCH_MINOR=
+}
+
+# Publish one release for the collected notes, if there are any. Safe to call
+# more than once, for example from an EXIT trap after a failed step, so updates
+# already pushed in the run are still released.
+_release_batch_finish() {
+  local -a notes=("${_RELEASE_BATCH_NOTES[@]+"${_RELEASE_BATCH_NOTES[@]}"}")
+  local minor_update="${_RELEASE_BATCH_MINOR:-}"
+
+  unset _RELEASE_BATCH
+  _RELEASE_BATCH_NOTES=()
+  _RELEASE_BATCH_MINOR=
+  if [[ "${#notes[@]}" == 0 ]]; then
+    return 0
+  fi
+  # After a failed push, the release tag must not point at a local commit.
+  if _publishing_enabled && _head_has_unpushed_commits; then
+    echo >&2 "Not releasing unpushed commits: $(printf '%s; ' "${notes[@]}")"
+    return 1
+  fi
+
+  # Separate the notes with blank lines; the substitution drops the last ones.
+  _release_tag "$(printf '%s\n\n' "${notes[@]}")" "${minor_update}"
 }
 
 _get_dir() {
@@ -995,6 +1037,12 @@ _update_versions() {
 # Group identical Alpine transitions, naming only exceptions when there is one
 # shared update. Keep distinct transitions associated with their image tags.
 _alpine_release_description() {
+  printf 'Alpine Linux updates: %s' "$(_transitions_description "$@")"
+}
+
+# Describe per-version transitions of one image, naming each image tag only
+# where versions differ.
+_transitions_description() {
   local image="${1}"
   local version_list="${2}"
   shift 2
@@ -1032,7 +1080,7 @@ _alpine_release_description() {
       descriptions+=("${group} ($(_join_ws ", " "${affected[@]}"))")
     fi
   done
-  printf 'Alpine Linux updates: %s' "$(_join_ws "; " "${descriptions[@]}")"
+  _join_ws "; " "${descriptions[@]}"
 }
 
 # Copy the parent release's human-readable annotation, excluding its signature.

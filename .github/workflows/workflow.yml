@@ -38,6 +38,7 @@ jobs:
           ./tests/test_workspace_agents_updater.sh
           ./tests/test_frp_updater.sh
           ./tests/test_opensmtpd_updater.sh
+          ./tests/test_php_apache_updater.sh
           ./tests/test_dotnet_updater.sh
           ./tests/test_odoo_updater.sh
           ./tests/test_discourse_updater.sh
