@@ -7,17 +7,17 @@ set -euo pipefail
 _update_frp() {
   local current candidate arch
   current=$(sed -nE "s/^  FRP_VERSION: '?([0-9]+\.[0-9]+\.[0-9]+)'?$/\1/p" .github/workflows/workflow.yml)
-  [[ "$current" =~ ^0\.69\.[0-9]+$ ]] || {
-    echo >&2 'Expected FRP 0.69 in the build workflow'
+  [[ "$current" =~ ^0\.72\.[0-9]+$ ]] || {
+    echo >&2 'Expected FRP 0.72 in the build workflow'
     return 1
   }
   grep -qxF "FRP_VERSION ?= $current" Makefile || {
     echo >&2 'FRP workflow and Makefile versions differ'
     return 1
   }
-  candidate=$(_get_latest_version github.com/fatedier/frp 0.69 frp) || return 1
-  [[ "$candidate" =~ ^0\.69\.[0-9]+$ ]] || {
-    echo >&2 "Expected a stable FRP 0.69 patch, got: $candidate"
+  candidate=$(_get_latest_version github.com/fatedier/frp 0.72 frp) || return 1
+  [[ "$candidate" =~ ^0\.72\.[0-9]+$ ]] || {
+    echo >&2 "Expected a stable FRP 0.72 patch, got: $candidate"
     return 1
   }
   if ! _version_is_newer "$candidate" "$current"; then
