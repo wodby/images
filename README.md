@@ -90,8 +90,11 @@ buildx-imagetools-create:
 
 Outside CI the sources stay the per-architecture tags. In CI, a source that this run
 did not push stops the publish job instead of combining another run's image.
-Workflows also serialize runs of the same branch or tag, so an older `master` run
-cannot finish after a newer one and move floating tags back.
+Workflows also serialize runs of the same event and branch or tag
+(`concurrency: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}`),
+so an older `master` run cannot finish after a newer one and move floating tags
+back. The event is part of the group because GitHub replaces a pending run with a
+newer one, and a scheduled run must not replace a queued push run.
 
 ## Update reports
 
