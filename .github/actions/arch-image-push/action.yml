@@ -1,0 +1,28 @@
+name: Push architecture image
+description: Push one architecture image and record its digest for arch-image-pins
+inputs:
+  image:
+    description: Per-architecture image to push, such as wodby/mariadb:11.4-amd64
+    required: true
+outputs:
+  digest-ref:
+    description: The pushed image as repository@sha256 digest
+    value: ${{ steps.push.outputs.digest-ref }}
+runs:
+  using: composite
+  steps:
+    - name: Push image and record its digest
+      id: push
+      shell: bash
+      env:
+        IMAGE: ${{ inputs.image }}
+        RECORD_DIR: ${{ runner.temp }}/arch-image-pins
+      run: bash "$GITHUB_ACTION_PATH/push.sh"
+    # One artifact per architecture image; a rerun replaces its own record.
+    - uses: actions/upload-artifact@v4
+      with:
+        name: ${{ steps.push.outputs.artifact }}
+        path: ${{ steps.push.outputs.record }}
+        if-no-files-found: error
+        overwrite: true
+        retention-days: 7

@@ -23,6 +23,7 @@ jobs:
       - name: Test updater helpers
         run: |
           ./tests/test_action_runner.sh
+          ./tests/test_arch_image_pins.sh
           ./tests/test_alpine_security_updater.sh
           ./tests/test_backup_updater.sh
           ./tests/test_edge_alpine_updater.sh
