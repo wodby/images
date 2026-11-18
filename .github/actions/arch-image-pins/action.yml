@@ -1,0 +1,22 @@
+name: Pin architecture images
+description: >-
+  Download the architecture digests recorded by arch-image-push in this run and
+  export ARCH_IMAGE_PINS, so make buildx-imagetools-create combines those exact
+  images instead of the shared per-architecture tags
+runs:
+  using: composite
+  steps:
+    - uses: actions/download-artifact@v4
+      with:
+        pattern: arch-image-pin-*
+        merge-multiple: true
+        path: ${{ runner.temp }}/arch-image-pins
+    - name: Export pinned architecture images
+      shell: bash
+      run: |
+        set -euo pipefail
+        dir="$RUNNER_TEMP/arch-image-pins"
+        mkdir -p "$dir"
+        # A missing record fails in make, naming the image that was not pushed.
+        ls -1 "$dir"
+        echo "ARCH_IMAGE_PINS=$dir" >> "$GITHUB_ENV"

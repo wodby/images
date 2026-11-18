@@ -67,6 +67,35 @@ versions, so `17.11-r0` and `7.6-r0` use the full-version counter; `17-r102` and
 version, such as `17.6.1.136-r0`. WordPress initial releases named `7.2` use
 `7.2.0-r0` for the exact version, keeping `7.2-r102` for the minor line.
 
+## Multi-architecture publishing
+
+Images built on separate amd64 and arm64 runners push per-architecture tags such
+as `wodby/mariadb:11.4-amd64`, then combine them into one multi-arch image. Those
+tags are shared by every workflow run, so an overlapping run can replace one
+architecture before the combine step and publish a release that runs different
+versions on amd64 and arm64.
+
+Build jobs therefore push with `.github/actions/arch-image-push`, which records the
+digest that push produced. Publish jobs run `.github/actions/arch-image-pins` before
+combining. It sets `ARCH_IMAGE_PINS`, and the image Makefile resolves each
+per-architecture source through it:
+
+```make
+arch-image = $(if $(ARCH_IMAGE_PINS),$(or $(shell cat '$(ARCH_IMAGE_PINS)/$(subst :,_,$(subst /,_,$(1)))' 2>/dev/null),$(error No digest of $(1) was pushed by this workflow run)),$(1))
+
+buildx-imagetools-create:
+	docker buildx imagetools create -t $(REPO):$(IMAGETOOLS_TAG) \
+		$(call arch-image,$(REPO):$(TAG)-amd64) $(call arch-image,$(REPO):$(TAG)-arm64)
+```
+
+Outside CI the sources stay the per-architecture tags. In CI, a source that this run
+did not push stops the publish job instead of combining another run's image.
+Workflows also serialize runs of the same event and branch or tag
+(`concurrency: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}`),
+so an older `master` run cannot finish after a newer one and move floating tags
+back. The event is part of the group because GitHub replaces a pending run with a
+newer one, and a scheduled run must not replace a queued push run.
+
 ## Update reports
 
 Email digests and consolidated reports include a **Grype Exception Warnings** section
