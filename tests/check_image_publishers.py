@@ -6,10 +6,12 @@ Docker is replaced with a recorder, and Make only renders commands; no image is
 built or pushed. This checks tag wiring across the actual scripts and Makefiles.
 """
 import argparse
+import hashlib
 import os
 from pathlib import Path
 import re
 import subprocess
+import tempfile
 
 # Representative versions; these are test inputs, not catalog version pins.
 VERSIONS = {
@@ -71,6 +73,41 @@ def check_make_aliases(repo: Path) -> int:
     return count
 
 
+def imagetools_sources(stdout: str) -> list:
+    """Return the sources of each rendered imagetools create command."""
+    commands = []
+    for command in re.findall(r'docker buildx imagetools create((?:\\\n|[^\n])*)', stdout):
+        words = command.replace('\\\n', ' ').split()
+        sources, i = [], 0
+        while i < len(words):
+            if words[i] in ('-t', '--tag'):
+                i += 2
+                continue
+            sources.append(words[i])
+            i += 1
+        commands.append(sources)
+    return commands
+
+
+def check_arch_image_pins(run, stdout: str, tmp: Path) -> int:
+    """Adopted publishers must combine the digests CI recorded, never shared tags."""
+    floating = imagetools_sources(stdout)
+    refs = {ref for sources in floating for ref in sources}
+    assert floating and all(re.search(r'-(amd64|arm64)$', r) for r in refs), ('unexpected sources', floating)
+    pins = tmp / 'pins'
+    pins.mkdir(exist_ok=True)
+    digests = {r: r.rsplit(':', 1)[0] + '@sha256:' + hashlib.sha256(r.encode()).hexdigest() for r in refs}
+    for ref, digest in digests.items():
+        (pins / ref.replace('/', '_').replace(':', '_')).write_text(digest + '\n')
+    pinned = imagetools_sources(run({'ARCH_IMAGE_PINS': str(pins)}).stdout)
+    assert pinned == [[digests[r] for r in sources] for sources in floating], ('unpinned sources', pinned)
+    missing = tmp / 'missing'
+    missing.mkdir(exist_ok=True)
+    result = run({'ARCH_IMAGE_PINS': str(missing)}, check=False)
+    assert result.returncode != 0 and 'was pushed by this workflow run' in result.stderr, ('missing pin accepted', result)
+    return 2
+
+
 def check_repo(repo: Path) -> int:
     """Check revision and legacy releases, variants, and non-publishing refs."""
     name = repo.name
@@ -126,6 +163,8 @@ docker() {
 . "$1"
 '''
     count = 0
+    # Repositories that adopted wodby/images arch-image-pins resolve sources through it.
+    adopted = any('arch-image =' in mk.read_text() for mk in repo.rglob('Makefile'))
     product = name in ('edge-alpine', 'backup') and not (repo / '.image-release-format').exists()
     releases = ('4.83.3',) if product else ('r0', 'r1', 'r23', '4.83.3')
     if product:
@@ -163,6 +202,13 @@ docker() {
                 assert any('dev-macos-' + revision in t for t in destinations), (name, variant, destinations)
             elif any(variant.get(k) for k in ('PHP_DEV', 'PYTHON_DEV', 'RUBY_DEV', 'GO_DEV', 'ALPINE_DEV')):
                 assert any('dev-' + revision in t for t in destinations), (name, variant, destinations)
+            if adopted and 'imagetools create' in result.stdout:
+                def rerun(extra, check=True, variant=variant, revision=revision):
+                    return subprocess.run(['bash', '-c', wrapper, 'publisher-test', str(script)], cwd=workdir,
+                                          env={**env, **variant, 'GITHUB_REF': 'refs/tags/' + revision, **extra},
+                                          capture_output=True, text=True, check=check)
+                with tempfile.TemporaryDirectory() as tmp:
+                    count += check_arch_image_pins(rerun, result.stdout, Path(tmp))
             count += 1
     result = subprocess.run(['bash', '-c', wrapper, 'publisher-test', str(script)], cwd=workdir,
                             env={**env, 'GITHUB_REF': 'refs/heads/feature/test'}, capture_output=True, text=True, check=True)
