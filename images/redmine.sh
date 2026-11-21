@@ -83,7 +83,8 @@ _update_redmine() {
       "Redmine ${newest_line} is released; add an image line and a service option for it"
   fi
 
-  if [[ "${pins}" == "$(grep '^BASE_IMAGE_DIGEST_' base-images.mk)"$'\n' ]]; then
+  # Compare as sets: the order of the pins in base-images.mk doesn't matter.
+  if [[ "$(sort <<<"${pins%$'\n'}")" == "$(grep '^BASE_IMAGE_DIGEST_' base-images.mk | sort)" ]]; then
     echo "Redmine ${line_list} base images are up to date"
     return 0
   fi

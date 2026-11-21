@@ -61,6 +61,18 @@ _update_redmine "7.0 6.1"
 unchanged
 [[ ! -s reports ]]
 
+# Pins listed newest line first, as wodby/redmine lists them, are not a change.
+reset_fixture
+{
+  head -n4 base-images.expected
+  grep '^BASE_IMAGE_DIGEST_7' base-images.expected
+  grep '^BASE_IMAGE_DIGEST_6' base-images.expected
+  tail -n2 base-images.expected
+} > base-images.mk
+cp base-images.mk base-images.expected
+_update_redmine "7.0 6.1"
+unchanged
+
 # New patch releases move the workflow, the Makefile default and the pins of their line only.
 reset_fixture
 latest_70=7.0.4
