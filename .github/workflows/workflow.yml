@@ -42,6 +42,7 @@ jobs:
           ./tests/test_php_apache_updater.sh
           ./tests/test_dotnet_updater.sh
           ./tests/test_odoo_updater.sh
+          ./tests/test_redmine_updater.sh
           ./tests/test_discourse_updater.sh
           ./tests/test_netbird_updater.sh
   tooling:
@@ -84,7 +85,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        script: [ alpine,apache,backup,memcached,mysql,node,php,postgres,supabase-postgres,python,go,rust,dotnet,odoo,discourse,redis,valkey,ruby,rabbitmq ]
+        script: [ alpine,apache,backup,memcached,mysql,node,php,postgres,supabase-postgres,python,go,rust,dotnet,odoo,redmine,discourse,redis,valkey,ruby,rabbitmq ]
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/alpine-security
