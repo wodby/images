@@ -2,6 +2,9 @@
 set -euo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
 . "$root/images/php.sh"
+# The fixtures below cover these versions. Pin them so adding a PHP version to
+# images/php.sh does not need fixture changes.
+PHP_VERSIONS="8.5 8.4 8.3 8.2"
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
 cd "$work"
