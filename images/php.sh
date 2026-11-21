@@ -4,7 +4,7 @@ set -e
 
 . "$(dirname "${BASH_SOURCE[0]}")/../update.sh"
 
-PHP_VERSIONS="8.5 8.4 8.3 8.2"
+PHP_VERSIONS="8.6 8.5 8.4 8.3 8.2"
 
 # Print the newest apache2 package the Alpine repositories of a PHP base image
 # offer. The lookup runs in the base image itself, so it sees the same Alpine
