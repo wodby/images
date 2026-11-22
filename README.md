@@ -157,6 +157,7 @@ is released on its own. Images without the pin are not affected.
 | [wodby/dotnet]    | [dotnet/aspnet]       | `10.0`                                 |
 | [wodby/odoo]      | [_/odoo]              | `20.0`, `19.0`, `18.0`                 |
 | [wodby/redmine]   | [_/redmine]           | `7.0`, `6.1`                           |
+| [wodby/senaite]   | [_/ubuntu]            | `22.04`                                |
 | [wodby/discourse] | [discourse/base]      | `2026.10`, `2026.7`                    |
 | [wodby/valkey]    | [valkey/valkey]       | `9.1`, `9.0`, `8.1`, `8.0`, `7.2`      |
 | [wodby/redis]     | [redis]               | `8.6`, `8.4`, `8.2`, `7.4`             |
@@ -455,6 +456,7 @@ Not automated:
 [dotnet/aspnet]: https://mcr.microsoft.com/product/dotnet/aspnet/about
 [_/odoo]: https://hub.docker.com/_/odoo
 [_/redmine]: https://hub.docker.com/_/redmine
+[_/ubuntu]: https://hub.docker.com/_/ubuntu
 [discourse/base]: https://hub.docker.com/r/discourse/base
 
 [valkey/valkey]: https://hub.docker.com/r/valkey/valkey
@@ -535,6 +537,7 @@ Not automated:
 [wodby/dotnet]: https://github.com/wodby/dotnet
 [wodby/odoo]: https://github.com/wodby/odoo
 [wodby/redmine]: https://github.com/wodby/redmine
+[wodby/senaite]: https://github.com/wodby/senaite
 [wodby/discourse]: https://github.com/wodby/discourse
 
 [wodby/valkey]: https://github.com/wodby/valkey
@@ -597,6 +600,14 @@ image (`7.0.3-trixie`). Its updater moves each line to its newest patch release
 and resolves every digest before editing anything. A new patch release or a
 rebuilt tag releases a new image revision. A new release line is reported for
 manual review, because it also needs a new service option.
+
+`wodby/senaite` builds SENAITE LIMS, a Python 2.7 application, on Ubuntu 22.04,
+which still ships Python 2.7 with security updates. The table lists the Ubuntu
+release because the image follows its base image, not a SENAITE line. A new
+`ubuntu:22.04` digest is pinned and releases a new image revision, whose build
+also installs Ubuntu's latest package updates. A new SENAITE release on PyPI is
+reported for manual review, because it needs new package pins and a review of
+the installed hotfix.
 
 `wodby/discourse` publishes Discourse's monthly release and its extended support
 release (ESR), each on a dated `discourse/base` web-only image (`-stable` for the
