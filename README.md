@@ -156,6 +156,7 @@ is released on its own. Images without the pin are not affected.
 | [wodby/rust]      | [_/rust]              | `1`                                    |
 | [wodby/dotnet]    | [dotnet/aspnet]       | `10.0`                                 |
 | [wodby/odoo]      | [_/odoo]              | `20.0`, `19.0`, `18.0`                 |
+| [wodby/redmine]   | [_/redmine]           | `7.0`, `6.1`                           |
 | [wodby/discourse] | [discourse/base]      | `2026.10`, `2026.7`                    |
 | [wodby/valkey]    | [valkey/valkey]       | `9.1`, `9.0`, `8.1`, `8.0`, `7.2`      |
 | [wodby/redis]     | [redis]               | `8.6`, `8.4`, `8.2`, `7.4`             |
@@ -453,6 +454,7 @@ Not automated:
 [_/rust]: https://hub.docker.com/_/rust
 [dotnet/aspnet]: https://mcr.microsoft.com/product/dotnet/aspnet/about
 [_/odoo]: https://hub.docker.com/_/odoo
+[_/redmine]: https://hub.docker.com/_/redmine
 [discourse/base]: https://hub.docker.com/r/discourse/base
 
 [valkey/valkey]: https://hub.docker.com/r/valkey/valkey
@@ -532,6 +534,7 @@ Not automated:
 [wodby/rust]: https://github.com/wodby/rust
 [wodby/dotnet]: https://github.com/wodby/dotnet
 [wodby/odoo]: https://github.com/wodby/odoo
+[wodby/redmine]: https://github.com/wodby/redmine
 [wodby/discourse]: https://github.com/wodby/discourse
 
 [wodby/valkey]: https://github.com/wodby/valkey
@@ -588,6 +591,12 @@ revision.
 major version and dates its builds (`20.0-20261102`). Its updater takes the
 newest dated tag of each series and resolves every digest before editing
 anything. A new Odoo build or a rebuilt tag releases a new image revision.
+
+`wodby/redmine` builds each Redmine release line on Redmine's official Debian
+image (`7.0.3-trixie`). Its updater moves each line to its newest patch release
+and resolves every digest before editing anything. A new patch release or a
+rebuilt tag releases a new image revision. A new release line is reported for
+manual review, because it also needs a new service option.
 
 `wodby/discourse` publishes Discourse's monthly release and its extended support
 release (ESR), each on a dated `discourse/base` web-only image (`-stable` for the
