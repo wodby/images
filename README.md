@@ -122,6 +122,7 @@ its dependencies with `python -m pip install -r scripts/requirements.txt`.
 | [wodby/opensmtpd] | `3.23`         |
 | [wodby/vinyl]     | `3.22`, `3.23` |
 | [wodby/squid]     | `3.24`         |
+| [wodby/rsyslog]   | `3.24`         |
 
 Images that render configuration templates pin their own [wodby/gotpl] release with
 `ARG GOTPL_VERSION` in each Dockerfile; `wodby/alpine` does not include gotpl. The
@@ -512,6 +513,8 @@ Not automated:
 [wodby/openjdk]: https://github.com/wodby/openjdk
 
 [wodby/opensmtpd]: https://github.com/wodby/opensmtpd
+
+[wodby/rsyslog]: https://github.com/wodby/rsyslog
 
 [wodby/frp]: https://github.com/wodby/frp
 
