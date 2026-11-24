@@ -222,16 +222,26 @@ _get_image_digest() {
   }
 }
 
+# The pin file of the build being updated. A variant of an image that is built
+# in its own directory keeps its own pin file there; update_variant_from_base_image
+# selects it for the functions it calls by setting _VARIANT_DIR.
+_base_image_pins_file() {
+  echo "${_VARIANT_DIR:+${_VARIANT_DIR}/}base-images.mk"
+}
+
 # Invoke the pin editor against the cloned image repository, not the updater checkout.
 _base_image_pins() {
-  python3 "${IMAGES_REPO_ROOT}/scripts/base_images.py" "$@"
+  python3 "${IMAGES_REPO_ROOT}/scripts/base_images.py" "$@" --file "$(_base_image_pins_file)"
 }
 
 # Permit the updater to ship before individual repositories complete the migration.
 _require_base_image_pins() {
-  if [[ ! -f base-images.mk ]]; then
+  local pins_file
+  pins_file=$(_base_image_pins_file)
+
+  if [[ ! -f "${pins_file}" ]]; then
     _report_event manual_review "$(_current_repo_slug)" "Waiting for digest-pinned base image build inputs"
-    echo "Skipping base image updates until base-images.mk is available"
+    echo "Skipping base image updates until ${pins_file} is available"
     return 1
   fi
   _base_image_pins repository >/dev/null || exit 1
@@ -780,7 +790,7 @@ _get_latest_version() {
     dockerfilePath=$(find . -name Dockerfile -maxdepth 2 | head -n 1)
 
     # Match the build's exact variant, including PHP's fpm-alpine suffix.
-    if [[ -f base-images.mk && "$(_base_image_pins repository)" == "${upstream}" ]]; then
+    if [[ -f "$(_base_image_pins_file)" && "$(_base_image_pins repository)" == "${upstream}" ]]; then
       local variant
       variant=$(_base_image_pins suffix) || return 1
       suffix="(?=${variant}$)"
@@ -893,7 +903,7 @@ _get_latest_complete_gotpl_release() {
 }
 
 _get_base_image() {
-  if [[ -f base-images.mk ]]; then
+  if [[ -f "$(_base_image_pins_file)" ]]; then
     _base_image_pins repository
     return
   fi
@@ -944,6 +954,11 @@ _update_versions() {
   local minor_update=""
   local version_key
   local name_key
+  # A variant has version settings of its own, named with a suffix, and is
+  # named in commits and release notes so its updates read apart from those
+  # of the image's other builds.
+  local key_suffix="${_VARIANT_KEY_SUFFIX:-}"
+  local label="${name}${_VARIANT_DIR:+ ${_VARIANT_DIR} variant}"
 
   IFS=' ' read -r -a arr_versions <<<"${version_list}"
 
@@ -954,21 +969,26 @@ _update_versions() {
   echo "============================"
 
   for version in "${arr_versions[@]}"; do
-    dir=$(_get_dir "${version}")
+    if [[ -n "${_VARIANT_DIR:-}" ]]; then
+      dir="${_VARIANT_DIR}"
+    else
+      dir=$(_get_dir "${version}")
+    fi
 
     # There are three supported ways to pin a version in workflow.yml:
     # 1. PHP72: 7.2.8 (or PHP7 depending on the provided version)
     # 2. PHP_VER: 7.2.8
     # 3. version: 7.2.8
-    version_key="${name_key}${version//./}"
+    # A variant only uses the first, with its suffix: MARIADB118_UBUNTU: 11.8.9
+    version_key="${name_key}${version//./}${key_suffix}"
     cur_ver=$(grep -oPm1 "(?<=${version_key}: )'?[0-9.]+" .github/workflows/workflow.yml || true)
 
-    if [[ -z "${cur_ver}" ]]; then
+    if [[ -z "${cur_ver}" && -z "${key_suffix}" ]]; then
       version_key="${name_key}_VER"
       cur_ver=$(grep -oPm1 "(?<=${version_key}: )'?[0-9.]+" .github/workflows/workflow.yml || true)
     fi
 
-    if [[ -z "${cur_ver}" ]]; then
+    if [[ -z "${cur_ver}" && -z "${key_suffix}" ]]; then
       version_key="version"
       cur_ver=$(grep -oPm1 "(?<=version: )'?${version//\./\\.}[0-9.]+" .github/workflows/workflow.yml || true)
     fi
@@ -990,9 +1010,9 @@ _update_versions() {
     cur_series=$(_get_minor_series "${cur_ver}")
 
     if _version_is_newer "${latest_ver}" "${cur_ver}"; then
-      echo "${name^} ${cur_ver} is outdated, updating to ${latest_ver}"
+      echo "${label^} ${cur_ver} is outdated, updating to ${latest_ver}"
 
-      if [[ -f base-images.mk && "$(_base_image_pins repository)" == "${upstream}" ]]; then
+      if [[ -f "$(_base_image_pins_file)" && "$(_base_image_pins repository)" == "${upstream}" ]]; then
         _base_image_pins version --old "${cur_ver}" --new "${latest_ver}" || return 1
       fi
 
@@ -1017,7 +1037,7 @@ _update_versions() {
 
       sed -i -E "s/(${name_key}_VER \?= )${cur_ver}/\1${latest_ver}/" "${dir}/Makefile"
 
-      _git_commit ./ "Update ${name} to ${latest_ver}"
+      _git_commit ./ "Update ${label} to ${latest_ver}"
       updated+=("${cur_ver} -> ${latest_ver}")
     else
       echo "Version ${cur_ver} is already the latest version"
@@ -1030,7 +1050,7 @@ _update_versions() {
     local ver
     ver=$(_join_ws ", " "${updated[@]}")
 
-    _release_tag "${name} updates: ${ver}" "${minor_update}"
+    _release_tag "${label} updates: ${ver}" "${minor_update}"
   fi
 }
 
@@ -1199,7 +1219,7 @@ _update_digests() {
     i=$((i + 1))
   done
 
-  _git_commit ./ "Rebuild against updated base image digests" "0"
+  _git_commit ./ "Rebuild ${_VARIANT_DIR:+the ${_VARIANT_DIR} variant }against updated base image digests" "0"
   _git_push origin
   if [[ -n "${alpine_updated}" ]]; then
     ver_list=$(_alpine_release_description "${image}" "${version_list}" "${alpine_transitions[@]}")
@@ -2111,6 +2131,41 @@ update_from_base_image() {
   fi
   _update_versions "${version_list}" "${base_image}" "${image#*/}"
   _update_digests "${version_list}" "${base_image}" "${image}"
+}
+
+# Update a variant of an image that is built on an official image in its own
+# directory of the image repository, such as the Ubuntu variant of
+# wodby/mariadb, built on the official mariadb image in ubuntu/.
+#
+# The variant has its own pin file, <dir>/base-images.mk, and its own version
+# settings in the workflow, named with the given suffix (MARIADB118_UBUNTU).
+# They are separate from the image's other builds because the official image is
+# published some time after the release those are built from.
+#
+# A newer version of the official image updates the setting and the pin, and is
+# released. A rebuilt official image of the same version only refreshes the pin.
+update_variant_from_base_image() {
+  local image="${1}"
+  local version_list="${2}"
+  # Dynamic scope: the pin and version helpers called below read these.
+  local _VARIANT_DIR="${3}"
+  local _VARIANT_KEY_SUFFIX="${4}"
+  local base_image
+
+  # An earlier step of the same run has usually cloned the repository already.
+  if [[ -d "/tmp/${image#*/}/.git" ]]; then
+    cd "/tmp/${image#*/}" || return 1
+  else
+    _git_clone "${image}"
+  fi
+
+  _require_base_image_pins || return 0
+
+  base_image=$(_get_base_image)
+  _update_versions "${version_list}" "${base_image}" "${image#*/}"
+  # No image argument: the official image is not Alpine, so there is no Alpine
+  # version to compare, as for wodby/mysql.
+  _update_digests "${version_list}" "${base_image}"
 }
 
 # Refresh and release a descendant from the repository's cloned default branch.

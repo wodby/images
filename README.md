@@ -585,6 +585,17 @@ retried using the same commit and digest.
 
 Images that only track application releases keep their existing update flow.
 
+`wodby/mariadb` also publishes an `-ubuntu` variant, built in its `ubuntu`
+directory on the official `mariadb` image. The variant has its own pin file,
+`ubuntu/base-images.mk`, and its own version settings in the workflow
+(`MARIADB118_UBUNTU` and the others), because the official image is published
+some time after the source release the Alpine images are built from. The
+MariaDB updater takes the newest exact version tag of the official image for
+each release line: a newer version updates the setting and the pin and is
+released, and a rebuilt image of the same version only refreshes the pin, which
+rebuilds the variant. Updates of the source builds and of the variant found in
+one run share one release.
+
 `wodby/dotnet` builds on two Microsoft images per release line: the ASP.NET Core
 runtime for ordinary images and the .NET SDK carrying the same runtime for `-dev`
 images, both from mcr.microsoft.com. Its updater takes the newest release of each
